@@ -1,0 +1,181 @@
+{% extends "base.dtl" %}
+{% block title %}System{% endblock %}
+{% block content %}
+  <div class="row">
+    <div class="col-sm-6 col-md-6 col-lg-6">
+      <div class="card">
+        <div class="card-header">System and architecture</div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-striped">
+              <tr>
+                <th scope="row">System Version:</th>
+                <td>{{sys_info.otp_release}}</td>
+              </tr>
+              <tr>
+                <th scope="row">ERTS Version:</th>
+                <td>{{sys_info.version}}</td>
+              </tr>
+              <tr>
+                <th scope="row">Compiled for:</th>
+                <td>{{sys_info.system_architecture}}</td>
+              </tr>
+              <tr>
+                <th scope="row">Emulator Wordsize:</th>
+                <td>{{sys_info.wordsize_external}}</td>
+              </tr>
+              <tr>
+                <th scope="row">Process Wordsize:</th>
+                <td>{{sys_info.wordsize_internal}}</td>
+              </tr>
+              <tr>
+                <th scope="row">SMP Support:</th>
+                <td>{{sys_info.smp_support}}</td>
+              </tr>
+              <tr>
+                <th scope="row">Thread Support:</th>
+                <td>{{sys_info.threads}}</td>
+              </tr>
+              <tr>
+                <th scope="row">Async thread pool size:</th>
+                <td>{{sys_info.thread_pool_size}}</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-md-6 col-lg-6">
+      <div class="card">
+        <div class="card-header">Memory Usage</div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-striped">
+              <tr>
+                <th scope="row">Total:</th>
+                <td>{{sys_info.total|filesizeformat}}</td>
+              </tr>
+              <tr>
+                <th scope="row">Processes:</th>
+                <td>{{sys_info.processes_used|filesizeformat}}</td>
+              </tr>
+              <tr>
+                <th scope="row">Atoms:</th>
+                <td>{{sys_info.atom_used|filesizeformat}}</td>
+              </tr>
+              <tr>
+                <th scope="row">Binaries:</th>
+                <td>{{sys_info.binary|filesizeformat}}</td>
+              </tr>
+              <tr>
+                <th scope="row">Code:</th>
+                <td>{{sys_info.code|filesizeformat}}</td>
+              </tr>
+              <tr>
+                <th scope="row">ETS:</th>
+                <td>{{sys_info.ets|filesizeformat}}</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-sm-6 col-md-6 col-lg-6">
+      <div class="card">
+        <div class="card-header">CPU's and Threads</div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-striped">
+              <tr>
+                <th scope="row">Logical CPU's:</th>
+                <td>{{sys_info.logical_processors}}</td>
+              </tr>
+              <tr>
+                <th scope="row">Online Logical CPU's:</th>
+                <td>{{sys_info.logical_processors_online}}</td>
+              </tr>
+              <tr>
+                <th scope="row">Available Logical CPU's:</th>
+                <td>{{sys_info.logical_processors_available}}</td>
+              </tr>
+              <tr>
+                <th scope="row">Schedulers:</th>
+                <td>{{sys_info.schedulers}}</td>
+              </tr>
+              <tr>
+                <th scope="row">Online schedulers:</th>
+                <td>{{sys_info.schedulers_online}}</td>
+              </tr>
+              <tr>
+                <th scope="row">Available schedulers:</th>
+                <td>{{sys_info.schedulers_available}}</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-md-6 col-lg-6">
+      <div class="card">
+        <div class="card-header">Statistics</div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-striped">
+              <tr>
+                <th scope="row">Up time:</th>
+                <td>{{uptime}}</td>
+              </tr>
+              <tr>
+                <th scope="row">Run Queue:</th>
+                <td>{{sys_info.run_queue}}</td>
+              </tr>
+              <tr>
+                <th scope="row">IO Input:</th>
+                <td>{{sys_info.io_input}}</td>
+              </tr>
+              <tr>
+                <th scope="row">IO Output:</th>
+                <td>{{sys_info.io_output}}</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-sm-12 col-md-12 col-lg-12">
+      <div class="card">
+        <div class="card-header">System statistics / limit</div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-striped">
+              <tr>
+                <th scope="row">Atoms:</th>
+                <td>{{sys_info.atom_count}} / {{sys_info.atom_limit}} ({% widthratio sys_info.atom_count sys_info.atom_limit 100 %}% used)</td>
+              </tr>
+              <tr>
+                <th scope="row">Processes:</th>
+                <td>{{sys_info.process_count}} / {{sys_info.process_limit}} ({% widthratio sys_info.process_count sys_info.process_limit 100 %}% used)</td>
+              </tr>
+              <tr>
+                <th scope="row">Ports:</th>
+                <td>{{sys_info.port_count}} / {{sys_info.port_limit}} ({% widthratio sys_info.port_count sys_info.port_limit 100 %}% used)</td>
+              </tr>
+              <tr>
+                <th scope="row">ETS:</th>
+                <td>{{sys_info.ets_count}} / {{sys_info.ets_limit}} ({% widthratio sys_info.ets_count sys_info.ets_limit 100 %}% used)</td>
+              </tr>
+              <tr>
+                <th scope="row">Distribution buffer busy limit:</th>
+                <td>{{sys_info.dist_buf_busy_limit}}</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

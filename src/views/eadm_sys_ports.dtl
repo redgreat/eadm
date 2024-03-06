@@ -1,0 +1,38 @@
+{% extends "base.dtl" %}
+
+{% block title %}信息看板{% endblock %}
+
+// {% block pre_title %}Overview{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-sm-12 col-md-12 col-lg-12">
+    <div class="card">
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-striped">
+            <thead>
+              <th>Id</th>
+              <th>Connected</th>
+              <th>Name</th>
+              <th>Controls</th>
+              <th>Slot</th>
+            </thead>
+            <tbody>
+              {% for port in ports %}
+              <tr>
+                <td>{{port.port_id}}</td>
+                <td>{{port.connected}}</td>
+                <td>{{port.registered_name}}</td>
+                <td>{{port.name}}</td>
+                <td>{{port.id}}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends "base.dtl" %}
+
+{% block title %}Routes{% endblock %}
+{% block pre_title %}Route table{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-12 col-lg-12">
+    <div class="card">
+      <div class="card-body">
+        <div class="chart" id="route-table"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block css %}
+<link href="/assets/vendor/treant/treant.css" rel="stylesheet">
+{% endblock %}
+
+{% block js_scripts %}
+<script src="/assets/vendor/treant/raphael.js"></script>
+<script src="/assets/vendor/treant/treant.js"></script>
+<script type="text/javascript">
+  var route_config = {
+  connectors: {
+  type: 'step'
+  },
+  nodeAlign: "BOTTOM",
+  chart: {
+    container: "#route-table"
+  },
+
+  nodeStructure: {{ routes|safe }}
+  };
+  new Treant( route_config );
+</script>
+{% endblock %}

@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Eadm{% block title %}{% endblock %}</title>
+    <link href="/assets/vendor/fontawesome/css/fontawesome.min.css" rel="stylesheet">
+    <link href="/assets/vendor/fontawesome/css/solid.min.css" rel="stylesheet">
+    <link href="/assets/vendor/fontawesome/css/brands.min.css" rel="stylesheet">
+    <link href="/assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/assets/css/master.css" rel="stylesheet">
+    <link href="/assets/vendor/flagiconcss/css/flag-icon.min.css" rel="stylesheet">
+    <link href="/assets/img/favicon.ico" rel="shortcut icon" type="image/x-icon">
+    {% block css %}{% endblock %}
+  </head>
+
+  <body>
+    {% block html_top %}{% endblock %}
+    <div class="wrapper">
+        <nav id="sidebar" class="active">
+        <div class="sidebar-header">
+          <img src="/assets/img/redgreat-header.png" alt="bootraper logo" class="app-logo">
+        </div>
+        <ul class="list-unstyled components text-secondary">
+            <li>
+                <a href="/"><i class="fas fa-home"></i> 信息看板</a>
+            </li>
+            <li>
+                <a href="/daily/health"><i class="fas fa-home"></i> 我的健康</a>
+            </li>
+            <li>
+                <a href="/daily/location"><i class="fas fa-home"></i> 轨迹回放</a>
+            </li>
+            <li>
+                <a href="/daily/finance"><i class="fas fa-home"></i> 我的财务</a>
+            </li>
+            <li>
+                <a href="/daily/crontab"><i class="fas fa-home"></i> 定时任务</a>
+            </li>
+            <li>
+                <a href="/daily/alert"><i class="fas fa-home"></i> 消息提醒</a>
+            </li>
+            <li>
+                <a href="/daily/sqlquery"><i class="fas fa-home"></i> 数据查询</a>
+            </li>
+            <li>
+              <a href="#sysmenu" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle no-caret-down"><i class="fas fa-user-shield"></i> 系统信息</a>
+              <ul class="collapse list-unstyled" id="sysmenu">
+                <li>
+                  <a href="/sys/sysinfo"><i class="fas fa-home"></i> 系统信息</a>
+                </li>
+                <li>
+                  <a href="/sys/route_table"><i class="fas fa-file-alt"></i> 路由信息</a>
+                </li>
+                <li>
+                  <a href="/sys/sysinfo"><i class="fas fa-file-alt"></i> Load charts</a>
+                </li>
+                <li>
+                  <a href="/sys/sysinfo"><i class="fas fa-table"></i> Memory Allocators</a>
+                </li>
+                <li>
+                  <a href="/sys/sysinfo"><i class="fas fa-chart-bar"></i> Applications</a>
+                </li>
+                <li>
+                  <a href="/sys/processes"><i class="fas fa-icons"></i> 线程信息</a>
+                </li>
+                <li>
+                  <a href="/sys/ports"><i class="fas fa-icons"></i> 端口信息</a>
+                </li>
+                <li>
+                  <a href="/sys/tables"><i class="fas fa-icons"></i> 表信息</a>
+                </li>
+                <li>
+                  <a href="/sys/sysinfo"><i class="fas fa-icons"></i> xProf</a>
+                </li>
+              </ul>
+            </li>
+        </ul>
+      </nav>
+        <div id="body" class="active">
+          <!-- navbar navigation component -->
+          <nav class="navbar navbar-expand-lg navbar-white bg-white">
+          <button type="button" id="sidebarCollapse" class="btn btn-light">
+            <i class="fas fa-bars"></i><span></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="nav navbar-nav ms-auto">
+              <li class="nav-item dropdown">
+                <div class="nav-dropdown">
+                  <a href="#" id="nav2" class="nav-item nav-link dropdown-toggle text-secondary" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-user"></i> <span>{{username}}</span> <i style="font-size: .8em;" class="fas fa-caret-down"></i>
+                  </a>
+                  <div class="dropdown-menu dropdown-menu-end nav-link-menu">
+                    <ul class="nav-list">
+                      <li><a href="" class="dropdown-item"><i class="fas fa-sign-out-alt"></i> 退出</a></li>
+                    </ul>
+                  </div>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </nav>
+          <!-- end of navbar navigation -->
+          <div class="content">
+            <div class="container">
+            <div class="row">
+              <div class="col-md-12 page-header">
+                <!-- <div class="page-pretitle">{% block pre_title %}{% endblock %}</div>
+                -->
+                <h2 class="page-title">{% block title %}{% endblock %}</h2>
+              </div>
+            </div>
+            {% block content %}{% endblock %}
+          </div>
+          </div>
+          <footer class="footer" id="footer">
+            <p class="text-center"></p>
+        </footer>
+        </div>
+    </div>
+
+    {% block html_bottom %}{% endblock %}
+    <script src="/assets/vendor/jquery/jquery.min.js"></script>
+    <script src="/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="/assets/js/script.js"></script>
+    {% block js_scripts %}{% endblock %}
+  </body>
+</html>

@@ -1,0 +1,31 @@
+["prod_db",
+  {nova, [
+    {environment, dev},
+    {cowboy_configuration, #{port => 8090}},
+    {dev_mode, true},
+    {bootstrap_application, eadm}, %% Bootstraps the application
+    {use_sessions, true},
+    {seretkey, <<"PfE4U42K6ApFYTgWjWRCvaD7wenPL26xcc7T">>},
+    %% Plugins is written on form {RequestType, Module, Options, Priority}
+    %% Priority is that the lowest number is executed first
+    {plugins, [
+      {pre_request, nova_correlation_plugin, #{}},
+      {pre_request, nova_request_plugin, #{decode_json_body => true,
+                                           parse_bindings => true,
+                                           read_urlencoded_body=>true,
+                                           parse_qs=>true}},
+      {pre_request, nova_cors_plugin, #{allow_origins => [<<"http://127.0.0.1:8080">>]}}
+      ]}
+    ]},
+  {lager, [
+    {log_root, "logs/"},
+    {colored, true},
+    {handlers, [
+      {lager_console_backend, [{level, info}]},
+      {lager_file_backend, [{file, "error.log"}, {level, error}, {size, 10485760}, {date, "$D0"}, {count, 5}]},
+      {lager_file_backend, [{file, "console.log"}, {level, info}, {size, 10485760}, {date, "$D0"}, {count, 5}]}
+      ]}
+    ]}
+].
+
+%% Please change your app.src-file instead if you intend to add app-specific configurations

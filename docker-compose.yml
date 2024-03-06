@@ -1,0 +1,14 @@
+version: '3.8'
+services:
+  app:
+    image: 'redgreat/eadm:latest'
+    container_name: eadm
+    restart: unless-stopped
+    ports:
+      - '8086:8080'
+    volumes:
+      - ./config/prod_db.config:/opt/eadm/releases/0.1.0/prod_db.config
+      - ./config/sys.config:/opt/eadm/releases/0.1.0/sys.config
+      - ./config/vm.args:/opt/eadm/releases/0.1.0/vm.args
+    environment:
+      DISABLE_IPV6: 'true'

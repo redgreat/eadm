@@ -1,0 +1,95 @@
+/*!
+ *
+ * @author wangcw
+ * @copyright (C) 2024, REDGREAT
+ * Created : 2024-03-01 13:24
+ *
+ * Module : health.js
+ *
+ */
+
+// import { translationDictionary } from '/assets/i18n/columname.js';
+const translationDictionary = {
+  "UtcTime": "时间",
+  "Steps": "步数"
+};
+
+function translateColumnNames(column, dictionary) {
+    return dictionary[column] || column;
+}
+
+let table = $('#dataTables-health').DataTable();
+
+function loadHealthData(dataType, startTime, endTime) {
+    const searchParams = {
+        dataType: dataType,
+        startTime: startTime,
+        endTime: endTime
+    };
+
+    $.getJSON('/data/health', searchParams, function (response) {
+
+            let htmlTHead = $('#dataTables-health thead');
+            let htmlTBody = $('#dataTables-health tbody');
+
+            htmlTHead.empty()
+            htmlTBody.empty()
+
+            const headerRow = $('<tr></tr>');
+            response.columns.forEach(function(column) {
+                column = translateColumnNames(column, translationDictionary);
+                headerRow.append($('<th></th>').text(column));
+            });
+            htmlTHead.append(headerRow);
+
+            response.data.forEach(function(rowData) {
+                const tableRow = $('<tr></tr>');
+                response.columns.forEach(function (column) {
+                    tableRow.append($('<td></td>').text(rowData[column]));
+                });
+                htmlTBody.append(tableRow);
+            });
+
+        }
+    )
+}
+
+
+function formatDateToNearestTenMinutes(date) {
+  const minutes = date.getMinutes();
+  const roundedMinutes = Math.round(minutes / 10) * 10;
+  const roundedDate = new Date(date);
+  roundedDate.setMinutes(roundedMinutes);
+
+  const year = roundedDate.getFullYear();
+  const month = ('0' + (roundedDate.getMonth() + 1)).slice(-2);
+  const day = ('0' + roundedDate.getDate()).slice(-2);
+  const hours = ('0' + roundedDate.getHours()).slice(-2);
+  const formattedMinutes = ('0' + roundedDate.getMinutes()).slice(-2);
+
+  return year + '-' + month + '-' + day + ' ' + hours + ':' + formattedMinutes + ':00';
+}
+
+$(document).ready(function() {
+    jQuery('#starttime').datetimepicker();
+    jQuery('#endtime').datetimepicker();
+    /* jQuery.datetimepicker.setLocale('zh'); */
+
+    const defaultDatatype = $('#datatype').val();
+    const now = new Date();
+    const oneDayBefore = new Date(now - 24 * 60 * 60 * 1000);
+    const defaultStartTime = formatDateToNearestTenMinutes(oneDayBefore);
+    const defaultEndTime = formatDateToNearestTenMinutes(now);
+    $('#starttime').val(defaultStartTime);
+    $('#endtime').val(defaultEndTime);
+
+    loadHealthData(defaultDatatype, "2024-01-29 00:00:00", "2024-01-30 00:00:00");
+
+    $('#searchHealth').click(function() {
+        const dataType = $('#datatype').val();
+        const startTime = $('#starttime').val();
+        const endTime = $('#endtime').val();
+        loadHealthData(dataType, startTime, endTime);
+    });
+
+});

@@ -1,0 +1,199 @@
+{% extends "base.dtl" %}
+
+{% block title %}Processes{% endblock %}
+{% block pre_title %}Overview{% endblock %}
+{% block content %}
+<div class="row">
+  <div class="col-sm-12 col-md-12 col-lg-12">
+    <div class="card">
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-striped" id="procs">
+            <thead>
+              <th>Pid</th>
+              <th>Name or Initial Func</th>
+              <th>Reds</th>
+              <th>Memory</th>
+              <th>MsgQ</th>
+              <th>Current Function</th>
+            </thead>
+            <tbody>
+              {% for proc in procs %}
+              <tr data-id="{{proc.pid}}">
+                <td>{{proc.pid}}</td>
+                <td>{{proc.registered_name}}</td>
+                <td>{{proc.reductions}}</td>
+                <td>{{proc.total_heap_size}}</td>
+                <td>{{proc.message_queue_len}}</td>
+                <td>{{proc.current_function}}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block html_top %}
+<div class="modal" id="proc-info" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Process information</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+          <div class="row">
+            <div class="col-sm-12 col-md-12 col-lg-12">
+              <ul class="nav nav-pills" id="modal-menu">
+                <li class="nav-item">
+                  <a class="nav-link active" aria-current="page" href="mod-process-info">Process info</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="mod-messages">Messages</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="mod-dict">Dictionary</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="mod-stacktrace">Stack Trace</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="mod-state">State</a>
+                </li>
+              </ul>
+            </div>
+            <div class="col-sm-12 col-md-12 col-lg-12">
+              <div class="card">
+                <div class="card-body">
+                  <table class="table table-striped" id="mod-process-info">
+                    <tr>
+                      <th scope="row">Initial Call:</th>
+                      <td id="info-init-call"></td>
+                    </tr>
+                    <tr>
+                      <th scope="row">Current Function:</th>
+                      <td id="info-current-func"></td>
+                    </tr>
+                    <tr>
+                      <th scope="row">Registered Name:</th>
+                      <td id="info-reg-name"></td>
+                    </tr>
+                    <tr>
+                      <th scope="row">Status:</th>
+                      <td id="info-status"></td>
+                    </tr>
+                    <tr>
+                      <th scope="row">Message Queue Len:</th>
+                      <td id="info-msg-queue"></td>
+                    </tr>
+                    <tr>
+                      <th scope="row">Group Leader:</th>
+                      <td id="info-grp-leader"></td>
+                    </tr>
+                    <tr>
+                      <th scope="row">Priority:</th>
+                      <td></td>
+                    </tr>
+                    <tr>
+                      <th scope="row">Trap Exit:</th>
+                      <td></td>
+                    </tr>
+                    <tr>
+                      <th scope="row">Reductions:</th>
+                      <td></td>
+                    </tr>
+                    <tr>
+                      <th scope="row">Binary:</th>
+                      <td></td>
+                    </tr>
+                    <tr>
+                      <th scope="row">Last Calls:</th>
+                      <td></td>
+                    </tr>
+                    <tr>
+                      <th scope="row">Catch Level:</th>
+                      <td></td>
+                    </tr>
+                    <tr>
+                      <th scope="row">Trace:</th>
+                      <td></td>
+                    </tr>
+                    <tr>
+                      <th scope="row">Suspending:</th>
+                      <td></td>
+                    </tr>
+                    <tr>
+                      <th scope="row">Sequential Trace Token:</th>
+                      <td></td>
+                    </tr>
+                    <tr>
+                      <th scope="row">Error Handler:</th>
+                      <td></td>
+                    </tr>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block js_scripts %}
+<script type="text/javascript">
+  function mfa(data) {
+  return data[0] + ":" + data[1] + "/" + data[2];
+  }
+
+  $(document).ready(function() {
+
+  function open_modal(id) {
+  $.getJSON('/sys/processes/' + id, function(data) {
+  $('#info-init-call').html(mfa(data['initial_call']));
+  $('#info-current-func').html(mfa(data['current_function']));
+  $('#info-reg-name').html(data['registered_name']);
+  $('#info-status').html(data['status']);
+  $('#info-msg-queue').html(data['message_queue_len']);
+  $('#info-grp-leader').html('<a href="javascript:open_modal(\'' + data['group_leader'] + '\');">' + data['group_leader'] + '</a>');
+
+  console.log(data);
+  });
+  $('#proc-info').modal('show');
+  }
+
+  $('#procs tbody tr').click(function() {
+  return false;
+  }).dblclick(function() {
+  console.log($(this).data('id'));
+  open_modal($(this).data('id'));
+  });
+
+  $('#modal-menu a').click(function(event) {
+  event.preventDefault();
+  if($(this).hasClass('active')) {
+  return;
+  }
+  old_target = $('#modal-menu .active').attr('href');
+  target = $(this).attr('href');
+  $('#modal-menu a').removeClass('active');
+  $(this).addClass('active');
+  $('#'+old_target).hide();
+  $('#'+target).show();
+  });
+
+  });
+</script>
+{% endblock %}

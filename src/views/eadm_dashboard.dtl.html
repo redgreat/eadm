@@ -1,0 +1,196 @@
+{% extends "base.dtl" %}
+
+{% block title %}信息看板{% endblock %}
+
+{% block content %}
+
+<div class="row">
+    <div class="col-sm-6 col-md-6 col-lg-3 mt-3">
+        <div class="card">
+            <div class="content">
+                <div class="row">
+                    <div class="col-sm-4">
+                        <div class="icon-big text-center">
+                            <i class="teal fas fa-shopping-cart"></i>
+                        </div>
+                    </div>
+                    <div class="col-sm-8">
+                        <div class="detail">
+                            <p class="detail-subtitle">平均里程</p>
+                            <span class="number">6,267</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="footer">
+                    <hr />
+                    <div class="stats">
+                        <i class="fas fa-calendar"></i> 7日内
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-md-6 col-lg-3 mt-3">
+        <div class="card">
+            <div class="content">
+                <div class="row">
+                    <div class="col-sm-4">
+                        <div class="icon-big text-center">
+                            <i class="olive fas fa-money-bill-alt"></i>
+                        </div>
+                    </div>
+                    <div class="col-sm-8">
+                        <div class="detail">
+                            <p class="detail-subtitle">平均步数</p>
+                            <span class="number">$180,900</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="footer">
+                    <hr />
+                    <div class="stats">
+                        <i class="fas fa-calendar"></i> 7日内
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-md-6 col-lg-3 mt-3">
+        <div class="card">
+            <div class="content">
+                <div class="row">
+                    <div class="col-sm-4">
+                        <div class="icon-big text-center">
+                            <i class="violet fas fa-eye"></i>
+                        </div>
+                    </div>
+                    <div class="col-sm-8">
+                        <div class="detail">
+                            <p class="detail-subtitle">平均睡眠时长</p>
+                            <span class="number">28,210</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="footer">
+                    <hr />
+                    <div class="stats">
+                        <i class="fas fa-stopwatch"></i> 7日内
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-md-6 col-lg-3 mt-3">
+        <div class="card">
+            <div class="content">
+                <div class="row">
+                    <div class="col-sm-4">
+                        <div class="icon-big text-center">
+                            <i class="orange fas fa-envelope"></i>
+                        </div>
+                    </div>
+                    <div class="col-sm-8">
+                        <div class="detail">
+                            <p class="detail-subtitle">平均心率</p>
+                            <span class="number">75</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="footer">
+                    <hr />
+                    <div class="stats">
+                        <i class="fas fa-envelope-open-text"></i> 7日内
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="content">
+                        <div class="head">
+                            <h5 class="mb-0">年度里程</h5>
+                            <p class="text-muted">每月GFS定位行程</p>
+                        </div>
+                        <div class="canvas-wrapper">
+                            <canvas class="chart" id="trafficflow"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="content">
+                        <div class="head">
+                            <h5 class="mb-0">年度财务</h5>
+                            <p class="text-muted">每月支出/收入</p>
+                        </div>
+                        <div class="canvas-wrapper">
+                            <canvas class="chart" id="sales"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-sm-6 col-md-6 col-lg-3">
+        <div class="card">
+            <div class="content">
+                <div class="row">
+                    <div class="dfd text-center">
+                        <i class="blue large-icon mb-2 fas fa-thumbs-up"></i>
+                        <h4 class="mb-0">+21,900</h4>
+                        <p class="text-muted">年度里程</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-md-6 col-lg-3">
+        <div class="card">
+            <div class="content">
+                <div class="row">
+                    <div class="dfd text-center">
+                        <i class="orange large-icon mb-2 fas fa-reply-all"></i>
+                        <h4 class="mb-0">+22,566</h4>
+                        <p class="text-muted">年度消费</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-md-6 col-lg-3">
+        <div class="card">
+            <div class="content">
+                <div class="row">
+                    <div class="dfd text-center">
+                        <i class="grey large-icon mb-2 fas fa-envelope"></i>
+                        <h4 class="mb-0">+15,566</h4>
+                        <p class="text-muted">年度睡眠</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-md-6 col-lg-3">
+        <div class="card">
+            <div class="content">
+                <div class="row">
+                    <div class="dfd text-center">
+                        <i class="olive large-icon mb-2 fas fa-dollar-sign"></i>
+                        <h4 class="mb-0">+98,601</h4>
+                        <p class="text-muted">年度心率</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

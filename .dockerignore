@@ -1,0 +1,15 @@
+.github/
+.idea/
+doc
+logs
+.dockerignore
+.gitignore
+docker-compose.yml
+Dockerfile
+LICENSE
+README.md
+!_build
+!config
+!priv
+!src
+!rebar.*
