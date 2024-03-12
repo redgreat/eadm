@@ -48,15 +48,17 @@ routes(_Environment) ->
         ]
       },
       #{prefix => "data",
-      security => false,
+      security => {eadm_auth, auth},
       routes => [
-          {"/health", { eadm_health_controller, search }, #{methods => [get]}}
+          {"/health", { eadm_health_controller, search }, #{methods => [get]}},
+          {"/location", { eadm_location_controller, search }, #{methods => [get]}}
         ]
       },
       #{prefix => "daily",
       security => {eadm_auth, auth},
       routes => [
-          {"/health", { eadm_health_controller, index }, #{methods => [get]}}
+          {"/health", { eadm_health_controller, index }, #{methods => [get]}},
+          {"/location", { eadm_location_controller, index }, #{methods => [get]}}
         ]
       },
       #{prefix => "/sys",

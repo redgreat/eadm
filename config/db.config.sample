@@ -1,0 +1,17 @@
+[{mysql_pool, [
+  {pools, [
+    {pool_db, [
+        {size, 2},
+         {connection_options, [
+             {host, "localhost"},
+             {user, "root"},
+             {port, 3306},
+             {password, "123456"},
+             {database, "testdb"},
+             {keep_alive, true},
+             {connect_timeout, 18000}
+         ]}
+       ]}
+   ]}
+]}
+].

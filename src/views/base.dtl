@@ -1,11 +1,11 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
 
   <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, user-scalable=no">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>Eadm{% block title %}{% endblock %}</title>
+    <title>Eadm-{% block title %}{% endblock %}</title>
     <link href="/assets/vendor/fontawesome/css/fontawesome.min.css" rel="stylesheet">
     <link href="/assets/vendor/fontawesome/css/solid.min.css" rel="stylesheet">
     <link href="/assets/vendor/fontawesome/css/brands.min.css" rel="stylesheet">
@@ -41,9 +41,6 @@
             </li>
             <li>
                 <a href="/daily/alert"><i class="fas fa-home"></i> 消息提醒</a>
-            </li>
-            <li>
-                <a href="/daily/sqlquery"><i class="fas fa-home"></i> 数据查询</a>
             </li>
             <li>
               <a href="#sysmenu" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle no-caret-down"><i class="fas fa-user-shield"></i> 系统信息</a>
@@ -109,7 +106,8 @@
               <div class="col-md-12 page-header">
                 <!-- <div class="page-pretitle">{% block pre_title %}{% endblock %}</div>
                 -->
-                <h2 class="page-title">{% block title %}{% endblock %}</h2>
+                <!-- <h2 class="page-title">{% block title %}{% endblock %}</h2>
+                -->
               </div>
             </div>
             {% block content %}{% endblock %}
@@ -117,7 +115,21 @@
           </div>
           <footer class="footer" id="footer">
             <p class="text-center"></p>
-        </footer>
+          </footer>
+        </div>
+    </div>
+
+    <div class="position-fixed bottom-0 right-0 p-3" style="z-index: 5; right: 0; bottom: 0;">
+        <div class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="true" data-bs-delay="5000">
+            <div class="toast-header">
+                <svg class="bd-placeholder-img rounded me-2" width="20" height="20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="xMidYMid slice" focusable="false">
+                    <rect width="100%" height="100%" fill="#007aff"></rect>
+                </svg>
+                <strong class="me-auto">系统消息通知</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body">
+            </div>
         </div>
     </div>
 

@@ -1,4 +1,7 @@
 {% extends "base.dtl" %}
+
+{% block title %}我的健康{% endblock %}
+
 {% block css %}
     <link href="/assets/vendor/datetimepicker/datetimepicker.min.css" rel="stylesheet">
     <link href="/assets/vendor/datatables/datatables.min.css" rel="stylesheet">

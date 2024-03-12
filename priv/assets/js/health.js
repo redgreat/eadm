@@ -11,7 +11,24 @@
 // import { translationDictionary } from '/assets/i18n/columname.js';
 const translationDictionary = {
   "UtcTime": "时间",
-  "Steps": "步数"
+  "Steps": "步数",
+  "Heartbeat": "心率",
+  "BodyTemperature": "体温",
+  "WristTemperature": "腕温",
+  "Diastolic": "舒张压",
+  "Shrink": "收缩压",
+  "SleepType": "睡眠类型",
+  "SleepStartTime": "入睡时间",
+  "SleepEndTime": "醒起时间",
+  "SleepWakeTime": "醒起时间",
+  "SleepMinute": "睡眠时长(分钟)",
+  "Battery": "电池电量",
+};
+
+const sleepType = {
+  1: "深度睡眠",
+  2: "浅度睡眠",
+  3: "醒来时长",
 };
 
 function translateColumnNames(column, dictionary) {
@@ -25,6 +42,7 @@ function loadHealthData(dataType, startTime, endTime) {
         endTime: endTime
     };
     let dynamicColumns = [];
+    let dynamicDatas = [];
 
     $.getJSON('/data/health', searchParams, function (response) {
 
@@ -34,17 +52,39 @@ function loadHealthData(dataType, startTime, endTime) {
                 dynamicColumn['data'] = column;
                 dynamicColumn['title'] = translateColumnNames(column, translationDictionary);
                 dynamicColumns.push(dynamicColumn);
+                if (column === "SleepType") {
+                    response.data.forEach(function (rowData) {
+                    rowData["SleepType"] = translateColumnNames(rowData["SleepType"],sleepType);
+                    });
+                }
             });
+            dynamicDatas = response.data;
         }
 
-        buildDynamicData(response);
+        if (response && response.length > 0 && response[0].Alert) {
+            const toastElList = [].slice.call(document.querySelectorAll('.toast'));
+            const toastList = toastElList.map(function (toastEl) {
+                const toastBodyEl = toastEl.querySelector('.toast-body');
+                toastBodyEl.textContent = response[0].Alert;
+                return new bootstrap.Toast(toastEl);
+            });
+            toastList.forEach(toast => toast.show());
+        }
+        else (
+            buildDynamicData(response)
+        );
 
+        // console.log("dynamicColumns: " + JSON.stringify(dynamicColumns));
+        // console.log("dynamicDatas: " + JSON.stringify(dynamicDatas));
+
+        $('#dataTables-health').DataTable().destroy();
+        $('#dataTables-health').empty();
         $('#dataTables-health').DataTable({
             // lengthChange: true,  //是否允许用户改变表格每页显示的记录数
             // bStateSave: true,  //记录cookie
             destroy: true, // 销毁重新渲染
             columns: dynamicColumns,
-            data: response.data,
+            data: dynamicDatas,
             responsive: true,
             info: true, // 是否显示左下角分页信息
             processing: true,  //是否显示处理状态(排序的时候，数据很多耗费时间长的话，也会显示这个)
@@ -56,7 +96,7 @@ function loadHealthData(dataType, startTime, endTime) {
             pagingType: "full_numbers",  //除首页、上一页、下一页、末页四个按钮还有页数按钮
             searching: false,  //是否开始本地搜索
             stateSave: true,  //刷新时是否保存状态
-            autoWidth: true,  //自动计算宽度
+            // autoWidth: true,  //自动计算宽度
             deferRender: true, // 延迟渲染
             language: {
                 // decimal: "",//小数的小数位符号  比如“，”作为数字的小数位符号
@@ -123,6 +163,7 @@ $(document).ready(function() {
         const endTime = $('#endtime').val();
         loadHealthData(dataType, startTime, endTime);
     });
+
     $('#cleanHealth').click(function() {
         $('input[type="text"]').val('');
     });
