@@ -8,7 +8,6 @@
     <title>Eadm-{% block title %}{% endblock %}</title>
     <link href="/assets/vendor/fontawesome/css/fontawesome.min.css" rel="stylesheet">
     <link href="/assets/vendor/fontawesome/css/solid.min.css" rel="stylesheet">
-    <link href="/assets/vendor/fontawesome/css/brands.min.css" rel="stylesheet">
     <link href="/assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <link href="/assets/css/master.css" rel="stylesheet">
     <link href="/assets/vendor/flagiconcss/css/flag-icon.min.css" rel="stylesheet">
@@ -136,7 +135,7 @@
     {% block html_bottom %}{% endblock %}
     <script src="/assets/vendor/jquery/jquery.min.js"></script>
     <script src="/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-    <script src="/assets/js/script.js"></script>
+    <script src="/assets/js/basic.js"></script>
     {% block js_scripts %}{% endblock %}
   </body>
 </html>

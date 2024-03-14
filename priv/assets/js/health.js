@@ -8,29 +8,6 @@
  *
  */
 
-// import { translationDictionary } from '/assets/i18n/columname.js';
-const translationDictionary = {
-  "UtcTime": "时间",
-  "Steps": "步数",
-  "Heartbeat": "心率",
-  "BodyTemperature": "体温",
-  "WristTemperature": "腕温",
-  "Diastolic": "舒张压",
-  "Shrink": "收缩压",
-  "SleepType": "睡眠类型",
-  "SleepStartTime": "入睡时间",
-  "SleepEndTime": "醒起时间",
-  "SleepWakeTime": "醒起时间",
-  "SleepMinute": "睡眠时长(分钟)",
-  "Battery": "电池电量",
-};
-
-const sleepType = {
-  1: "深度睡眠",
-  2: "浅度睡眠",
-  3: "醒来时长",
-};
-
 function translateColumnNames(column, dictionary) {
     return dictionary[column] || column;
 }
@@ -50,11 +27,11 @@ function loadHealthData(dataType, startTime, endTime) {
             response.columns.forEach(function (column) {
                 let dynamicColumn = {};
                 dynamicColumn['data'] = column;
-                dynamicColumn['title'] = translateColumnNames(column, translationDictionary);
+                dynamicColumn['title'] = translateColumnNames(column, i18n.translationDictionary);
                 dynamicColumns.push(dynamicColumn);
                 if (column === "SleepType") {
                     response.data.forEach(function (rowData) {
-                    rowData["SleepType"] = translateColumnNames(rowData["SleepType"],sleepType);
+                    rowData["SleepType"] = translateColumnNames(rowData["SleepType"],i18n.sleepType);
                     });
                 }
             });
@@ -127,34 +104,9 @@ function loadHealthData(dataType, startTime, endTime) {
 }
 
 
-function formatDateToNearestTenMinutes(date) {
-    const minutes = date.getMinutes();
-    const roundedMinutes = Math.round(minutes / 10) * 10;
-    const roundedDate = new Date(date);
-    roundedDate.setMinutes(roundedMinutes);
-
-    const year = roundedDate.getFullYear();
-    const month = ('0' + (roundedDate.getMonth() + 1)).slice(-2);
-    const day = ('0' + roundedDate.getDate()).slice(-2);
-    const hours = ('0' + roundedDate.getHours()).slice(-2);
-    const formattedMinutes = ('0' + roundedDate.getMinutes()).slice(-2);
-
-    return year + '-' + month + '-' + day + ' ' + hours + ':' + formattedMinutes + ':00';
-}
-
 $(document).ready(function() {
-    jQuery('#starttime').datetimepicker();
-    jQuery('#endtime').datetimepicker();
-    /* jQuery.datetimepicker.setLocale('zh'); */
 
     const defaultDatatype = $('#datatype').val();
-    const now = new Date();
-    const oneDayBefore = new Date(now - 24 * 60 * 60 * 1000);
-    const defaultStartTime = formatDateToNearestTenMinutes(oneDayBefore);
-    const defaultEndTime = formatDateToNearestTenMinutes(now);
-    $('#starttime').val(defaultStartTime);
-    $('#endtime').val(defaultEndTime);
-
     loadHealthData(defaultDatatype, defaultStartTime, defaultEndTime);
 
     $('#searchHealth').click(function() {

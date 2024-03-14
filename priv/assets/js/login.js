@@ -1,3 +1,13 @@
+/*!
+ *
+ * @author wangcw
+ * @copyright (C) 2024, REDGREAT
+ * Created : 2024-02-07 11:29:20
+ *
+ * Module : login.js
+ *
+ */
+
 document.querySelector('.footer').querySelector('p').textContent = "Copyright © wangcw 2020-" + new Date().getFullYear() + " All Rights Reserved";
 window.onload = function() {
     var urlParams = new URLSearchParams(window.location.search);

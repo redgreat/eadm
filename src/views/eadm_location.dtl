@@ -5,7 +5,6 @@
 {% block css %}
     <link href="/assets/vendor/datetimepicker/datetimepicker.min.css" rel="stylesheet">
     <link href="/assets/vendor/datatables/datatables.min.css" rel="stylesheet">
-    <link href="/assets/vendor/ionrangeslider/css/ion.rangeSlider.min.css" rel="stylesheet"/>
 {% endblock %}
 {% block content %}
 
@@ -51,16 +50,6 @@
                             </div>
                         </div>
                     </div>
-                    <div class="row">
-                        <div class="col-12">
-                            <!--速度条-->
-                            <div id="ionrange_speed"></div>
-                        </div>
-                        <div class="col-12">
-                            <!--进度条-->
-                            <div id="ionrange_process"></div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -69,10 +58,9 @@
 
 {% endblock %}
 {% block js_scripts %}
-    <script src="/assets/vendor/datatables/datatables.min.js"></script>
     <script src="/assets/vendor/datetimepicker/datetimepicker.full.min.js"></script>
-    <script src="/assets/vendor/ionrangeslider/js/ion.rangeSlider.min.js"></script>
-    <script src="https://webapi.amap.com/maps?v=1.3&key=fadee97bdcbf2dde564994f5deef0b58&plugin=AMap.Autocomplete,AMap.Walking,AMap.PlaceSearch,AMap.PolyEditor,AMap.CircleEditor,AMap.Transfer,AMap.Driving,AMap.CitySearch,AMap.Heatmap,AMap.Size" type="text/javascript"></script>
-    <script src="https://webapi.amap.com/ui/1.0/main.js?v=1.0.11"></script>
+    <script src="/assets/js/utils-datetime.js"></script>
+    <script src="https://webapi.amap.com/loader.js"></script>
     <script src="/assets/js/location.js"></script>
+
 {% endblock %}

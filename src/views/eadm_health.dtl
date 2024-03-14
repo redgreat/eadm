@@ -60,5 +60,7 @@
 {% block js_scripts %}
     <script src="/assets/vendor/datatables/datatables.min.js"></script>
     <script src="/assets/vendor/datetimepicker/datetimepicker.full.min.js"></script>
+    <script src="/assets/i18n/columname.js"></script>
+    <script src="/assets/js/utils-datetime.js"></script>
     <script src="/assets/js/health.js"></script>
 {% endblock %}

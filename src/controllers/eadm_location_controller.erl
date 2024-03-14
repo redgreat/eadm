@@ -37,6 +37,8 @@ search(#{auth_data := #{<<"authed">> := true},
     parsed_qs := #{<<"startTime">> := StartTime, <<"endTime">> := EndTime}}) ->
         MaxSearchSpan = application:get_env(restwong_cfg, max_search_span, 3),
         TimeDiff = eadm_utils:time_diff(StartTime, EndTime),
+        CtsStartTime = eadm_utils:cts_to_utc(StartTime),
+        CtsEndTime = eadm_utils:cts_to_utc(EndTime),
         case TimeDiff > (MaxSearchSpan * 86400) of
             true ->
                 Alert = #{<<"Alert">> => unicode:characters_to_binary("查询时长超过 " ++ integer_to_list(MaxSearchSpan) ++ " 天，禁止查询!")},
@@ -45,12 +47,12 @@ search(#{auth_data := #{<<"authed">> := true},
             _ ->
                 try
                     {ok, _, Res_Data} = mysql_pool:query(pool_db,
-                        "SELECT CONCAT(lng, ',', lat) AS data
+                        "SELECT lng, lat
                         FROM carlocdaily
                         WHERE dev_upload >= ?
                           AND dev_upload < ?
                         ORDER BY dev_upload DESC;",
-                        [StartTime, EndTime]),
+                        [CtsStartTime, CtsEndTime]),
                     {json, Res_Data}
                 catch
                     _:Error ->

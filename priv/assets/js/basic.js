@@ -1,3 +1,13 @@
+/*!
+ *
+ * @author wangcw
+ * @copyright (C) 2024, REDGREAT
+ * Created : 2024-01-07 11:29:20
+ *
+ * Module : basic.js
+ *
+ */
+
 (function() {
     'use strict';
 
