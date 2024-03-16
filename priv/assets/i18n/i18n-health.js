@@ -8,9 +8,9 @@
  *
  */
 
-window.i18n = window.i18n || {};
+window.i18nHealth = window.i18nHealth || {};
 
-i18n.translationDictionary = {
+i18nHealth.columnName = {
   "UtcTime": "时间",
   "Steps": "步数",
   "Heartbeat": "心率",
@@ -26,7 +26,7 @@ i18n.translationDictionary = {
   "Battery": "电池电量",
 };
 
-i18n.sleepType = {
+i18nHealth.sleepType = {
   1: "深度睡眠",
   2: "浅度睡眠",
   3: "醒来时长",

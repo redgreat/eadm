@@ -1,11 +1,11 @@
 %%%-------------------------------------------------------------------
 %%% @author wangcw
 %%% @copyright (C) 2024, REDGREAT
-%% @doc
-%%
-%% eadm public API
-%%
-%% @end
+%%% @doc
+%%%
+%%% eadm public API
+%%%
+%%% @end
 %%% Created : 2024-01-23 17:30:14
 %%%-------------------------------------------------------------------
 -module(eadm_router).
@@ -51,14 +51,17 @@ routes(_Environment) ->
       security => {eadm_auth, auth},
       routes => [
           {"/health", { eadm_health_controller, search }, #{methods => [get]}},
-          {"/location", { eadm_location_controller, search }, #{methods => [get]}}
+          {"/location", { eadm_location_controller, search }, #{methods => [get]}},
+          {"/finance", { eadm_finance_controller, search }, #{methods => [get]}},
+          {"/finance/:detailId", { eadm_finance_controller, searchdetail }, #{methods => [get]}}
         ]
       },
       #{prefix => "daily",
       security => {eadm_auth, auth},
       routes => [
           {"/health", { eadm_health_controller, index }, #{methods => [get]}},
-          {"/location", { eadm_location_controller, index }, #{methods => [get]}}
+          {"/location", { eadm_location_controller, index }, #{methods => [get]}},
+          {"/finance", { eadm_finance_controller, index }, #{methods => [get]}}
         ]
       },
       #{prefix => "/sys",

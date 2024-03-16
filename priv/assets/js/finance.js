@@ -2,9 +2,9 @@
  *
  * @author wangcw
  * @copyright (C) 2024, REDGREAT
- * Created : 2024-03-01 13:24
+ * Created : 2024-03-15 08:41:01
  *
- * Module : health.js
+ * Module : finance.js
  *
  */
 
@@ -12,26 +12,39 @@ function translateColumnNames(column, dictionary) {
     return dictionary[column] || column;
 }
 
-function loadHealthData(dataType, startTime, endTime) {
+function open_modal(id) {
+    $.getJSON('/sys/processes/' + id, function (data) {
+        $('#info-init-call').html(mfa(data['initial_call']));
+        $('#info-current-func').html(mfa(data['current_function']));
+        $('#info-reg-name').html(data['registered_name']);
+        $('#info-status').html(data['status']);
+        $('#info-msg-queue').html(data['message_queue_len']);
+        $('#info-grp-leader').html('<a href="javascript:open_modal(\'' + data['group_leader'] + '\');">' + data['group_leader'] + '</a>');
+    })
+}
+
+function loadFinanceData(sourceType, inorOut, startTime, endTime) {
     const searchParams = {
-        dataType: dataType,
+        sourceType: sourceType,
+        inorOut: inorOut,
         startTime: startTime,
         endTime: endTime
     };
     let dynamicColumns = [];
     let dynamicDatas = [];
 
-    $.getJSON('/data/health', searchParams, function (response) {
+    $.getJSON('/data/finance', searchParams, function (response) {
 
         function buildDynamicData(response) {
             response.columns.forEach(function (column) {
                 let dynamicColumn = {};
                 dynamicColumn['data'] = column;
-                dynamicColumn['title'] = translateColumnNames(column, i18nHealth.columnName);
+                dynamicColumn['title'] = translateColumnNames(column, i18nFinance.columnName);
+                dynamicColumn['className'] = "dataTables-column";
                 dynamicColumns.push(dynamicColumn);
-                if (column === "SleepType") {
+                if (column === "SourceType") {
                     response.data.forEach(function (rowData) {
-                    rowData["SleepType"] = translateColumnNames(rowData["SleepType"], i18nHealth.sleepType);
+                    rowData["SourceType"] = translateColumnNames(rowData["SourceType"], i18nFinance.sourceType);
                     });
                 }
             });
@@ -51,21 +64,18 @@ function loadHealthData(dataType, startTime, endTime) {
             const toastElList = [].slice.call(document.querySelectorAll('.toast'));
             const toastList = toastElList.map(function (toastEl) {
                 const toastBodyEl = toastEl.querySelector('.toast-body');
-                toastBodyEl.textContent = "此时间段内无健康数据！";
+                toastBodyEl.textContent = "此时间段内无财务数据！";
                 return new bootstrap.Toast(toastEl);
             });
             toastList.forEach(toast => toast.show());
         }
         else {
-            buildDynamicData(response)
+            buildDynamicData(response);
         }
 
-        // console.log("dynamicColumns: " + JSON.stringify(dynamicColumns));
-        // console.log("dynamicDatas: " + JSON.stringify(dynamicDatas));
-
-        $('#dataTables-health').DataTable().destroy();
-        $('#dataTables-health').empty();
-        $('#dataTables-health').DataTable({
+        $('#dataTables-finance').DataTable().destroy();
+        $('#dataTables-finance').empty();
+        $('#dataTables-finance').DataTable({
             // lengthChange: true,  //是否允许用户改变表格每页显示的记录数
             // bStateSave: true,  //记录cookie
             destroy: true, // 销毁重新渲染
@@ -109,24 +119,46 @@ function loadHealthData(dataType, startTime, endTime) {
                 }
             }
         });
+        $('#dataTables-finance').DataTable().column(0).visible(false);
     })
 }
 
-
 $(document).ready(function() {
 
-    const defaultDatatype = $('#datatype').val();
-    loadHealthData(defaultDatatype, defaultStartTime, defaultEndTime);
+    loadFinanceData($('#sourceType').val(), $('#inorOut').val(), defaultStartTime, defaultEndTime);
 
-    $('#searchHealth').click(function() {
-        const dataType = $('#datatype').val();
+    $('#searchFinance').click(function () {
+        const sourceType = $('#sourceType').val();
+        const inorOut = $('#inorOut').val();
         const startTime = $('#starttime').val();
         const endTime = $('#endtime').val();
-        loadHealthData(dataType, startTime, endTime);
+        loadFinanceData(sourceType, inorOut, startTime, endTime);
     });
 
-    $('#cleanHealth').click(function() {
+    $('#cleanFinance').click(function () {
         $('input[type="text"]').val('');
     });
+
+    // $('#bill-info').modal('show');
+
+    // $('#bill tbody tr').click(function () {
+    //     return false;
+    // })
+    //     .dblclick(function () {
+    //         open_modal($(this).data('id'));
+    //     });
+
+    // $('#modal-menu a').click(function(event) {
+    //     event.preventDefault();
+    //     if($(this).hasClass('active')) {
+    //     return;
+    //     }
+    //     let old_target = $('#modal-menu .active').attr('href');
+    //     let target = $(this).attr('href');
+    //     $('#modal-menu a').removeClass('active');
+    //     $(this).addClass('active');
+    //     $('#'+old_target).hide();
+    //     $('#'+target).show();
+    // });
 
 });
