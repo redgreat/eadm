@@ -14,7 +14,7 @@
 %%%===================================================================
 %%% Application callbacks
 %%%===================================================================
--export([index/1, search/1, searchdetail/1]).
+-export([index/1, search/1, searchdetail/1, upload/1]).
 
 
 %%====================================================================
@@ -106,16 +106,16 @@ search(#{auth_data := #{<<"authed">> := false}}) ->
 %% 查询返回数据明细
 %% @end
 searchdetail(#{auth_data := #{<<"authed">> := true},
-    parsed_qs := #{<<"detailId">> := DetailId}}) ->
+    bindings := #{<<"detailId">> := DetailId}}) ->
     try
-        {ok, Res_Col, Res_Data} = mysql_pool:query(pool_db,
+        Res_Data = mysql_pool:query(pool_db,
             "SELECT Owner, `Source` AS SourceType, InOrOut, CounterParty, Counterbank, CounterAccount,
                GoodsComment, PayMethod, Amount, Balance, Currency, PayStatus,
                TradeType, TradeOrderNo, CounterorderNo, TradeTime, BillComment
              FROM paybilldetail
              WHERE Id = ?;",
             [DetailId]),
-        Response = eadm_utils:return_as_json(Res_Col, Res_Data),
+        Response = eadm_utils:as_map(Res_Data),
         {json, Response}
     catch
         _:Error ->
@@ -124,6 +124,54 @@ searchdetail(#{auth_data := #{<<"authed">> := true},
     end;
 
 searchdetail(#{auth_data := #{<<"authed">> := false}}) ->
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("权限校验失败，请刷新页面重新登录! ")},
+    {json, [Alert]}.
+
+%% @doc
+%% 处理上传数据
+%% @end
+% upload(#{auth_data := #{<<"authed">> := true},
+%     bindings := #{<<"detailId">> := DetailId}}) ->
+upload(Req) ->
+    io:format("Req: ~p~n", [Req]),
+    {ok, FileContent, Req2} = cowboy_req:read_body(Req),
+    DataToInsert = #{
+        'Owner' => <<"OwnerName">>,
+        'SourceType' => <<"SourceTypeValue">>,
+        'InOrOut' => <<"InOrOut">>,
+        'CounterParty' => <<"CounterParty">>,
+        'CounterBank' => <<"CounterBank">>,
+        'CounterAccount' => <<"CounterAccount">>,
+        'GoodsComment' => <<"GoodsComment">>,
+        'PayMethod' => <<"PayMethod">>,
+        'Amount' => <<"Amount">>,
+        'Balance' => <<"Balance">>,
+        'Currency' => <<"Currency">>,
+        'PayStatus' => <<"PayStatus">>,
+        'TradeType' => <<"TradeType">>,
+        'TradeOrderNo' => <<"TradeOrderNo">>,
+        'CounterOrderNo' => <<"CounterOrderNo">>,
+        'TradeTime' => <<"TradeTime">>,
+        'BillComment' => <<"BillComment">>
+    },
+
+    try
+        Res_Data = mysql_pool:query(pool_db,
+            "SELECT Owner, `Source` AS SourceType, InOrOut, CounterParty, Counterbank, CounterAccount,
+               GoodsComment, PayMethod, Amount, Balance, Currency, PayStatus,
+               TradeType, TradeOrderNo, CounterorderNo, TradeTime, BillComment
+             FROM paybilldetail
+             WHERE Id = ?;",
+            [Req]),
+        Response = eadm_utils:as_map(Res_Data),
+        {json, Response}
+    catch
+        _:Error ->
+            Alert = #{<<"Alert">> => unicode:characters_to_binary("查询失败! " ++ Error)},
+            {json, [Alert]}
+    end;
+
+upload(#{auth_data := #{<<"authed">> := false}}) ->
     Alert = #{<<"Alert">> => unicode:characters_to_binary("权限校验失败，请刷新页面重新登录! ")},
     {json, [Alert]}.
 

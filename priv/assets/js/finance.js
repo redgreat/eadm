@@ -12,17 +12,6 @@ function translateColumnNames(column, dictionary) {
     return dictionary[column] || column;
 }
 
-function open_modal(id) {
-    $.getJSON('/sys/processes/' + id, function (data) {
-        $('#info-init-call').html(mfa(data['initial_call']));
-        $('#info-current-func').html(mfa(data['current_function']));
-        $('#info-reg-name').html(data['registered_name']);
-        $('#info-status').html(data['status']);
-        $('#info-msg-queue').html(data['message_queue_len']);
-        $('#info-grp-leader').html('<a href="javascript:open_modal(\'' + data['group_leader'] + '\');">' + data['group_leader'] + '</a>');
-    })
-}
-
 function loadFinanceData(sourceType, inorOut, startTime, endTime) {
     const searchParams = {
         sourceType: sourceType,
@@ -68,14 +57,22 @@ function loadFinanceData(sourceType, inorOut, startTime, endTime) {
                 return new bootstrap.Toast(toastEl);
             });
             toastList.forEach(toast => toast.show());
+            response.columns.forEach(function (column) {
+                let dynamicColumn = {};
+                dynamicColumn['data'] = column;
+                dynamicColumn['title'] = translateColumnNames(column, i18nFinance.columnName);
+                dynamicColumn['className'] = "dataTables-column";
+                dynamicColumns.push(dynamicColumn);
+            });
         }
         else {
             buildDynamicData(response);
         }
 
-        $('#dataTables-finance').DataTable().destroy();
-        $('#dataTables-finance').empty();
-        $('#dataTables-finance').DataTable({
+        //#TODO 调整为固定表格列，接口返回JSON数据后直接渲染
+        $('#table-finance').DataTable().destroy();
+        $('#table-finance').empty();
+        $('#table-finance').DataTable({
             // lengthChange: true,  //是否允许用户改变表格每页显示的记录数
             // bStateSave: true,  //记录cookie
             destroy: true, // 销毁重新渲染
@@ -119,10 +116,79 @@ function loadFinanceData(sourceType, inorOut, startTime, endTime) {
                 }
             }
         });
-        $('#dataTables-finance').DataTable().column(0).visible(false);
+        // #TODO 更换为固定表格列后可不展示主键列，数据放到列数据的data-id中
+        // $('#table-finance').DataTable().column(0).visible(false);
     })
 }
 
+function loadFinanceDetail(detailId) {
+    if (typeof detailId !== 'undefined' && detailId !== null && detailId.trim() !== '') {
+        $.getJSON('/data/finance/' + detailId, function (datas) {
+        let data = datas[0];
+        $('#findetail-owner').html(data.Owner);
+        $('#findetail-source').html(data.SourceType);
+        $('#findetail-inorout').html(data.InOrOut);
+        $('#findetail-counterparty').html(data.CounterParty);
+        $('#findetail-counterbank').html(data.CounterBank);
+        $('#findetail-counteraccount').html(data.CounterAccount);
+        $('#findetail-goodscomment').html(data.GoodsComment);
+        $('#findetail-paymethod').html(data.PayMethod);
+        $('#findetail-amount').html(data.Amount);
+        $('#findetail-balance').html(data.Balance);
+        $('#findetail-currency').html(data.Currency);
+        $('#findetail-paystatus').html(data.PayStatus);
+        $('#findetail-tradetype').html(data.TradeType);
+        $('#findetail-tradeorderno').html(data.TradeOrderNo);
+        $('#findetail-counterorderno').html(data.CounterOrderNo);
+        $('#findetail-tradetime').html(data.TradeTime);
+        $('#findetail-billcomment').html(data.BillComment);
+    });
+    } else {
+        console.error('Invalid or empty detailId provided.');
+    }
+}
+
+function processFile(importType, uploadFile) {
+    const formData = new FormData();
+    formData.append('file', uploadFile);
+
+    // 发送AJAX请求
+    $.ajax({
+        url: '/upload/finance',
+        type: 'POST',
+        data: formData,
+        processData: false, // 告诉jQuery不要处理发送的数据
+        contentType: false, // 告诉jQuery不要设置Content-Type请求头
+        success: function(response) {
+            if (response && response.length > 0 && response[0].Alert) {
+                const toastElList = [].slice.call(document.querySelectorAll('.toast'));
+                const toastList = toastElList.map(function (toastEl) {
+                    const toastBodyEl = toastEl.querySelector('.toast-body');
+                    toastBodyEl.textContent = response[0].Alert;
+                    return new bootstrap.Toast(toastEl);
+                });
+                toastList.forEach(toast => toast.show());
+            } else {
+                const toastElList = [].slice.call(document.querySelectorAll('.toast'));
+                const toastList = toastElList.map(function (toastEl) {
+                    const toastBodyEl = toastEl.querySelector('.toast-body');
+                    toastBodyEl.textContent = response[0];
+                    return new bootstrap.Toast(toastEl);
+                });
+                toastList.forEach(toast => toast.show());
+            }
+        },
+        error: function(xhr, status, error) {
+            const toastElList = [].slice.call(document.querySelectorAll('.toast'));
+                const toastList = toastElList.map(function (toastEl) {
+                    const toastBodyEl = toastEl.querySelector('.toast-body');
+                    toastBodyEl.textContent = "服务器内部错误！";
+                    return new bootstrap.Toast(toastEl);
+                });
+            toastList.forEach(toast => toast.show());
+        }
+    });
+}
 $(document).ready(function() {
 
     loadFinanceData($('#sourceType').val(), $('#inorOut').val(), defaultStartTime, defaultEndTime);
@@ -139,26 +205,54 @@ $(document).ready(function() {
         $('input[type="text"]').val('');
     });
 
-    // $('#bill-info').modal('show');
+    $('#importFinance').click(function () {
+        $('#finance-import').modal('show');
+    });
 
-    // $('#bill tbody tr').click(function () {
-    //     return false;
-    // })
-    //     .dblclick(function () {
-    //         open_modal($(this).data('id'));
-    //     });
+    $('#submitFinance').click(function (e) {
+        e.preventDefault();
+        const importType = $('#importType').val();
+        const uploadFile = $('#finance-imp-file').prop('files')[0];
+        if (uploadFile) {
+            processFile(importType, uploadFile);
+        }
 
-    // $('#modal-menu a').click(function(event) {
-    //     event.preventDefault();
-    //     if($(this).hasClass('active')) {
-    //     return;
-    //     }
-    //     let old_target = $('#modal-menu .active').attr('href');
-    //     let target = $(this).attr('href');
-    //     $('#modal-menu a').removeClass('active');
-    //     $(this).addClass('active');
-    //     $('#'+old_target).hide();
-    //     $('#'+target).show();
-    // });
+    });
+
+    $('#importType').on('change', function() {
+        let selectedValue = $(this).val();
+        let exampleLink = $('#exampleLink');
+
+        switch (selectedValue) {
+            case '0':
+                exampleLink.attr('href', '/assets/files/finance-import-sample-raw.xlsx');
+                break;
+            case '1':
+                exampleLink.attr('href', '/assets/files/finance-import-sample-alipay.xlsx');
+                break;
+            case '2':
+                exampleLink.attr('href', '/assets/files/finance-import-sample-weixin.xlsx');
+                break;
+            case '3':
+                exampleLink.attr('href', '/assets/files/finance-import-sample-bqd.xlsx');
+                break;
+            case '4':
+                exampleLink.attr('href', '/assets/files/finance-import-sample-boc.xlsx');
+                break;
+            default:
+                exampleLink.attr('href', '/assets/files/finance-import-sample-raw.xlsx');
+                break;
+        }
+    });
+
+    $('#table-finance').DataTable();
+
+    $('body').on('dblclick', '#table-finance tbody tr', function() {
+        const detailId = $(this).find('td').eq(0).text();
+        if (detailId  !== "未查到数据") {
+            loadFinanceDetail(detailId);
+            $('#finance-detail').modal('show');
+        }
+    });
 
 });

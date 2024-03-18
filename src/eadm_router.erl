@@ -47,6 +47,14 @@ routes(_Environment) ->
           {"/", { eadm_dashboard_controller, index }, #{methods => [get]}}
         ]
       },
+      #{prefix => "daily",
+      security => {eadm_auth, auth},
+      routes => [
+          {"/health", { eadm_health_controller, index }, #{methods => [get]}},
+          {"/location", { eadm_location_controller, index }, #{methods => [get]}},
+          {"/finance", { eadm_finance_controller, index }, #{methods => [get]}}
+        ]
+      },
       #{prefix => "data",
       security => {eadm_auth, auth},
       routes => [
@@ -55,13 +63,10 @@ routes(_Environment) ->
           {"/finance", { eadm_finance_controller, search }, #{methods => [get]}},
           {"/finance/:detailId", { eadm_finance_controller, searchdetail }, #{methods => [get]}}
         ]
-      },
-      #{prefix => "daily",
+      },#{prefix => "upload",
       security => {eadm_auth, auth},
       routes => [
-          {"/health", { eadm_health_controller, index }, #{methods => [get]}},
-          {"/location", { eadm_location_controller, index }, #{methods => [get]}},
-          {"/finance", { eadm_finance_controller, index }, #{methods => [get]}}
+          {"/finance", { eadm_finance_controller, upload }, #{methods => [post]}}
         ]
       },
       #{prefix => "/sys",

@@ -55,6 +55,13 @@ function loadHealthData(dataType, startTime, endTime) {
                 return new bootstrap.Toast(toastEl);
             });
             toastList.forEach(toast => toast.show());
+            response.columns.forEach(function (column) {
+                let dynamicColumn = {};
+                dynamicColumn['data'] = column;
+                dynamicColumn['title'] = translateColumnNames(column, i18nFinance.columnName);
+                dynamicColumn['className'] = "dataTables-column";
+                dynamicColumns.push(dynamicColumn);
+            });
         }
         else {
             buildDynamicData(response)
@@ -63,9 +70,9 @@ function loadHealthData(dataType, startTime, endTime) {
         // console.log("dynamicColumns: " + JSON.stringify(dynamicColumns));
         // console.log("dynamicDatas: " + JSON.stringify(dynamicDatas));
 
-        $('#dataTables-health').DataTable().destroy();
-        $('#dataTables-health').empty();
-        $('#dataTables-health').DataTable({
+        $('#table-health').DataTable().destroy();
+        $('#table-health').empty();
+        $('#table-health').DataTable({
             // lengthChange: true,  //是否允许用户改变表格每页显示的记录数
             // bStateSave: true,  //记录cookie
             destroy: true, // 销毁重新渲染
