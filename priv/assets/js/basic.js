@@ -47,3 +47,15 @@ $(document).ready(function() {
       });
 
 document.getElementById('footer').querySelector('p').textContent = "Copyright © wangcw 2020-" + new Date().getFullYear() + " All Rights Reserved";
+
+window.showWarningToast = window.showWarningToast || {};
+
+function showWarningToast(message) {
+    const toastElList = [].slice.call(document.querySelectorAll('.toast'));
+    const toastList = toastElList.map(function (toastEl) {
+        const toastBodyEl = toastEl.querySelector('.toast-body');
+        toastBodyEl.textContent = message;
+        return new bootstrap.Toast(toastEl);
+    });
+    toastList.forEach(toast => toast.show());
+}

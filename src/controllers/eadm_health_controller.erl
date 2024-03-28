@@ -24,8 +24,8 @@
 %% @doc
 %% index
 %% @end
-index(#{auth_data := #{<<"authed">> := true, <<"username">> := Username}}) ->
-    {ok, [{username, Username}]};
+index(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName}}) ->
+    {ok, [{username, UserName}]};
 
 index(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
@@ -128,8 +128,7 @@ search(#{auth_data := #{<<"authed">> := true},
     end;
 
 search(#{auth_data := #{<<"authed">> := false}}) ->
-    Alert = #{<<"Alert">> => unicode:characters_to_binary("权限校验失败，请刷新页面重新登录! ")},
-    {json, [Alert]}.
+    {redirect, "/login"}.
 
 %%====================================================================
 %% Internal functions

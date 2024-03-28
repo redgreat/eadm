@@ -31,6 +31,12 @@
                         <div id="loginfailed" class="alert alert-warning" role="alert" style="display: none;">
 				            <span class="alert-link">用户名或密码错误，请重新登录！</span>
                         </div>
+                        <div id="userdisable" class="alert alert-warning" role="alert" style="display: none;">
+				            <span class="alert-link">用户已禁用，请联系管理员！</span>
+                        </div>
+                        <div id="usernodfond" class="alert alert-warning" role="alert" style="display: none;">
+				            <span class="alert-link">用户不存在，请联系管理员！</span>
+                        </div>
                         <input type="submit" value="登录" class="btn btn-primary shadow-2 mb-4">
                     </form>
                 </div>

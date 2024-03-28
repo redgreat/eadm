@@ -4,7 +4,7 @@
  * @copyright (C) 2024, REDGREAT
  * Created : 2024-03-05 14:53
  *
- * Module : columname.js
+ * Module : i18n-health.js
  *
  */
 

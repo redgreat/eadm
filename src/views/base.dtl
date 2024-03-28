@@ -27,49 +27,37 @@
                 <a href="/"><i class="fas fa-home"></i> 信息看板</a>
             </li>
             <li>
-                <a href="/daily/health"><i class="fas fa-home"></i> 我的健康</a>
+                <a href="/daily/health"><i class="fas fa-heartbeat"></i> 我的健康</a>
             </li>
             <li>
-                <a href="/daily/location"><i class="fas fa-home"></i> 轨迹回放</a>
+                <a href="/daily/location"><i class="fas fa-map-marked-alt"></i> 轨迹回放</a>
             </li>
             <li>
-                <a href="/daily/finance"><i class="fas fa-home"></i> 我的财务</a>
+                <a href="/daily/finance"><i class="fas fa-money-bill"></i> 我的财务</a>
             </li>
             <li>
-                <a href="/daily/crontab"><i class="fas fa-home"></i> 定时任务</a>
+                <a href="/daily/crontab"><i class="fas fa-hourglass-half"></i> 定时任务</a>
             </li>
             <li>
-                <a href="/daily/alert"><i class="fas fa-home"></i> 消息提醒</a>
+                <a href="/user"><i class="fas fa-user"></i> 用户信息</a>
             </li>
             <li>
-              <a href="#sysmenu" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle no-caret-down"><i class="fas fa-user-shield"></i> 系统信息</a>
+              <a href="#sysmenu" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle no-caret-down"><i class="fas fa-cogs"></i> 系统信息</a>
               <ul class="collapse list-unstyled" id="sysmenu">
                 <li>
-                  <a href="/sys/sysinfo"><i class="fas fa-home"></i> 系统信息</a>
+                  <a href="/sys/sysinfo"><i class="fas fa-server"></i> 系统信息</a>
                 </li>
                 <li>
-                  <a href="/sys/route_table"><i class="fas fa-file-alt"></i> 路由信息</a>
+                  <a href="/sys/route_table"><i class="fas fa-route"></i> 路由信息</a>
                 </li>
                 <li>
-                  <a href="/sys/sysinfo"><i class="fas fa-file-alt"></i> Load charts</a>
+                  <a href="/sys/processes"><i class="fas fa-tasks"></i> 线程信息</a>
                 </li>
                 <li>
-                  <a href="/sys/sysinfo"><i class="fas fa-table"></i> Memory Allocators</a>
-                </li>
-                <li>
-                  <a href="/sys/sysinfo"><i class="fas fa-chart-bar"></i> Applications</a>
-                </li>
-                <li>
-                  <a href="/sys/processes"><i class="fas fa-icons"></i> 线程信息</a>
-                </li>
-                <li>
-                  <a href="/sys/ports"><i class="fas fa-icons"></i> 端口信息</a>
+                  <a href="/sys/ports"><i class="fas fa-anchor"></i> 端口信息</a>
                 </li>
                 <li>
                   <a href="/sys/tables"><i class="fas fa-icons"></i> 表信息</a>
-                </li>
-                <li>
-                  <a href="/sys/sysinfo"><i class="fas fa-icons"></i> xProf</a>
                 </li>
               </ul>
             </li>
@@ -89,6 +77,12 @@
                     <i class="fas fa-user"></i> <span>{{username}}</span> <i style="font-size: .8em;" class="fas fa-caret-down"></i>
                   </a>
                   <div class="dropdown-menu dropdown-menu-end nav-link-menu">
+                    <ul class="nav-list">
+                      <li><a href="" class="dropdown-item"><i class="fas fa-user-edit"></i> 个人信息</a></li>
+                    </ul>
+                    <ul class="nav-list">
+                      <li><a href="" class="dropdown-item"><i class="fas fa-user-lock"></i> 修改密码</a></li>
+                    </ul>
                     <ul class="nav-list">
                       <li><a href="" class="dropdown-item"><i class="fas fa-sign-out-alt"></i> 退出</a></li>
                     </ul>

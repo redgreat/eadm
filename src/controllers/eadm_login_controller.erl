@@ -32,10 +32,16 @@ login(Req) ->
                     NewExp = eadm_utils:get_exp_bin(),
                     nova_session:set(Req, <<"username">>, Username),
                     nova_session:set(Req, <<"exp">>, NewExp),
-                    lager:info("User: ~p, Login Success! New Exp: ~p~n", [Username, NewExp]),
+                    lager:info("User: ~p, Login Success! New Exp: ~p", [Username, NewExp]),
                     {redirect, "/"};
-                false ->
-                    lager:info("User Login Failed!~n"),
+                2 ->
+                    lager:info("User Disable Failed!"),
+                    {redirect, "/login?error=user_notfond"};
+                3 ->
+                    lager:info("User Disable Failed!"),
+                    {redirect, "/login?error=user_disable"};
+                _ ->
+                    lager:info("User Login Failed!"),
                     {redirect, "/login?error=invalid_credentials"}
             end
     end.
@@ -51,13 +57,29 @@ logout(Req) ->
 %%===================================================================
 %% 内部函数
 %%===================================================================
-validate_login(ParamsPwd) ->
+validate_login(ParamsVal) ->
     {ok, _, DbPassE} = mysql_pool:query(pool_db,
-        "SELECT upw FROM eadm_user WHERE un = ? LIMIT 1;",
-        [maps:get(<<"username">>, ParamsPwd)]),
-        DbPassB = list_to_binary(DbPassE),
-        PaPass = maps:get(<<"password">>, ParamsPwd),
-        verify_password(PaPass, DbPassB).
+        "SELECT CryptoGram, UserStatus
+        FROM eadm_user
+        WHERE LoginName = ?
+          AND Deleted = 0
+        ORDER BY UpdatedAt DESC
+        LIMIT 1;",
+        [maps:get(<<"username">>, ParamsVal)]),
+        case DbPassE of
+            [] ->
+                2;
+            _ ->
+                case tl(hd(DbPassE)) of
+                    [0] ->
+                      ParamsPass = maps:get(<<"password">>, ParamsVal),
+                      verify_password(ParamsPass, hd(hd(DbPassE)));
+                    [1] ->
+                      3;
+                    _ ->
+                      4
+                end
+        end.
 
 %% @doc
 %% 密码加密解密-验证密码

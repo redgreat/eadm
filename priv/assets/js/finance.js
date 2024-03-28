@@ -37,26 +37,15 @@ function loadFinanceData(sourceType, inorOut, startTime, endTime) {
                     });
                 }
             });
+            dynamicColumns.push({"data": "Action", "title": "操作", "className": "dataTables-column"});
             dynamicDatas = response.data;
         }
 
         if (response && response.length > 0 && response[0].Alert) {
-            const toastElList = [].slice.call(document.querySelectorAll('.toast'));
-            const toastList = toastElList.map(function (toastEl) {
-                const toastBodyEl = toastEl.querySelector('.toast-body');
-                toastBodyEl.textContent = response[0].Alert;
-                return new bootstrap.Toast(toastEl);
-            });
-            toastList.forEach(toast => toast.show());
+            showWarningToast(response[0].Alert);
         }
         else if (response && response.data.length === 0) {
-            const toastElList = [].slice.call(document.querySelectorAll('.toast'));
-            const toastList = toastElList.map(function (toastEl) {
-                const toastBodyEl = toastEl.querySelector('.toast-body');
-                toastBodyEl.textContent = "此时间段内无财务数据！";
-                return new bootstrap.Toast(toastEl);
-            });
-            toastList.forEach(toast => toast.show());
+            showWarningToast("此时间段内无财务数据！");
             response.columns.forEach(function (column) {
                 let dynamicColumn = {};
                 dynamicColumn['data'] = column;
@@ -75,6 +64,16 @@ function loadFinanceData(sourceType, inorOut, startTime, endTime) {
         $('#table-finance').DataTable({
             // lengthChange: true,  //是否允许用户改变表格每页显示的记录数
             // bStateSave: true,  //记录cookie
+            columnDefs: [{
+                targets: -1, // 将按钮添加到最后一列
+                render: function (data, type, full, meta) {
+                    return `
+                        <button class="btn btn-outline-danger btn-rounded delete-btn">
+                          <i class="fas fa-trash"></i>
+                        </button>
+                    `;
+                }
+            }],
             destroy: true, // 销毁重新渲染
             columns: dynamicColumns,
             data: dynamicDatas,
@@ -121,6 +120,22 @@ function loadFinanceData(sourceType, inorOut, startTime, endTime) {
     })
 }
 
+function deleteRecord(detailId) {
+    if (typeof detailId !== 'undefined' && detailId !== null && detailId.trim() !== '') {
+        $.ajax({
+            url: '/data/finance/' + detailId,
+            type: 'DELETE',
+            success: function (response) {
+                if (response && response.length > 0 && response[0].Alert) {
+                    showWarningToast(response[0].Alert);
+                } else {
+                    showWarningToast("数据删除成功！");
+                }
+            }
+        });
+    }
+}
+
 function loadFinanceDetail(detailId) {
     if (typeof detailId !== 'undefined' && detailId !== null && detailId.trim() !== '') {
         $.getJSON('/data/finance/' + detailId, function (datas) {
@@ -144,51 +159,32 @@ function loadFinanceDetail(detailId) {
         $('#findetail-billcomment').html(data.BillComment);
     });
     } else {
-        console.error('Invalid or empty detailId provided.');
+        showWarningToast("服务器内部错误！");
     }
 }
 
-function processFile(importType, uploadFile) {
-    const formData = new FormData();
-    formData.append('file', uploadFile);
-
+function processFile(importType, uploadJson) {
+    const uploadParams = {
+        importType: importType,
+        uploadJson: uploadJson
+    };
     // 发送AJAX请求
     $.ajax({
         url: '/upload/finance',
         type: 'POST',
-        data: formData,
-        processData: false, // 告诉jQuery不要处理发送的数据
-        contentType: false, // 告诉jQuery不要设置Content-Type请求头
+        contentType: 'application/json; charset=utf-8"',
+        data: JSON.stringify(uploadParams),
         success: function(response) {
             if (response && response.length > 0 && response[0].Alert) {
-                const toastElList = [].slice.call(document.querySelectorAll('.toast'));
-                const toastList = toastElList.map(function (toastEl) {
-                    const toastBodyEl = toastEl.querySelector('.toast-body');
-                    toastBodyEl.textContent = response[0].Alert;
-                    return new bootstrap.Toast(toastEl);
-                });
-                toastList.forEach(toast => toast.show());
-            } else {
-                const toastElList = [].slice.call(document.querySelectorAll('.toast'));
-                const toastList = toastElList.map(function (toastEl) {
-                    const toastBodyEl = toastEl.querySelector('.toast-body');
-                    toastBodyEl.textContent = response[0];
-                    return new bootstrap.Toast(toastEl);
-                });
-                toastList.forEach(toast => toast.show());
+                showWarningToast(response[0].Alert);
             }
         },
         error: function(xhr, status, error) {
-            const toastElList = [].slice.call(document.querySelectorAll('.toast'));
-                const toastList = toastElList.map(function (toastEl) {
-                    const toastBodyEl = toastEl.querySelector('.toast-body');
-                    toastBodyEl.textContent = "服务器内部错误！";
-                    return new bootstrap.Toast(toastEl);
-                });
-            toastList.forEach(toast => toast.show());
+            showWarningToast("服务器内部错误！");
         }
     });
 }
+
 $(document).ready(function() {
 
     loadFinanceData($('#sourceType').val(), $('#inorOut').val(), defaultStartTime, defaultEndTime);
@@ -212,11 +208,50 @@ $(document).ready(function() {
     $('#submitFinance').click(function (e) {
         e.preventDefault();
         const importType = $('#importType').val();
-        const uploadFile = $('#finance-imp-file').prop('files')[0];
-        if (uploadFile) {
-            processFile(importType, uploadFile);
-        }
+        let fileInput = $('#finance-imp-file')[0];
+        let uploadFile = fileInput.files[0];
 
+        if (uploadFile) {
+            if (uploadFile.size <= 10 * 1024 * 1024) {
+                let fileExtension = uploadFile.name.split('.').pop().toLowerCase();
+                let validExtensions = ['xlsx', 'xls', 'csv'];
+
+                if ($.inArray(fileExtension, validExtensions) !== -1) {
+
+                    let reader = new FileReader();
+                    reader.onload = function(e) {
+                        let data = new Uint8Array(e.target.result);
+                        let workbook = XLSX.read(data, {type: 'array'});
+
+                        // 只读取第一个工作表
+                        let firstSheetName = workbook.SheetNames[0];
+                        if (firstSheetName) {
+                            let worksheet = workbook.Sheets[firstSheetName];
+                            let jsonData = XLSX.utils.sheet_to_json(worksheet, {raw:false});
+                            // console.log("jsonData: "+ JSON.stringify(jsonData));
+                            processFile(importType, jsonData);
+
+                        } else {
+                            const toastElList = [].slice.call(document.querySelectorAll('.toast'));
+                            const toastList = toastElList.map(function (toastEl) {
+                                const toastBodyEl = toastEl.querySelector('.toast-body');
+                                toastBodyEl.textContent = "Excel文件没有工作表!";
+                                return new bootstrap.Toast(toastEl);
+                            });
+                            toastList.forEach(toast => toast.show());
+                        }
+                    };
+                    reader.readAsArrayBuffer(uploadFile);
+                } else {
+                    showWarningToast("文件类型不符合要求!");
+                }
+            } else {
+                showWarningToast("文件大小超过10MB!");
+            }
+        } else {
+            showWarningToast("请选择一个文件!");
+        }
+        $('#finance-import').modal('hide');
     });
 
     $('#importType').on('change', function() {
@@ -245,9 +280,10 @@ $(document).ready(function() {
         }
     });
 
-    $('#table-finance').DataTable();
+    let dataTableFinance = $('#table-finance').DataTable();
+    let dataTableFinanceBody = $('body');
 
-    $('body').on('dblclick', '#table-finance tbody tr', function() {
+    dataTableFinanceBody.on('dblclick', '#table-finance tbody tr', function() {
         const detailId = $(this).find('td').eq(0).text();
         if (detailId  !== "未查到数据") {
             loadFinanceDetail(detailId);
@@ -255,4 +291,21 @@ $(document).ready(function() {
         }
     });
 
+    dataTableFinance.on('click', '.delete-btn', function() {
+        let delRow = $(this).closest('tr');
+        $('#del-confirm').modal('show');
+        $('#del-confirm-btn').click(function () {
+            let idCell = delRow.find('td').first();
+            let detailId = idCell.text();
+            if (detailId !== "未查到数据" && typeof detailId !== 'undefined' && detailId !== null && detailId.trim() !== '') {
+                deleteRecord(detailId);
+                delRow.remove();
+                setTimeout(function () {
+                    dataTableFinance.draw(false);
+                }, 100);
+            } else {
+                showWarningToast("未查到需删除数据，请刷新页面重试!");
+            }
+        });
+    });
 });

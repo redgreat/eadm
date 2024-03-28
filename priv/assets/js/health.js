@@ -39,26 +39,14 @@ function loadHealthData(dataType, startTime, endTime) {
         }
 
         if (response && response.length > 0 && response[0].Alert) {
-            const toastElList = [].slice.call(document.querySelectorAll('.toast'));
-            const toastList = toastElList.map(function (toastEl) {
-                const toastBodyEl = toastEl.querySelector('.toast-body');
-                toastBodyEl.textContent = response[0].Alert;
-                return new bootstrap.Toast(toastEl);
-            });
-            toastList.forEach(toast => toast.show());
+            showWarningToast(response[0].Alert);
         }
         else if (response && response.data.length === 0) {
-            const toastElList = [].slice.call(document.querySelectorAll('.toast'));
-            const toastList = toastElList.map(function (toastEl) {
-                const toastBodyEl = toastEl.querySelector('.toast-body');
-                toastBodyEl.textContent = "此时间段内无健康数据！";
-                return new bootstrap.Toast(toastEl);
-            });
-            toastList.forEach(toast => toast.show());
+            showWarningToast("此时间段内无健康数据！");
             response.columns.forEach(function (column) {
                 let dynamicColumn = {};
                 dynamicColumn['data'] = column;
-                dynamicColumn['title'] = translateColumnNames(column, i18nFinance.columnName);
+                dynamicColumn['title'] = translateColumnNames(column, i18nHealth.columnName);
                 dynamicColumn['className'] = "dataTables-column";
                 dynamicColumns.push(dynamicColumn);
             });

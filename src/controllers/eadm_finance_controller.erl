@@ -14,7 +14,7 @@
 %%%===================================================================
 %%% Application callbacks
 %%%===================================================================
--export([index/1, search/1, searchdetail/1, upload/1]).
+-export([index/1, search/1, delete/1, searchdetail/1, upload/1]).
 
 
 %%====================================================================
@@ -24,8 +24,8 @@
 %% @doc
 %% index
 %% @end
-index(#{auth_data := #{<<"authed">> := true, <<"username">> := Username}}) ->
-    {ok, [{username, Username}]};
+index(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName}}) ->
+    {ok, [{username, UserName}]};
 
 index(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
@@ -52,6 +52,7 @@ search(#{auth_data := #{<<"authed">> := true},
                             FROM paybilldetail
                             WHERE TradeTime >= ?
                               AND TradeTime < ?
+                              AND Deleted = 0
                             ORDER BY TradeTime;",
                             [StartTime, EndTime]),
                         Response = eadm_utils:return_as_json(Res_Col, Res_Data),
@@ -63,6 +64,7 @@ search(#{auth_data := #{<<"authed">> := true},
                             WHERE TradeTime >= ?
                               AND TradeTime < ?
                               AND InOrOut = ?
+                              AND Deleted = 0
                             ORDER BY TradeTime;",
                             [StartTime, EndTime, InOrOut]),
                         Response = eadm_utils:return_as_json(Res_Col, Res_Data),
@@ -74,6 +76,7 @@ search(#{auth_data := #{<<"authed">> := true},
                             WHERE TradeTime >= ?
                               AND TradeTime < ?
                               AND `Source` = ?
+                              AND Deleted = 0
                             ORDER BY TradeTime;",
                             [StartTime, EndTime, SourceType]),
                         Response = eadm_utils:return_as_json(Res_Col, Res_Data),
@@ -86,6 +89,7 @@ search(#{auth_data := #{<<"authed">> := true},
                               AND TradeTime < ?
                               AND `Source` = ?
                               AND InOrOut = ?
+                              AND Deleted = 0
                             ORDER BY TradeTime;",
                             [StartTime, EndTime, SourceType, InOrOut]),
                         Response = eadm_utils:return_as_json(Res_Col, Res_Data),
@@ -93,14 +97,36 @@ search(#{auth_data := #{<<"authed">> := true},
                 end
             catch
                 _:Error ->
-                    Alert = #{<<"Alert">> => unicode:characters_to_binary("查询失败! " ++ Error)},
+                    Alert = #{<<"Alert">> => unicode:characters_to_binary("数据查询失败! " ++ Error)},
                     {json, [Alert]}
             end
     end;
 
 search(#{auth_data := #{<<"authed">> := false}}) ->
-    Alert = #{<<"Alert">> => unicode:characters_to_binary("权限校验失败，请刷新页面重新登录! ")},
-    {json, [Alert]}.
+    {redirect, "/login"}.
+
+%% @doc
+%% 删除财务数据
+%% @end
+delete(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName},
+    bindings := #{<<"detailId">> := DetailId}}) ->
+        try
+            mysql_pool:query(pool_db, "UPDATE paybilldetail
+                                      SET DeletedUser = ?,
+                                      DeletedAt = NOW(),
+                                      Deleted = 1
+                                      WHERE Id = ?;",
+                                      [UserName, DetailId]),
+            Info = #{<<"Alert">> => unicode:characters_to_binary("数据删成功! ")},
+            {json, [Info]}
+        catch
+            _:Error ->
+                Alert = #{<<"Alert">> => unicode:characters_to_binary("数据删除失败! " ++ Error)},
+                {json, [Alert]}
+        end;
+
+delete(#{auth_data := #{<<"authed">> := false}}) ->
+    {redirect, "/login"}.
 
 %% @doc
 %% 查询返回数据明细
@@ -109,11 +135,12 @@ searchdetail(#{auth_data := #{<<"authed">> := true},
     bindings := #{<<"detailId">> := DetailId}}) ->
     try
         Res_Data = mysql_pool:query(pool_db,
-            "SELECT Owner, `Source` AS SourceType, InOrOut, CounterParty, Counterbank, CounterAccount,
+            "SELECT Owner, `Source` AS SourceType, InOrOut, CounterParty, CounterBank, CounterAccount,
                GoodsComment, PayMethod, Amount, Balance, Currency, PayStatus,
                TradeType, TradeOrderNo, CounterorderNo, TradeTime, BillComment
              FROM paybilldetail
-             WHERE Id = ?;",
+             WHERE Deleted = 0
+               AND Id = ?;",
             [DetailId]),
         Response = eadm_utils:as_map(Res_Data),
         {json, Response}
@@ -124,57 +151,72 @@ searchdetail(#{auth_data := #{<<"authed">> := true},
     end;
 
 searchdetail(#{auth_data := #{<<"authed">> := false}}) ->
-    Alert = #{<<"Alert">> => unicode:characters_to_binary("权限校验失败，请刷新页面重新登录! ")},
-    {json, [Alert]}.
+    {redirect, "/login"}.
 
 %% @doc
 %% 处理上传数据
 %% @end
-% upload(#{auth_data := #{<<"authed">> := true},
-%     bindings := #{<<"detailId">> := DetailId}}) ->
-upload(Req) ->
-    io:format("Req: ~p~n", [Req]),
-    {ok, FileContent, Req2} = cowboy_req:read_body(Req),
-    DataToInsert = #{
-        'Owner' => <<"OwnerName">>,
-        'SourceType' => <<"SourceTypeValue">>,
-        'InOrOut' => <<"InOrOut">>,
-        'CounterParty' => <<"CounterParty">>,
-        'CounterBank' => <<"CounterBank">>,
-        'CounterAccount' => <<"CounterAccount">>,
-        'GoodsComment' => <<"GoodsComment">>,
-        'PayMethod' => <<"PayMethod">>,
-        'Amount' => <<"Amount">>,
-        'Balance' => <<"Balance">>,
-        'Currency' => <<"Currency">>,
-        'PayStatus' => <<"PayStatus">>,
-        'TradeType' => <<"TradeType">>,
-        'TradeOrderNo' => <<"TradeOrderNo">>,
-        'CounterOrderNo' => <<"CounterOrderNo">>,
-        'TradeTime' => <<"TradeTime">>,
-        'BillComment' => <<"BillComment">>
-    },
-
-    try
-        Res_Data = mysql_pool:query(pool_db,
-            "SELECT Owner, `Source` AS SourceType, InOrOut, CounterParty, Counterbank, CounterAccount,
-               GoodsComment, PayMethod, Amount, Balance, Currency, PayStatus,
-               TradeType, TradeOrderNo, CounterorderNo, TradeTime, BillComment
-             FROM paybilldetail
-             WHERE Id = ?;",
-            [Req]),
-        Response = eadm_utils:as_map(Res_Data),
-        {json, Response}
-    catch
-        _:Error ->
-            Alert = #{<<"Alert">> => unicode:characters_to_binary("查询失败! " ++ Error)},
-            {json, [Alert]}
+upload(#{auth_data := #{<<"authed">> := true},
+      json := #{<<"importType">> := ImportType, <<"uploadJson">> := UploadJson}}) ->
+    case ImportType of
+        <<"0">> ->
+            lists:foreach(
+                fun(Map) ->
+                    try
+                        mysql_pool:query(pool_db,
+                            "INSERT INTO paybilldetail(Owner, Source, InOrOut, CounterParty, CounterBank,
+                             CounterAccount, GoodsComment, PayMethod, Amount, Balance, Currency, PayStatus,
+                             TradeType, TradeOrderNo, CounterorderNo, TradeTime, BillComment)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
+                            [maps:get(<<"Owner">>, Map, null),
+                             maps:get(<<"Source">>, Map, null),
+                             maps:get(<<"InOrOut">>, Map, null),
+                             maps:get(<<"CounterParty">>, Map, null),
+                             maps:get(<<"CounterBank">>, Map, null),
+                             maps:get(<<"CounterAccount">>, Map, null),
+                             maps:get(<<"GoodsComment">>, Map, null),
+                             maps:get(<<"PayMethod">>, Map, null),
+                             maps:get(<<"Amount">>, Map, null),
+                             maps:get(<<"Balance">>, Map, null),
+                             maps:get(<<"Currency">>, Map, null),
+                             maps:get(<<"PayStatus">>, Map, null),
+                             maps:get(<<"TradeType">>, Map, null),
+                             maps:get(<<"TradeOrderNo">>, Map, null),
+                             maps:get(<<"CounterorderNo">>, Map, null),
+                             maps:get(<<"TradeTime">>, Map, null),
+                             maps:get(<<"BillComment">>, Map, null)]
+                        )
+                    catch
+                        _:Error ->
+                            Alert = #{<<"Alert">> => unicode:characters_to_binary("数据插入失败! " ++ Error)},
+                            {json, [Alert]}
+                    end
+                end,
+                UploadJson),
+            Info = #{<<"Alert">> => unicode:characters_to_binary("导入成功" ++ integer_to_list(count_maps(UploadJson)) ++ "行!")},
+            {json, [Info]};
+        <<"1">> ->
+            {json, [unicode:characters_to_binary("导入成功" ++ 1 ++ "行!")]};
+        <<"2">> ->
+            {json, [unicode:characters_to_binary("导入成功" ++ 1 ++ "行!")]};
+        <<"3">> ->
+            {json, [unicode:characters_to_binary("导入成功" ++ 1 ++ "行!")]};
+        <<"4">> ->
+            {json, [unicode:characters_to_binary("导入成功" ++ 1 ++ "行!")]};
+        _ ->
+            {json, [unicode:characters_to_binary("导入成功" ++ 1 ++ "行!")]}
     end;
 
 upload(#{auth_data := #{<<"authed">> := false}}) ->
-    Alert = #{<<"Alert">> => unicode:characters_to_binary("权限校验失败，请刷新页面重新登录! ")},
-    {json, [Alert]}.
+    {redirect, "/login"}.
 
 %%====================================================================
 %% Internal functions
 %%====================================================================
+count_maps(List) ->
+    lists:foldl(fun(Elem, Acc) ->
+        case is_map(Elem) of
+            true -> Acc + 1;
+            false -> Acc
+        end
+    end, 0, List).

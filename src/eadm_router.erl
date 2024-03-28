@@ -55,13 +55,32 @@ routes(_Environment) ->
           {"/finance", { eadm_finance_controller, index }, #{methods => [get]}}
         ]
       },
+      #{prefix => "user",
+      security => {eadm_auth, auth},
+      routes => [
+          {"/", { eadm_user_controller, index }, #{methods => [get]}},
+          {"/role", { eadm_role_controller, index }, #{methods => [get]}}
+        ]
+      },
       #{prefix => "data",
       security => {eadm_auth, auth},
       routes => [
           {"/health", { eadm_health_controller, search }, #{methods => [get]}},
           {"/location", { eadm_location_controller, search }, #{methods => [get]}},
           {"/finance", { eadm_finance_controller, search }, #{methods => [get]}},
-          {"/finance/:detailId", { eadm_finance_controller, searchdetail }, #{methods => [get]}}
+          {"/finance/:detailId", { eadm_finance_controller, delete }, #{methods => [delete]}},
+          {"/finance/:detailId", { eadm_finance_controller, searchdetail }, #{methods => [get]}},
+          {"/useradd", { eadm_user_controller, add }, #{methods => [post]}},
+          {"/user/:userId", { eadm_user_controller, delete }, #{methods => [delete]}},
+          {"/user/reset/:userId", { eadm_user_controller, reset }, #{methods => [post]}},
+          {"/user/disable/:userId", { eadm_user_controller, disable }, #{methods => [post]}},
+          {"/user", { eadm_user_controller, search }, #{methods => [get]}},
+          {"/userrole", { eadm_user_controller, userrole }, #{methods => [post]}},
+          {"/role/:roleId", { eadm_role_controller, delete }, #{methods => [delete]}},
+          {"/role/disable/:roleId", { eadm_role_controller, disable }, #{methods => [post]}},
+          {"/role", { eadm_role_controller, search }, #{methods => [get]}},
+          {"/permission", { eadm_role_controller, updatepermission }, #{methods => [post]}},
+          {"/permission/:roleId", { eadm_role_controller, loadpermission }, #{methods => [get]}}
         ]
       },#{prefix => "upload",
       security => {eadm_auth, auth},

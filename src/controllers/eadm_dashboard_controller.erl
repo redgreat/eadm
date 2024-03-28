@@ -24,8 +24,8 @@
 %% @doc
 %% index
 %% @end
-index(#{auth_data := #{<<"authed">> := true, <<"username">> := Username}}) ->
-    {ok, [{username, Username}]};
+index(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName}}) ->
+    {ok, [{username, UserName}]};
 
 index(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.

@@ -65,7 +65,6 @@ a[aria-expanded="true"] {
 }
 
 #sidebar .dropdown-toggle::after {
-    display: block;
     position: absolute;
     top: 50%;
     right: 20px;
