@@ -8,8 +8,14 @@
  *
  */
 
-function translateColumnNames(column, dictionary) {
-    return dictionary[column] || column;
+function translateColumnNames(columnName) {
+  const translations = i18nHealth.columnName[defaultLanguage];
+  return translations[columnName] || columnName;
+}
+
+function translateSleepType(columnName) {
+  const translations = i18nHealth.sleepType[defaultLanguage];
+  return translations[columnName] || columnName;
 }
 
 function loadHealthData(dataType, startTime, endTime) {
@@ -27,11 +33,11 @@ function loadHealthData(dataType, startTime, endTime) {
             response.columns.forEach(function (column) {
                 let dynamicColumn = {};
                 dynamicColumn['data'] = column;
-                dynamicColumn['title'] = translateColumnNames(column, i18nHealth.columnName);
+                dynamicColumn['title'] = translateColumnNames(column);
                 dynamicColumns.push(dynamicColumn);
                 if (column === "SleepType") {
                     response.data.forEach(function (rowData) {
-                    rowData["SleepType"] = translateColumnNames(rowData["SleepType"], i18nHealth.sleepType);
+                    rowData["SleepType"] = translateSleepType(rowData["SleepType"]);
                     });
                 }
             });
@@ -46,7 +52,7 @@ function loadHealthData(dataType, startTime, endTime) {
             response.columns.forEach(function (column) {
                 let dynamicColumn = {};
                 dynamicColumn['data'] = column;
-                dynamicColumn['title'] = translateColumnNames(column, i18nHealth.columnName);
+                dynamicColumn['title'] = translateColumnNames(column);
                 dynamicColumn['className'] = "dataTables-column";
                 dynamicColumns.push(dynamicColumn);
             });

@@ -8,10 +8,10 @@
  *
  */
 
-function translateColumnNames(column, dictionary) {
-    return dictionary[column] || column;
+function translateColumnNames(columnName) {
+  const translations = i18nUser.columnName[defaultLanguage];
+  return translations[columnName] || columnName;
 }
-
 
 function loadUserData() {
     let dynamicColumns = []
@@ -21,7 +21,7 @@ function loadUserData() {
             resdata.columns.forEach(function (column) {
                 let dynamicColumn = {};
                 dynamicColumn['data'] = column;
-                dynamicColumn['title'] = translateColumnNames(column, i18nUser.columnName);
+                dynamicColumn['title'] = translateColumnNames(column);
                 dynamicColumns.push(dynamicColumn);
             });
             dynamicColumns.push({"data": "Action", "title": "操作"});
@@ -60,7 +60,15 @@ function loadUserData() {
                         </button>
                     `;
                 }
+            },{
+                targets: 0,
+                visible: false,
+                orderable: false
             }],
+            createdRow: function(row, data) {
+                let dataId = data['Id'];
+                $(row).attr('data-id', dataId);
+            },
             destroy: true, // 销毁重新渲染
             columns: dynamicColumns,
             data: dynamicDatas,
@@ -175,25 +183,190 @@ function addUser() {
     });
 }
 
-function userRole(userId) {
-    if (typeof userId !== 'undefined' && userId !== null && userId.trim() !== '') {
-        const postParams = {
-            userId: userId,
-            roleIds: []
+function loadUserRole(userId) {
+    let dynamicColumns = []
+    let dynamicDatas = []
+    $.getJSON('/data/userrole/' + userId, function (resdata) {
+        function buildDynamicData(resdata) {
+            resdata.columns.forEach(function (column) {
+                let dynamicColumn = {};
+                dynamicColumn['data'] = column;
+                dynamicColumn['title'] = translateColumnNames(column);
+                dynamicColumns.push(dynamicColumn);
+            });
+            dynamicColumns.push({"data": "Action", "title": "操作"});
+            dynamicDatas = resdata.data;
         }
+
+        if (resdata && resdata.length > 0 && resdata[0].Alert) {
+            showWarningToast(resdata[0].Alert);
+        } else {
+            buildDynamicData(resdata);
+        }
+
+        $('#table-user-role').DataTable().destroy();
+        $('#table-user-role').empty();
+        $('#table-user-role').DataTable({
+            columnDefs: [{
+                targets: -1,
+                render: function () {
+                    return `
+                        <button class="btn btn-outline-danger btn-rounded delete-userrole-btn">
+                          <i class="fas fa-trash"></i>
+                        </button>
+                    `;
+                }
+            },{
+                targets: 0,
+                visible: false,
+                orderable: false
+            }],
+            destroy: true,
+            columns: dynamicColumns,
+            data: dynamicDatas,
+            responsive: true,
+            info: true,
+            processing: true,
+            orderMulti: true,
+            ordering: true,
+            paging: true,
+            pageLength: 10,
+            lengthChange: false,
+            pagingType: "full_numbers",
+            searching: false,
+            stateSave: true,
+            deferRender: true,
+            language: {
+                info: "当前 _START_ 条到 _END_ 条 共 _TOTAL_ 条",
+                infoEmpty: "无记录",
+                emptyTable: "未查到数据",
+                thousands: ",",
+                lengthMenu: "每页 _MENU_ 条记录",
+                loadingRecords: "加载中...",
+                processing: "处理中...",
+                paginate: {
+                  first: "首页",
+                  previous: "上一页",
+                  next: "下一页",
+                  last: "尾页"
+                  },
+                aria: {
+                   sortAscending: "：激活以按升序排序此列",
+                   sortDescending: ": 激活以按降序排序此列"
+                }
+            }
+        });
+    })
+}
+
+function deleteUserRole(userRoleId) {
+    if (typeof userRoleId !== 'undefined' && userRoleId !== null && userRoleId.trim() !== '') {
         $.ajax({
-            url: '/data/userrole' + userId,
-            type: 'POST',
-            data: postParams,
+            url: '/data/userrole/delete/' + userRoleId,
+            type: 'DELETE',
             success: function (resdata) {
                 if (resdata && resdata.length > 0 && resdata[0].Alert) {
                     showWarningToast(resdata[0].Alert);
                 } else {
-                    showWarningToast("服务器运行错误，请联系管理员！");
+                    showWarningToast("数据删除成功！");
                 }
             }
         });
     }
+}
+
+function loadRoleList() {
+    let dynamicColumns = []
+    let dynamicDatas = []
+    $.getJSON('/data/rolelist', function (resdata) {
+        function buildDynamicData(resdata) {
+            dynamicColumns.push({"data": "Action", "title": "选择"});
+            resdata.columns.forEach(function (column) {
+                let dynamicColumn = {};
+                dynamicColumn['data'] = column;
+                dynamicColumn['title'] = translateColumnNames(column);
+                dynamicColumns.push(dynamicColumn);
+            });
+            dynamicDatas = resdata.data;
+        }
+
+        if (resdata && resdata.length > 0 && resdata[0].Alert) {
+            showWarningToast(resdata[0].Alert);
+        } else {
+            buildDynamicData(resdata);
+        }
+
+        $('#table-rolelist').DataTable().destroy();
+        $('#table-rolelist').empty();
+        $('#table-rolelist').DataTable({
+            columnDefs: [{
+                targets: 0,
+                render: function () {
+                    return `
+                        <input type="checkbox" class="select-row">
+                    `;
+                }
+            },{
+                targets: 1,
+                visible: false,
+                orderable: false
+            }],
+            destroy: true,
+            columns: dynamicColumns,
+            data: dynamicDatas,
+            responsive: true,
+            info: true,
+            processing: true,
+            orderMulti: true,
+            ordering: true,
+            paging: true,
+            pageLength: 10,
+            lengthChange: false,
+            pagingType: "full_numbers",
+            searching: false,
+            stateSave: true,
+            deferRender: true,
+            language: {
+                info: "当前 _START_ 条到 _END_ 条 共 _TOTAL_ 条",
+                infoEmpty: "无记录",
+                emptyTable: "未查到数据",
+                thousands: ",",
+                lengthMenu: "每页 _MENU_ 条记录",
+                loadingRecords: "加载中...",
+                processing: "处理中...",
+                paginate: {
+                  first: "首页",
+                  previous: "上一页",
+                  next: "下一页",
+                  last: "尾页"
+                  },
+                aria: {
+                   sortAscending: "：激活以按升序排序此列",
+                   sortDescending: ": 激活以按降序排序此列"
+                }
+            }
+        });
+    })
+}
+
+function addUserRole(UserId, RoleIds) {
+    const AddParams = {
+        userId: UserId,
+        roleIds: RoleIds
+    };
+    $.ajaxSetup({async:false});
+    $.ajax({
+        url: '/data/userroleadd',
+        type: 'POST',
+        data: AddParams,
+        success: function (resdata) {
+            if (resdata && resdata.length > 0 && resdata[0].Alert) {
+                showWarningToast(resdata[0].Alert);
+            } else {
+                    showWarningToast("服务器运行错误，请联系管理员！");
+            }
+        }
+    });
 }
 
 $(document).ready(function() {
@@ -219,6 +392,23 @@ $(document).ready(function() {
         $('#email').val('');
         $('#username').val('');
         $('#password').val('');
+    });
+
+    $('#user-role-add-btn').click(function() {
+        loadRoleList();
+        let roleListTitle = $('#title-role-list');
+        roleListTitle.attr('data-id', $('#title-user-role').data('id'));
+    });
+
+    $('#user-role-submit-btn').click(function() {
+        let selectedRows = $('#table-rolelist').DataTable().rows({selected: true});
+        let selectedRoleIds = [];
+        selectedRows.nodes().each(function (row) {
+            let data = $(row).data();
+            let roleId = data.ID;
+            selectedRoleIds.push(roleId);
+        });
+        addUserRole(UserId, selectedRoleIds);
     });
 
     let dataTableUser = $('#table-user').DataTable();
@@ -272,17 +462,34 @@ $(document).ready(function() {
     });
 
     dataTableUser.on('click', '.user-role-btn', function() {
-        let addRow = $(this).closest('tr');
-        $('#user-role').modal('show');
-        $('#user-role-confirm-btn').click(function () {
-            let idCell = addRow.find('td').first();
-            let userId = idCell.text();
-            if (userId !== "未查到数据" && typeof userId !== 'undefined' && userId !== null && userId.trim() !== '') {
-                userRole(userId);
+        let tr = $(this).closest('tr');
+        let userId = tr.data('id');
+        if (userId !== "未查到数据" && typeof userId !== 'undefined' && userId !== null && userId.trim() !== '') {
+            loadUserRole(userId);
+            let userRoleTitle = $('#title-user-role');
+            userRoleTitle.attr('data-id', userId);
+        } else {
+            showWarningToast("未找到用户信息，请刷新页面重试!");
+        }
+    });
+
+    let dataTableUserRole = $('#table-user-role').DataTable();
+
+    dataTableUserRole.on('click', '.delete-userrole-btn', function() {
+        let delRow = $(this).closest('tr');
+        $('#del-userrole-confirm').modal('show');
+        $('#del-userrole-confirm-btn').click(function () {
+            let idCell = delRow.find('td').first();
+            let userRoleId = idCell.text();
+            if (userRoleId !== "未查到数据" && typeof userRoleId !== 'undefined' && userRoleId !== null && userRoleId.trim() !== '') {
+                deleteUserRole(userRoleId);
+                delRow.remove();
+                setTimeout(function () {
+                    dataTableUserRole.draw(false);
+                }, 100);
             } else {
-                showWarningToast("未找到用户信息，请刷新页面重试!");
+                showWarningToast("未查到需删除数据，请刷新页面重试!");
             }
         });
     });
-
 });

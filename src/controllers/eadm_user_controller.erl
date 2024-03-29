@@ -14,7 +14,7 @@
 %%%===================================================================
 %%% Application callbacks
 %%%===================================================================
--export([index/1, search/1, add/1, reset/1, delete/1, disable/1, userrole/1]).
+-export([index/1, search/1, add/1, reset/1, delete/1, disable/1, userrole/1, userroleadd/1, userroledel/1]).
 
 
 %%====================================================================
@@ -191,9 +191,31 @@ delete(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 
 %% @doc
-%% 设置用户角色
+%% 获取用户角色
 %% @end
-userrole(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName},
+userrole(#{auth_data := #{<<"authed">> := true},
+      bindings := #{<<"userId">> := UserId}}) ->
+    try
+        {ok, Res_Col, Res_Data} = mysql_pool:query(pool_db,
+            "SELECT Id, RoleName, UpdatedAt
+            FROM vi_userrole
+            WHERE UserId=?;",
+            [UserId]),
+        Response = eadm_utils:return_as_json(Res_Col, Res_Data),
+        {json, Response}
+    catch
+        _:Error ->
+            Alert = #{<<"Alert">> => unicode:characters_to_binary("用户角色查询失败! ") ++ binary_to_list(Error)},
+            {json, [Alert]}
+    end;
+
+userrole(#{auth_data := #{<<"authed">> := false}}) ->
+    {redirect, "/login"}.
+
+%% @doc
+%% 新增用户角色
+%% @end
+userroleadd(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName},
       params := #{<<"userId">> := UserId, <<"roleIds">> := RoleIds}}) ->
 
     try
@@ -211,7 +233,30 @@ userrole(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName},
             {json, [Alert]}
     end;
 
-userrole(#{auth_data := #{<<"authed">> := false}}) ->
+userroleadd(#{auth_data := #{<<"authed">> := false}}) ->
+    {redirect, "/login"}.
+
+%% @doc
+%% 删除用户角色数据
+%% @end
+userroledel(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName},
+    bindings := #{<<"userRoleId">> := UserRoleId}}) ->
+    try
+        mysql_pool:query(pool_db, "UPDATE eadm_userrole
+                                  SET DeletedUser = ?,
+                                  DeletedAt = NOW(),
+                                  Deleted = 1
+                                  WHERE Id = ?;",
+                                  [UserName, UserRoleId]),
+        Info = #{<<"Alert">> => unicode:characters_to_binary("用户角色删除成功! ")},
+        {json, [Info]}
+    catch
+        _:Error ->
+            Alert = #{<<"Alert">> => unicode:characters_to_binary("用户角色删除失败! ") ++ binary_to_list(Error)},
+            {json, [Alert]}
+    end;
+
+userroledel(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 
 %%====================================================================

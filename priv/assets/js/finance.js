@@ -8,8 +8,14 @@
  *
  */
 
-function translateColumnNames(column, dictionary) {
-    return dictionary[column] || column;
+function translateColumnNames(columnName) {
+  const translations = i18nFinance.columnName[defaultLanguage];
+  return translations[columnName] || columnName;
+}
+
+function translatesourceType(columnName) {
+  const translations = i18nFinance.sourceType[defaultLanguage];
+  return translations[columnName] || columnName;
 }
 
 function loadFinanceData(sourceType, inorOut, startTime, endTime) {
@@ -28,12 +34,12 @@ function loadFinanceData(sourceType, inorOut, startTime, endTime) {
             response.columns.forEach(function (column) {
                 let dynamicColumn = {};
                 dynamicColumn['data'] = column;
-                dynamicColumn['title'] = translateColumnNames(column, i18nFinance.columnName);
+                dynamicColumn['title'] = translateColumnNames(column);
                 dynamicColumn['className'] = "dataTables-column";
                 dynamicColumns.push(dynamicColumn);
                 if (column === "SourceType") {
                     response.data.forEach(function (rowData) {
-                    rowData["SourceType"] = translateColumnNames(rowData["SourceType"], i18nFinance.sourceType);
+                    rowData["SourceType"] = translatesourceType(rowData["SourceType"]);
                     });
                 }
             });
@@ -49,7 +55,7 @@ function loadFinanceData(sourceType, inorOut, startTime, endTime) {
             response.columns.forEach(function (column) {
                 let dynamicColumn = {};
                 dynamicColumn['data'] = column;
-                dynamicColumn['title'] = translateColumnNames(column, i18nFinance.columnName);
+                dynamicColumn['title'] = translateColumnNames(column);
                 dynamicColumn['className'] = "dataTables-column";
                 dynamicColumns.push(dynamicColumn);
             });

@@ -59,3 +59,5 @@ function showWarningToast(message) {
     });
     toastList.forEach(toast => toast.show());
 }
+
+defaultLanguage = 'zh';

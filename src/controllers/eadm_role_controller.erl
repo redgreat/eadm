@@ -14,7 +14,7 @@
 %%%===================================================================
 %%% Application callbacks
 %%%===================================================================
--export([index/1, search/1, disable/1, delete/1, loadpermission/1, updatepermission/1]).
+-export([index/1, search/1, disable/1, delete/1, loadpermission/1, updatepermission/1, getrolelist/1]).
 
 %%====================================================================
 %% API functions
@@ -154,6 +154,26 @@ delete(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName},
     end;
 
 delete(#{auth_data := #{<<"authed">> := false}}) ->
+    {redirect, "/login"}.
+
+%% @doc
+%% 查询角色列表
+%% @end
+getrolelist(#{auth_data := #{<<"authed">> := true}}) ->
+    try
+        {ok, Res_Col, Res_Data} = mysql_pool:query(pool_db,
+            "SELECT Id, RoleName, CreatedAt
+            FROM vi_role
+            ORDER BY CreatedAt;", []),
+        Response = eadm_utils:return_as_json(Res_Col, Res_Data),
+        {json, Response}
+    catch
+        _:Error ->
+            Alert = #{<<"Alert">> => unicode:characters_to_binary("数据查询失败! " ++ Error)},
+            {json, [Alert]}
+    end;
+
+getrolelist(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 
 %%====================================================================

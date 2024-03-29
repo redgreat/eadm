@@ -75,10 +75,13 @@ routes(_Environment) ->
           {"/user/reset/:userId", { eadm_user_controller, reset }, #{methods => [post]}},
           {"/user/disable/:userId", { eadm_user_controller, disable }, #{methods => [post]}},
           {"/user", { eadm_user_controller, search }, #{methods => [get]}},
-          {"/userrole", { eadm_user_controller, userrole }, #{methods => [post]}},
+          {"/userrole/:userId", { eadm_user_controller, userrole }, #{methods => [get]}},
+          {"/userrole/delete/:userRoleId", { eadm_user_controller, userroledel }, #{methods => [delete]}},
+          {"/userroleadd", { eadm_user_controller, userroleadd }, #{methods => [post]}},
           {"/role/:roleId", { eadm_role_controller, delete }, #{methods => [delete]}},
           {"/role/disable/:roleId", { eadm_role_controller, disable }, #{methods => [post]}},
           {"/role", { eadm_role_controller, search }, #{methods => [get]}},
+          {"/rolelist", { eadm_role_controller, getrolelist }, #{methods => [get]}},
           {"/permission", { eadm_role_controller, updatepermission }, #{methods => [post]}},
           {"/permission/:roleId", { eadm_role_controller, loadpermission }, #{methods => [get]}}
         ]

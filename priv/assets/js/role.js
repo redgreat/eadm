@@ -8,8 +8,9 @@
  *
  */
 
-function translateColumnNames(column, dictionary) {
-    return dictionary[column] || column;
+function translateColumnNames(columnName) {
+  const translations = i18nRole.columnName[defaultLanguage];
+  return translations[columnName] || columnName;
 }
 
 
@@ -21,7 +22,7 @@ function loadRoleData() {
             resdata.columns.forEach(function (column) {
                 let dynamicColumn = {};
                 dynamicColumn['data'] = column;
-                dynamicColumn['title'] = translateColumnNames(column, i18nRole.columnName);
+                dynamicColumn['title'] = translateColumnNames(column);
                 dynamicColumns.push(dynamicColumn);
             });
             dynamicColumns.push({"data": "Action", "title": "操作"});
@@ -41,7 +42,7 @@ function loadRoleData() {
             // bStateSave: true,  //记录cookie
             columnDefs: [{
                 targets: -1, // 将按钮添加到最后一列
-                render: function (data, type, full, meta) {
+                render: function () {
                     return `
                         <button class="btn btn-outline-primary btn-rounded disable-role-btn">
                             <i class="fas fa-toggle-on"></i>
@@ -51,6 +52,10 @@ function loadRoleData() {
                         </button>
                     `;
                 }
+            },{
+                targets: 0,
+                visible: false,
+                orderable: false
             }],
             destroy: true, // 销毁重新渲染
             columns: dynamicColumns,

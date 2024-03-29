@@ -194,11 +194,42 @@ SELECT Id, RoleName, RolePermission, CASE RoleStatus WHEN 1 THEN '禁用' WHEN 0
 FROM eadm_role
   WHERE Deleted=0;
 
+# 用户角色对应关系
+DROP TABLE IF EXISTS `eadm_userrole`;
+CREATE TABLE `eadm_userrole` (
+  `Id` CHAR(12) NOT NULL PRIMARY KEY COMMENT '自定义主键(UR)',
+  `UserId` CHAR(12) NOT NULL COMMENT '用户Id(eadm_user.Id)',
+  `RoleId` CHAR(12) NOT NULL COMMENT '角色Id(eadm_role.Id)',
+  `CreatedUser` VARCHAR(50) DEFAULT NULL COMMENT '创建人',
+  `CreatedAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP() COMMENT '数据写入时间',
+  `UpdatedUser` VARCHAR(50) DEFAULT NULL COMMENT '更新人',
+  `UpdatedAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP()  ON UPDATE CURRENT_TIMESTAMP() COMMENT '更新时间',
+  `DeletedUser` VARCHAR(50) DEFAULT NULL COMMENT '删除人',
+  `DeletedAt` DATETIME DEFAULT NULL COMMENT '删除时间',
+  `Deleted` TINYINT NOT NULL DEFAULT 0 COMMENT '是否删除(0否1是)',
+  KEY `IDX-UserId` (`UserId`),
+  KEY `IDX-RoleId` (`RoleId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci ROW_FORMAT=DYNAMIC COMMENT '基础信息_用户角色对应关系表';
+
+INSERT INTO eadm_userrole(Id, UserId, RoleId)
+VALUES(fn_nextval('UR'), 'EU9999999998', 'ER9999999998');
+
+# 用户角色信息视图
+CREATE OR REPLACE VIEW vi_userrole
+AS
+SELECT B.Id, A.Id AS UserId, C.Id AS RoleId, C.RoleName, B.UpdatedAt
+FROM eadm_user A
+INNER JOIN eadm_userrole B
+  ON B.UserId=A.Id
+  AND B.Deleted=0
+INNER JOIN eadm_role C
+  ON C.Id=B.RoleId
+  AND C.RoleStatus=0
+  AND C.Deleted=0
+WHERE A.Deleted=0;
+
 SELECT * FROM eadm_user;
-
 SELECT * FROM eadm_role;
+SELECT * FROM eadm_userrole;
 
-SELECT RolePermission
-            FROM eadm_role
-            WHERE Id = "ER9999999998"
-              AND Deleted = 0;
+SELECT * FROM vi_userrole;
