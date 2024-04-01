@@ -14,7 +14,7 @@
 %%%===================================================================
 %%% Application callbacks
 %%%===================================================================
--export([index/1, search/1, add/1, reset/1, delete/1, disable/1, userrole/1, userroleadd/1, userroledel/1]).
+-export([index/1, search/1, add/1, edit/1, reset/1, delete/1, disable/1, userrole/1, userroleadd/1, userroledel/1]).
 
 
 %%====================================================================
@@ -61,7 +61,7 @@ add(#{auth_data := #{<<"authed">> := true, <<"username">> := CreatedUser},
             case validate_loginname(LoginName) of
                 {ok} ->
                     case re:run(Email, "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$") of
-                        match ->
+                        {match, _} ->
                             try
                                 CryptoGram = eadm_utils:pass_encrypt(PassWord),
                                 mysql_pool:query(pool_db, "INSERT INTO eadm_user(Id, TenantId, LoginName, UserName, Email, CryptoGram, CreatedUser)
@@ -117,6 +117,68 @@ add(#{auth_data := #{<<"authed">> := true, <<"username">> := CreatedUser},
 add(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 
+
+%% @doc
+%% 编辑用户数据
+%% @end
+edit(#{auth_data := #{<<"authed">> := true, <<"username">> := CreatedUser},
+      params := #{<<"userId">> := UserId, <<"loginName">> := LoginName,
+          <<"email">> := Email, <<"userName">> := UserName}}) ->
+      case validate_loginname(LoginName) of
+          {ok} ->
+              case re:run(Email, "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$") of
+                  {match, _} ->
+                      try
+                          mysql_pool:query(pool_db,
+                                "UPDATE eadm_user
+                                SET LoginName=?,
+                                UserName=?,
+                                Email=?,
+                                UpdatedUser=?
+                                WHERE Id=?;",
+                              [LoginName, UserName, Email, CreatedUser, UserId]),
+                          A = unicode:characters_to_binary("用户【"),
+                          B = unicode:characters_to_binary("】编辑成功! "),
+                          Info = #{<<"Alert">> => <<A/binary, UserName/binary, B/binary>>},
+                          {json, [Info]}
+                      catch
+                          _:Error ->
+                              Alert = #{<<"Alert">> => unicode:characters_to_binary("用户编辑失败！") ++ binary_to_list(Error)},
+                              {json, [Alert]}
+                      end;
+                  _ ->
+                      A = unicode:characters_to_binary("邮箱【"),
+                      B = unicode:characters_to_binary("】格式错误! "),
+                      Info = #{<<"Alert">> => <<A/binary, Email/binary, B/binary>>},
+                      {json, [Info]}
+              end;
+          {error, 1} ->
+              A = unicode:characters_to_binary("登录名【"),
+              B = unicode:characters_to_binary("】不能少于6位! "),
+              Info = #{<<"Alert">> => <<A/binary, LoginName/binary, B/binary>>},
+              {json, [Info]};
+          {error, 2} ->
+              A = unicode:characters_to_binary("登录名【"),
+              B = unicode:characters_to_binary("】不能大于18位! "),
+              Info = #{<<"Alert">> => <<A/binary, LoginName/binary, B/binary>>},
+              {json, [Info]};
+          {error, 3} ->
+              A = unicode:characters_to_binary("登录名【"),
+              B = unicode:characters_to_binary("】已存在! "),
+              Info = #{<<"Alert">> => <<A/binary, LoginName/binary, B/binary>>},
+              {json, [Info]};
+          {error, 6} ->
+              A = unicode:characters_to_binary("登录名【"),
+              B = unicode:characters_to_binary("】仅支持英文+数字! "),
+              Info = #{<<"Alert">> => <<A/binary, LoginName/binary, B/binary>>},
+              {json, [Info]};
+          _ ->
+              Alert = #{<<"Alert">> => unicode:characters_to_binary("用户编辑失败！")},
+              {json, [Alert]}
+      end;
+
+edit(#{auth_data := #{<<"authed">> := false}}) ->
+    {redirect, "/login"}.
 
 %% @doc
 %% 重置用户密码
@@ -215,21 +277,21 @@ userrole(#{auth_data := #{<<"authed">> := false}}) ->
 %% @doc
 %% 新增用户角色
 %% @end
-userroleadd(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName},
-      params := #{<<"userId">> := UserId, <<"roleIds">> := RoleIds}}) ->
-
+userroleadd(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName}, params := RoleIdMap}) ->
+    [{RoleIds, _Value}] = maps:to_list(RoleIdMap),
+    {ok, RoleIdList} = thoas:decode(RoleIds),
+    InsertQuery = "INSERT INTO eadm_userrole(UserId, RoleId, CreatedUser) VALUES(?, ?, ?);",
     try
-        mysql_pool:query(pool_db, "UPDATE eadm_user
-                                  SET UpdatedUser = ?,
-                                  UpdatedAt = NOW(),
-                                  CryptoGram = ?
-                                  WHERE Id = ?;",
-                                  [UserName, RoleIds, UserId]),
-        Info = #{<<"Alert">> => unicode:characters_to_binary("用户密码重置成功! ")},
+        lists:foreach(fun (Map) ->
+            mysql_pool:query(pool_db, InsertQuery,
+                [maps:get(<<"userId">>, Map), maps:get(<<"roleId">>, Map), UserName])
+            end,
+            RoleIdList),
+        Info = #{<<"Alert">> => unicode:characters_to_binary("用户角色新增成功! ")},
         {json, [Info]}
     catch
         _:Error ->
-            Alert = #{<<"Alert">> => unicode:characters_to_binary("用户密码重置失败! ") ++ binary_to_list(Error)},
+            Alert = #{<<"Alert">> => unicode:characters_to_binary("用户角色新增失败! ") ++ binary_to_list(Error)},
             {json, [Alert]}
     end;
 

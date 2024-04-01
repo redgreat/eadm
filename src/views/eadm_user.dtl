@@ -18,7 +18,7 @@
                     <i class="fas fa-user-shield"></i> 角色
                 </a>
                 <button type="button" id="add-user-btn" class="btn btn-sm btn-outline-primary float-end mb-2 me-1"
-                  data-bs-toggle="modal" data-bs-target="#user-add">
+                  data-bs-toggle="modal" data-bs-target="#modal-add-user">
                     <i class="fas fa-plus-circle"></i> 新增
                 </button>
             </div>
@@ -35,7 +35,7 @@
 
 {% block html_top %}
 
-<div class="modal" id="user-add" tabindex="-1" role="dialog">
+<div class="modal" id="modal-add-user" tabindex="-1" role="dialog">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -63,20 +63,20 @@
                         </div>
                     </form>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" id="add-user-submit-btn" data-bs-dismiss="modal">提交</button>
-                    <button type="button" class="btn btn-secondary" id="add-user-cancel-btn" data-bs-dismiss="modal">取消</button>
-                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="add-user-submit-btn" data-bs-dismiss="modal">提交</button>
+                <button type="button" class="btn btn-secondary" id="add-user-cancel-btn" data-bs-dismiss="modal">取消</button>
             </div>
         </div>
     </div>
 </div>
 
-<div class="modal modal-lg" id="user-role" tabindex="-1" role="dialog">
+<div class="modal modal-lg" id="modal-user-role" tabindex="-1" role="dialog">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title" id="title-user-role" data-id="">用户角色信息</h4>
+                <h4 class="modal-title">用户角色信息</h4>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -87,23 +87,23 @@
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" id="user-role-add-btn"
-                      data-bs-toggle="modal" data-bs-target="#role-list">
-                        <i class="fas fa-plus-circle"></i> 新增
-                    </button>
-                    <button type="button" class="btn btn-secondary" id="user-role-close-btn" data-bs-dismiss="modal">关闭</button>
-                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="add-user-role-btn"
+                  data-bs-toggle="modal" data-bs-target="#modal-role-list">
+                    <i class="fas fa-plus-circle"></i> 新增
+                </button>
+                <button type="button" class="btn btn-secondary" id="user-role-close-btn" data-bs-dismiss="modal">关闭</button>
             </div>
         </div>
     </div>
 </div>
 
-<div class="modal modal-lg" id="role-list" tabindex="-1" role="dialog">
+<div class="modal modal-lg" id="modal-role-list" tabindex="-1" role="dialog">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title" id="title-role-list" data-id="">角色信息列表</h4>
+                <h4 class="modal-title">角色信息列表</h4>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -114,10 +114,43 @@
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" id="user-role-submit-btn" data-bs-dismiss="modal">提交</button>
-                    <button type="button" class="btn btn-secondary" id="user-role-cancel-btn" data-bs-dismiss="modal">取消</button>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="user-role-submit-btn" data-bs-dismiss="modal">提交</button>
+                <button type="button" class="btn btn-secondary" id="user-role-cancel-btn" data-bs-dismiss="modal">取消</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="modal-user-edit" tabindex="-1" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">用户信息编辑</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="container">
+                    <form accept-charset="utf-8">
+                        <div class="row mb-3">
+                            <label class="form-label col-3" for="loginname-edit">登录名</label>
+                            <input class="col-6" id="loginname-edit" type="text">
+                        </div>
+                        <div class="row mb-3">
+                            <label class="form-label col-3" for="username-edit">显示姓名</label>
+                            <input class="col-6" id="username-edit" type="text">
+                        </div>
+                        <div class="row mb-3">
+                            <label class="form-label col-3" for="email-edit">邮箱</label>
+                            <input class="col-6" id="email-edit" type="email">
+                        </div>
+                    </form>
                 </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="user-edit-submit-btn" data-bs-dismiss="modal">提交</button>
+                <button type="button" class="btn btn-secondary" id="user-edit-close-btn" data-bs-dismiss="modal">关闭</button>
             </div>
         </div>
     </div>
@@ -135,10 +168,10 @@
                         <h5 class="alert-title"><i class="fas fa-exclamation-triangle"></i> 是否确认删除用户？</h5>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-danger" id="del-user-confirm-btn" data-bs-dismiss="modal">确认</button>
-                    <button type="button" class="btn btn-secondary" id="del-user-cancel-btn" data-bs-dismiss="modal">取消</button>
-                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" id="del-user-confirm-btn" data-bs-dismiss="modal">确认</button>
+                <button type="button" class="btn btn-secondary" id="del-user-cancel-btn" data-bs-dismiss="modal">取消</button>
             </div>
         </div>
     </div>
@@ -156,10 +189,10 @@
                         <h5 class="alert-title"><i class="fas fa-exclamation-triangle"></i> 是否确认删除用户角色？</h5>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-danger" id="del-userrole-confirm-btn" data-bs-dismiss="modal">确认</button>
-                    <button type="button" class="btn btn-secondary" id="del-userrole-cancel-btn" data-bs-dismiss="modal">取消</button>
-                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" id="del-userrole-confirm-btn" data-bs-dismiss="modal">确认</button>
+                <button type="button" class="btn btn-secondary" id="del-userrole-cancel-btn" data-bs-dismiss="modal">取消</button>
             </div>
         </div>
     </div>

@@ -43,10 +43,12 @@ function loadUserData() {
                 targets: -1, // 将按钮添加到最后一列
                 render: function (data, type, full, meta) {
                     return `
-                        <button class="btn btn-outline-primary btn-rounded user-role-btn">
+                        <button class="btn btn-outline-primary btn-rounded user-role-btn"
+                          data-bs-toggle="modal" data-bs-target="#modal-user-role">
                           <i class="fas fa-user-shield"></i>
                         </button>
-                        <button class="btn btn-outline-primary btn-rounded edit-user-btn">
+                        <button class="btn btn-outline-primary btn-rounded edit-user-btn"
+                          data-bs-toggle="modal" data-bs-target="#modal-user-edit">
                           <i class="fas fa-pen"></i>
                         </button>
                         <button class="btn btn-outline-primary btn-rounded disable-user-btn">
@@ -221,6 +223,10 @@ function loadUserRole(userId) {
                 visible: false,
                 orderable: false
             }],
+            createdRow: function(row, data) {
+                let dataId = data['Id'];
+                $(row).attr('data-id', dataId);
+            },
             destroy: true,
             columns: dynamicColumns,
             data: dynamicDatas,
@@ -275,10 +281,11 @@ function deleteUserRole(userRoleId) {
     }
 }
 
-function loadRoleList() {
+function loadRoleList(userId) {
     let dynamicColumns = []
     let dynamicDatas = []
-    $.getJSON('/data/rolelist', function (resdata) {
+    // $.ajaxSetup({async:false});
+    $.getJSON('/data/rolelist/' + userId, function (resdata) {
         function buildDynamicData(resdata) {
             dynamicColumns.push({"data": "Action", "title": "选择"});
             resdata.columns.forEach(function (column) {
@@ -311,6 +318,14 @@ function loadRoleList() {
                 visible: false,
                 orderable: false
             }],
+            createdRow: function(row, data) {
+                let dataId = data['Id'];
+                $(row).attr('data-id', dataId);
+            },
+            select: {
+                style: 'multi',
+                selector: 'td:first-child input[type="checkbox"]'
+            },
             destroy: true,
             columns: dynamicColumns,
             data: dynamicDatas,
@@ -349,14 +364,32 @@ function loadRoleList() {
     })
 }
 
-function addUserRole(UserId, RoleIds) {
-    const AddParams = {
-        userId: UserId,
-        roleIds: RoleIds
-    };
+function addUserRole(userRoleIds) {
     $.ajaxSetup({async:false});
     $.ajax({
         url: '/data/userroleadd',
+        type: 'POST',
+        data: userRoleIds,
+        success: function (resdata) {
+            if (resdata && resdata.length > 0 && resdata[0].Alert) {
+                showWarningToast(resdata[0].Alert);
+            } else {
+                    showWarningToast("服务器运行错误，请联系管理员！");
+            }
+        }
+    });
+}
+
+function editUser(currentUserId) {
+    const AddParams = {
+        userId: currentUserId,
+        loginName: $('#loginname-edit').val(),
+        email: $('#email-edit').val(),
+        userName: $('#username-edit').val()
+    };
+    $.ajaxSetup({async:false});
+    $.ajax({
+        url: '/data/useredit',
         type: 'POST',
         data: AddParams,
         success: function (resdata) {
@@ -370,6 +403,7 @@ function addUserRole(UserId, RoleIds) {
 }
 
 $(document).ready(function() {
+    let currentUserId;
 
     loadUserData();
 
@@ -394,21 +428,32 @@ $(document).ready(function() {
         $('#password').val('');
     });
 
-    $('#user-role-add-btn').click(function() {
-        loadRoleList();
-        let roleListTitle = $('#title-role-list');
-        roleListTitle.attr('data-id', $('#title-user-role').data('id'));
+    $('#add-user-role-btn').click(function() {
+        loadRoleList(currentUserId);
     });
 
     $('#user-role-submit-btn').click(function() {
-        let selectedRows = $('#table-rolelist').DataTable().rows({selected: true});
-        let selectedRoleIds = [];
-        selectedRows.nodes().each(function (row) {
-            let data = $(row).data();
-            let roleId = data.ID;
-            selectedRoleIds.push(roleId);
+        let userRoleIds = [];
+        $('#table-rolelist tbody').find('input.select-row:checked').each(function () {
+            let row = $(this).closest('tr');
+            let roleId = row.data('id');
+            if (roleId) {
+                const userRoleId = {
+                    userId: currentUserId,
+                    roleId: roleId
+                }
+                userRoleIds.push(userRoleId);
+            }
         });
-        addUserRole(UserId, selectedRoleIds);
+        addUserRole(JSON.stringify(userRoleIds));
+    });
+
+    $('#user-edit-submit-btn').click(function() {
+        editUser(currentUserId);
+        loadUserData();
+        $('#loginname-edit').val('');
+        $('#email-edit').val('');
+        $('#username-edit').val('');
     });
 
     let dataTableUser = $('#table-user').DataTable();
@@ -417,8 +462,7 @@ $(document).ready(function() {
         let delRow = $(this).closest('tr');
         $('#del-user-confirm').modal('show');
         $('#del-user-confirm-btn').click(function () {
-            let idCell = delRow.find('td').first();
-            let userId = idCell.text();
+            let userId = delRow.data('id');
             if (userId !== "未查到数据" && typeof userId !== 'undefined' && userId !== null && userId.trim() !== '') {
                 deleteUser(userId);
                 delRow.remove();
@@ -433,8 +477,7 @@ $(document).ready(function() {
 
     dataTableUser.on('click', '.disable-user-btn', function() {
         let disableRow = $(this).closest('tr');
-        let idCell = disableRow.find('td').first();
-        let userId = idCell.text();
+        let userId = disableRow.data('id');
         if (userId !== "未查到数据" && typeof userId !== 'undefined' && userId !== null && userId.trim() !== '') {
             disableUser(userId);
             setTimeout(function () {
@@ -443,13 +486,11 @@ $(document).ready(function() {
         } else {
             showWarningToast("未查到需禁用用户，请刷新页面重试!");
         }
-
     });
 
     dataTableUser.on('click', '.reset-user-btn', function() {
         let resetRow = $(this).closest('tr');
-        let idCell = resetRow.find('td').first();
-        let userId = idCell.text();
+        let userId = resetRow.data('id');
         if (userId !== "未查到数据" && typeof userId !== 'undefined' && userId !== null && userId.trim() !== '') {
             resetUser(userId);
             setTimeout(function () {
@@ -462,15 +503,22 @@ $(document).ready(function() {
     });
 
     dataTableUser.on('click', '.user-role-btn', function() {
-        let tr = $(this).closest('tr');
-        let userId = tr.data('id');
+        let selectedRow = $(this).closest('tr');
+        let userId = selectedRow.data('id');
         if (userId !== "未查到数据" && typeof userId !== 'undefined' && userId !== null && userId.trim() !== '') {
             loadUserRole(userId);
-            let userRoleTitle = $('#title-user-role');
-            userRoleTitle.attr('data-id', userId);
+            currentUserId = userId;
         } else {
             showWarningToast("未找到用户信息，请刷新页面重试!");
         }
+    });
+
+    dataTableUser.on('click', '.edit-user-btn', function() {
+        let editRow = $(this).closest('tr');
+        currentUserId = editRow.data('id');
+        $('#loginname-edit').val(editRow.find('td')[1].innerText);
+        $('#username-edit').val(editRow.find('td')[2].innerText);
+        $('#email-edit').val(editRow.find('td')[3].innerText);
     });
 
     let dataTableUserRole = $('#table-user-role').DataTable();
@@ -479,8 +527,7 @@ $(document).ready(function() {
         let delRow = $(this).closest('tr');
         $('#del-userrole-confirm').modal('show');
         $('#del-userrole-confirm-btn').click(function () {
-            let idCell = delRow.find('td').first();
-            let userRoleId = idCell.text();
+            let userRoleId = delRow.data('id');
             if (userRoleId !== "未查到数据" && typeof userRoleId !== 'undefined' && userRoleId !== null && userRoleId.trim() !== '') {
                 deleteUserRole(userRoleId);
                 delRow.remove();

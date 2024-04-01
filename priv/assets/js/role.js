@@ -57,6 +57,10 @@ function loadRoleData() {
                 visible: false,
                 orderable: false
             }],
+            createdRow: function(row, data) {
+                let dataId = data['Id'];
+                $(row).attr('data-id', dataId);
+            },
             destroy: true, // 销毁重新渲染
             columns: dynamicColumns,
             data: dynamicDatas,
@@ -164,14 +168,16 @@ $(document).ready(function() {
 
     loadRoleData();
 
+    let currentRoleId;
+
     $('#refresh-role-btn').click(function () {
         loadRoleData();
         showWarningToast("数据刷新成功！");
     });
 
     $('#edit-role-submit-btn').click(function (e) {
-        let roleId = $('#role-edit .modal-header .modal-title').data('id');
-        editPermission(roleId);
+        // let roleId = $('#role-edit .modal-header .modal-title').data('id');
+        editPermission(currentRoleId);
         showWarningToast("角色信息变更成功！");
     });
 
@@ -179,8 +185,7 @@ $(document).ready(function() {
 
     dataTableRole.on('click', '.disable-role-btn', function() {
         let disableRow = $(this).closest('tr');
-        let idCell = disableRow.find('td').first();
-        let roleId = idCell.text();
+        let roleId = disableRow.data('id');
         if (roleId !== "未查到数据" && typeof roleId !== 'undefined' && roleId !== null && roleId.trim() !== '') {
             disableRole(roleId);
             setTimeout(function () {
@@ -193,13 +198,13 @@ $(document).ready(function() {
 
     dataTableRole.on('click', '.edit-role-btn', function() {
         let editRow = $(this).closest('tr');
-        let idCell = editRow.find('td').first();
-        let roleId = idCell.text();
+        let roleId = editRow.data('id');
         if (roleId !== "未查到数据" && typeof roleId !== 'undefined' && roleId !== null && roleId.trim() !== '') {
             $('#role-edit').modal('show');
             loadPermission(roleId);
-            let modalTitle = $('.modal-title');
-            modalTitle.attr('data-id', roleId);
+            // let modalTitle = $('.modal-title');
+            // modalTitle.attr('data-id', roleId);
+            currentRoleId = roleId;
         } else {
             showWarningToast("未查到需编辑角色，请刷新页面重试!");
         }

@@ -71,6 +71,7 @@ routes(_Environment) ->
           {"/finance/:detailId", { eadm_finance_controller, delete }, #{methods => [delete]}},
           {"/finance/:detailId", { eadm_finance_controller, searchdetail }, #{methods => [get]}},
           {"/useradd", { eadm_user_controller, add }, #{methods => [post]}},
+          {"/useredit", { eadm_user_controller, edit }, #{methods => [post]}},
           {"/user/:userId", { eadm_user_controller, delete }, #{methods => [delete]}},
           {"/user/reset/:userId", { eadm_user_controller, reset }, #{methods => [post]}},
           {"/user/disable/:userId", { eadm_user_controller, disable }, #{methods => [post]}},
@@ -81,7 +82,7 @@ routes(_Environment) ->
           {"/role/:roleId", { eadm_role_controller, delete }, #{methods => [delete]}},
           {"/role/disable/:roleId", { eadm_role_controller, disable }, #{methods => [post]}},
           {"/role", { eadm_role_controller, search }, #{methods => [get]}},
-          {"/rolelist", { eadm_role_controller, getrolelist }, #{methods => [get]}},
+          {"/rolelist/:userId", { eadm_role_controller, getrolelist }, #{methods => [get]}},
           {"/permission", { eadm_role_controller, updatepermission }, #{methods => [post]}},
           {"/permission/:roleId", { eadm_role_controller, loadpermission }, #{methods => [get]}}
         ]

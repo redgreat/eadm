@@ -159,12 +159,18 @@ delete(#{auth_data := #{<<"authed">> := false}}) ->
 %% @doc
 %% 查询角色列表
 %% @end
-getrolelist(#{auth_data := #{<<"authed">> := true}}) ->
+getrolelist(#{auth_data := #{<<"authed">> := true},
+      bindings := #{<<"userId">> := UserId}}) ->
     try
         {ok, Res_Col, Res_Data} = mysql_pool:query(pool_db,
-            "SELECT Id, RoleName, CreatedAt
-            FROM vi_role
-            ORDER BY CreatedAt;", []),
+            "SELECT A.Id, A.RoleName, A.CreatedAt
+            FROM vi_role A
+            WHERE NOT EXISTS(SELECT 1
+                FROM eadm_userrole B
+                WHERE B.RoleId=A.Id
+                AND B.UserId=?
+                AND B.Deleted=0)
+            ORDER BY A.CreatedAt;", [UserId]),
         Response = eadm_utils:return_as_json(Res_Col, Res_Data),
         {json, Response}
     catch

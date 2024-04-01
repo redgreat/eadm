@@ -187,6 +187,12 @@ INSERT INTO eadm_role(Id, RoleName, RolePermission)
 # VALUES(fn_nextval('ER'), '超级管理员', '{}');
 VALUES('ER9999999998', '超级管理员', '{}');
 
+INSERT INTO eadm_role(Id, RoleName, RolePermission)
+VALUES(fn_nextval('ER'), '注册租户', '{}');
+
+INSERT INTO eadm_role(Id, RoleName, RolePermission)
+VALUES(fn_nextval('ER'), '分配租户', '{}');
+
 # 角色视图
 CREATE OR REPLACE VIEW vi_role
 AS
@@ -197,7 +203,7 @@ FROM eadm_role
 # 用户角色对应关系
 DROP TABLE IF EXISTS `eadm_userrole`;
 CREATE TABLE `eadm_userrole` (
-  `Id` CHAR(12) NOT NULL PRIMARY KEY COMMENT '自定义主键(UR)',
+  `Id` BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY COMMENT '自定义主键(UR)',
   `UserId` CHAR(12) NOT NULL COMMENT '用户Id(eadm_user.Id)',
   `RoleId` CHAR(12) NOT NULL COMMENT '角色Id(eadm_role.Id)',
   `CreatedUser` VARCHAR(50) DEFAULT NULL COMMENT '创建人',
@@ -211,8 +217,8 @@ CREATE TABLE `eadm_userrole` (
   KEY `IDX-RoleId` (`RoleId`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci ROW_FORMAT=DYNAMIC COMMENT '基础信息_用户角色对应关系表';
 
-INSERT INTO eadm_userrole(Id, UserId, RoleId)
-VALUES(fn_nextval('UR'), 'EU9999999998', 'ER9999999998');
+INSERT INTO eadm_userrole(UserId, RoleId)
+VALUES('EU9999999998', 'ER9999999998');
 
 # 用户角色信息视图
 CREATE OR REPLACE VIEW vi_userrole
@@ -233,3 +239,10 @@ SELECT * FROM eadm_role;
 SELECT * FROM eadm_userrole;
 
 SELECT * FROM vi_userrole;
+
+UPDATE eadm_user
+SET LoginName=?,
+UserName=?,
+Email=?,
+UpdatedUser=?
+WHERE Id=?;
