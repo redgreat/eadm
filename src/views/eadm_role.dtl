@@ -1,4 +1,4 @@
-{% extends "base.dtl" %}
+{% extends "eadm_base.dtl" %}
 
 {% block title %}角色信息{% endblock %}
 

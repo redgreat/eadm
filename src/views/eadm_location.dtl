@@ -1,4 +1,4 @@
-{% extends "base.dtl" %}
+{% extends "eadm_base.dtl" %}
 
 {% block title %}轨迹回放{% endblock %}
 
@@ -7,9 +7,6 @@
     <link href="/assets/vendor/datatables/datatables.min.css" rel="stylesheet">
 {% endblock %}
 {% block content %}
-
-<div class="row">
-</div>
 
 <div class="row">
     <div class="col-md-12">

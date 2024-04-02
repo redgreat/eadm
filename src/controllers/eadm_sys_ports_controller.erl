@@ -1,11 +1,11 @@
 %%%-------------------------------------------------------------------
 %%% @author wangcw
 %%% @copyright (C) 2024, REDGREAT
-%% @doc
-%%
-%% eadm Controller
-%%
-%% @end
+%%% @doc
+%%%
+%%% eadm Controller
+%%%
+%%% @end
 %%% Created : 2024-01-25 09:28:21
 %%%-------------------------------------------------------------------
 -module(eadm_sys_ports_controller).

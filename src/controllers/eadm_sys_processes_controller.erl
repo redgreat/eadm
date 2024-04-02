@@ -1,11 +1,11 @@
 %%%-------------------------------------------------------------------
 %%% @author wangcw
 %%% @copyright (C) 2024, REDGREAT
-%% @doc
-%%
-%% eadm Controller
-%%
-%% @end
+%%% @doc
+%%%
+%%% eadm Controller
+%%%
+%%% @end
 %%% Created : 2024-01-25 09:28:14
 %%%-------------------------------------------------------------------
 -module(eadm_sys_processes_controller).

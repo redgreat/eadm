@@ -203,7 +203,7 @@ FROM eadm_role
 # 用户角色对应关系
 DROP TABLE IF EXISTS `eadm_userrole`;
 CREATE TABLE `eadm_userrole` (
-  `Id` BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY COMMENT '自定义主键(UR)',
+  `Id` BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY COMMENT '自增主键',
   `UserId` CHAR(12) NOT NULL COMMENT '用户Id(eadm_user.Id)',
   `RoleId` CHAR(12) NOT NULL COMMENT '角色Id(eadm_role.Id)',
   `CreatedUser` VARCHAR(50) DEFAULT NULL COMMENT '创建人',
@@ -234,15 +234,43 @@ INNER JOIN eadm_role C
   AND C.Deleted=0
 WHERE A.Deleted=0;
 
+# 用户权限信息视图
+CREATE OR REPLACE VIEW vi_userpermission
+AS
+SELECT B.Id, A.LoginName, C.RolePermission
+FROM eadm_user A
+INNER JOIN eadm_userrole B
+  ON B.UserId=A.Id
+  AND B.Deleted=0
+INNER JOIN eadm_role C
+  ON C.Id=B.RoleId
+  AND C.RoleStatus=0
+  AND C.Deleted=0
+WHERE A.Deleted=0;
+
 SELECT * FROM eadm_user;
 SELECT * FROM eadm_role;
 SELECT * FROM eadm_userrole;
-
 SELECT * FROM vi_userrole;
 
-UPDATE eadm_user
-SET LoginName=?,
-UserName=?,
-Email=?,
-UpdatedUser=?
-WHERE Id=?;
+# 定时任务信息
+DROP TABLE IF EXISTS `eadm_crontab`;
+CREATE TABLE `eadm_crontab` (
+  `Id` BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY COMMENT '自增主键',
+  `CronName` VARCHAR(50) NOT NULL COMMENT '任务名称',
+  `CronExp` VARCHAR(50) NOT NULL COMMENT '定时表达式',
+  `CronMFA` VARCHAR(50) NOT NULL COMMENT '任务备注',
+  `StartDateTime` DATETIME COMMENT '任务开始时间',
+  `EndDateTime` DATETIME COMMENT '任务结束时间',
+  `CreatedUser` VARCHAR(50) DEFAULT NULL COMMENT '创建人',
+  `CreatedAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP() COMMENT '数据写入时间',
+  `UpdatedUser` VARCHAR(50) DEFAULT NULL COMMENT '更新人',
+  `UpdatedAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP()  ON UPDATE CURRENT_TIMESTAMP() COMMENT '更新时间',
+  `DeletedUser` VARCHAR(50) DEFAULT NULL COMMENT '删除人',
+  `DeletedAt` DATETIME DEFAULT NULL COMMENT '删除时间',
+  `Deleted` TINYINT NOT NULL DEFAULT 0 COMMENT '是否删除(0否1是)',
+  KEY `IDX-CronName` (`CronName`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci ROW_FORMAT=DYNAMIC COMMENT '基础信息_定时任务信息表';
+
+SELECT CronName, CronExp, CronMFA, StartDateTime, EndDateTime, CreatedAt
+FROM eadm_crontab;

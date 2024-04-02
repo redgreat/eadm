@@ -21,11 +21,14 @@ auth(Req) ->
             lager:info("Auth Exp:~p~n", [Exp]),
             case is_integer(Exp) andalso (Exp > erlang:system_time(seconds)) of
                 true ->
-                    {ok, Username} = nova_session:get(Req ,<<"username">>),
+                    {ok, LoginName} = nova_session:get(Req ,<<"loginname">>),
+                    {ok, UserName} = nova_session:get(Req ,<<"username">>),
+                    {ok, Permission} = nova_session:get(Req ,<<"permission">>),
                     NewExp = eadm_utils:get_exp_bin(),
                     nova_session:set(Req, <<"exp">>, NewExp),
-                    lager:info("User: ~p Auth Success! Exp: ~p, NewExp: ~p~n", [Username, Exp, NewExp]),
-                    {true, #{<<"authed">> => true, <<"username">> => Username}};
+                    lager:info("User: ~ts Auth Success! Exp: ~p, NewExp: ~p~n", [UserName, Exp, NewExp]),
+                    {true, #{<<"authed">> => true, <<"username">> => UserName,
+                        <<"loginname">> => LoginName, <<"permission">> => Permission}};
                 false ->
                     lager:info("Auth Failed, Exp: ~p Expired!", [Exp]),
                     {true, #{<<"authed">> => false}}

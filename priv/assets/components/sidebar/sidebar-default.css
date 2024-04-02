@@ -1,9 +1,11 @@
 /*------------------------------------------------------------------
-* Bootstrap Simple Admin Template
-* Version: 3.0
-* Author: Alexis Luna
-* Website: https://github.com/alexis-luna/bootstrap-simple-admin-template
+* 侧面导航栏样式
+* Author: wangcw
+* Created: 2024-03-15 15:10:03
+* Website: www.wongcw.cn
+* inspire by https://github.com/alexis-luna/bootstrap-simple-admin-template
 -------------------------------------------------------------------*/
+
 #sidebar {
     min-width: 250px;
     max-width: 250px;

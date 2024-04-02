@@ -19,7 +19,7 @@
 %%%===================================================================
 -export([to_json/1, get_exp_bin/0]).
 -export([as_map/1, as_map/3, return_as_map/1, return_as_map/2, return_as_json/1, return_as_json/2,
-    validate_date_time/1, time_diff/2, utc_to_cts/1, cts_to_utc/1, pass_encrypt/1]).
+    validate_date_time/1, time_diff/2, utc_to_cts/1, cts_to_utc/1, pass_encrypt/1, validate_login/2, verify_password/2]).
 
 %%====================================================================
 %% API functions
@@ -198,6 +198,41 @@ pass_encrypt(PassBin) ->
     SecretKey = application:get_env(nova, secret_key, <<>>),
     EncryptPwd = crypto:hash(sha256, <<SecretKey/binary, PassBin/binary>>),
     base64:encode(EncryptPwd).
+
+%% @doc
+%% 验证密码
+%% @end
+validate_login(LoginName, Password) ->
+    {ok, _, DbPassword} = mysql_pool:query(pool_db,
+        "SELECT CryptoGram, UserStatus
+        FROM eadm_user
+        WHERE LoginName = ?
+          AND Deleted = 0
+        ORDER BY UpdatedAt DESC
+        LIMIT 1;",
+        [LoginName]),
+        case DbPassword of
+            [] ->
+                2;
+            _ ->
+                case tl(hd(DbPassword)) of
+                    [0] ->
+                      verify_password(Password, hd(hd(DbPassword)));
+                    [1] ->
+                      3;
+                    _ ->
+                      4
+                end
+        end.
+
+%% @doc
+%% 密码加密解密-验证密码
+%% @end
+verify_password(Pwd, DbPwd) ->
+    Secret_Key = application:get_env(nova, secret_key, <<>>),
+    HPwd = crypto:hash(sha256, <<Secret_Key/binary, Pwd/binary>>),
+    DbPwdBin = base64:decode(DbPwd),
+    HPwd =:= DbPwdBin.
 
 %%===================================================================
 %% 内部函数

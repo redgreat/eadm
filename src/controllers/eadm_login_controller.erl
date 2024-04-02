@@ -2,7 +2,7 @@
 %%% @author wangcw
 %%% @copyright (C) 2024, REDGREAT
 %%% @doc
-%%%
+%%%  用户登录模块
 %%% @end
 %%% Created : 2024-02-15 23:54
 %%%-------------------------------------------------------------------
@@ -26,23 +26,38 @@ login(Req) ->
             {ok, []};
         <<"POST">> ->
             {ok, _, #{params := Params}} = cowboy_req:read_body(Req),
-            case validate_login(Params) of
+            LoginName = maps:get(<<"loginName">>, Params),
+            Password = maps:get(<<"password">>, Params),
+            case eadm_utils:validate_login(LoginName, Password) of
                 true ->
-                    Username = maps:get(<<"username">>, Params),
+                    UserName = get_username(LoginName),
+                    Permission = get_permission(LoginName),
                     NewExp = eadm_utils:get_exp_bin(),
-                    nova_session:set(Req, <<"username">>, Username),
+                    nova_session:set(Req, <<"loginname">>, LoginName),
+                    nova_session:set(Req, <<"username">>, UserName),
+                    nova_session:set(Req, <<"permission">>, Permission),
                     nova_session:set(Req, <<"exp">>, NewExp),
-                    lager:info("User: ~p, Login Success! New Exp: ~p", [Username, NewExp]),
-                    {redirect, "/"};
+                    lager:info("User: ~ts, Login Success! New Exp: ~p", [UserName, NewExp]),
+                    A = unicode:characters_to_binary("欢迎【"),
+                    B = unicode:characters_to_binary("】登录! "),
+                    Info = #{<<"Alert">> => <<A/binary, UserName/binary, B/binary>>,
+                        <<"logined">> => 1},
+                    {json, [Info]};
                 2 ->
-                    lager:info("User Disable Failed!"),
-                    {redirect, "/login?error=user_notfond"};
+                    lager:info("User Not Fond!"),
+                    Alert = #{<<"Alert">> => unicode:characters_to_binary("用户不存在，请联系管理员！"),
+                        <<"logined">> => 0},
+                    {json, [Alert]};
                 3 ->
-                    lager:info("User Disable Failed!"),
-                    {redirect, "/login?error=user_disable"};
+                    lager:info("User Disable!"),
+                    Alert = #{<<"Alert">> => unicode:characters_to_binary("用户已禁用，请联系管理员！"),
+                        <<"logined">> => 0},
+                    {json, [Alert]};
                 _ ->
                     lager:info("User Login Failed!"),
-                    {redirect, "/login?error=invalid_credentials"}
+                    Alert = #{<<"Alert">> => unicode:characters_to_binary("用户名或密码错误，请重新登录！"),
+                        <<"logined">> => 0},
+                    {json, [Alert]}
             end
     end.
 
@@ -50,42 +65,32 @@ login(Req) ->
 %% 退出登录
 %% @end
 logout(Req) ->
-    lager:info("User Session Deleted!~n"),
+    lager:info("User Logout!~n"),
     nova_session:delete(Req).
-    % {redirect, "/login"}.
 
 %%===================================================================
 %% 内部函数
 %%===================================================================
-validate_login(ParamsVal) ->
-    {ok, _, DbPassE} = mysql_pool:query(pool_db,
-        "SELECT CryptoGram, UserStatus
-        FROM eadm_user
-        WHERE LoginName = ?
-          AND Deleted = 0
-        ORDER BY UpdatedAt DESC
-        LIMIT 1;",
-        [maps:get(<<"username">>, ParamsVal)]),
-        case DbPassE of
-            [] ->
-                2;
-            _ ->
-                case tl(hd(DbPassE)) of
-                    [0] ->
-                      ParamsPass = maps:get(<<"password">>, ParamsVal),
-                      verify_password(ParamsPass, hd(hd(DbPassE)));
-                    [1] ->
-                      3;
-                    _ ->
-                      4
-                end
-        end.
 
 %% @doc
-%% 密码加密解密-验证密码
+%% 获取用户权限
 %% @end
-verify_password(Pwd, DbPwd) ->
-    Secret_Key = application:get_env(nova, secret_key, <<>>),
-    HPwd = crypto:hash(sha256, <<Secret_Key/binary, Pwd/binary>>),
-    DbPwdBin = base64:decode(DbPwd),
-    HPwd =:= DbPwdBin.
+get_permission(LoginName) ->
+    {ok, _, Res_Data} = mysql_pool:query(pool_db,
+        "SELECT RolePermission
+        FROM vi_userpermission
+        WHERE LoginName=?
+        LIMIT 1;", [LoginName]),
+    {ok, Response} = thoas:decode(list_to_binary(Res_Data)),
+    Response.
+
+%% @doc
+%% 根据登陆名获取显示
+%% @end
+get_username(LoginName) ->
+    {ok, _, Res_Data} = mysql_pool:query(pool_db,
+        "SELECT UserName
+        FROM eadm_user
+        WHERE LoginName=?
+        LIMIT 1;", [LoginName]),
+    hd(hd(Res_Data)).

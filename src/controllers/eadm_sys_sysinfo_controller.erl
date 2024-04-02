@@ -1,11 +1,11 @@
 %%%-------------------------------------------------------------------
 %%% @author wangcw
 %%% @copyright (C) 2024, REDGREAT
-%% @doc
-%%
-%% eadm Controller
-%%
-%% @end
+%%% @doc
+%%%
+%%% eadm Controller
+%%%
+%%% @end
 %%% Created : 2024-01-25 09:18:34
 %%%-------------------------------------------------------------------
 -module(eadm_sys_sysinfo_controller).

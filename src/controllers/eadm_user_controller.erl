@@ -1,11 +1,11 @@
 %%%-------------------------------------------------------------------
 %%% @author wangcw
 %%% @copyright (C) 2024, REDGREAT
-%% @doc
-%%
-%% 用户信息逻辑处理
-%%
-%% @end
+%%% @doc
+%%%
+%%% 用户信息逻辑处理
+%%%
+%%% @end
 %%% Created : 2024-03-20 16:20:17
 %%%-------------------------------------------------------------------
 -module(eadm_user_controller).
@@ -14,8 +14,8 @@
 %%%===================================================================
 %%% Application callbacks
 %%%===================================================================
--export([index/1, search/1, add/1, edit/1, reset/1, delete/1, disable/1, userrole/1, userroleadd/1, userroledel/1]).
-
+-export([index/1, search/1, searchself/1, add/1, edit/1, editself/1, reset/1, password/1,
+    delete/1, disable/1, userrole/1, userroleadd/1, userroledel/1]).
 
 %%====================================================================
 %% API functions
@@ -33,7 +33,7 @@ index(#{auth_data := #{<<"authed">> := false}}) ->
 %% @doc
 %% 查询返回数据结果
 %% @end
-search(#{auth_data := #{<<"authed">> := true}}) ->
+search(#{auth_data := #{<<"authed">> := true, <<"permission">> := #{<<"usermanage">> := true}}}) ->
     try
         {ok, Res_Col, Res_Data} = mysql_pool:query(pool_db,
             "SELECT Id, TenantName, LoginName, UserName, Email, UserStatus, CreatedAt
@@ -51,9 +51,31 @@ search(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 
 %% @doc
+%% 查询返回数据结果
+%% @end
+searchself(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName}}) ->
+    try
+        {ok, _, ResData} = mysql_pool:query(pool_db,
+            "SELECT LoginName, UserName, Email
+            FROM eadm_user
+            WHERE LoginName=?
+              AND UserStatus=0
+              AND Deleted=0
+            LIMIT 1", [LoginName]),
+        {json, hd(ResData)}
+    catch
+        _:Error ->
+            Alert = #{<<"Alert">> => unicode:characters_to_binary("数据查询失败! " ++ binary_to_list(Error))},
+            {json, [Alert]}
+    end;
+
+searchself(#{auth_data := #{<<"authed">> := false}}) ->
+    {redirect, "/login"}.
+
+%% @doc
 %% 新增用户数据
 %% @end
-add(#{auth_data := #{<<"authed">> := true, <<"username">> := CreatedUser},
+add(#{auth_data := #{<<"authed">> := true, <<"loginname">> := CreatedUser},
       params := #{<<"loginName">> := LoginName, <<"email">> := Email,
       <<"userName">> := UserName, <<"password">> := PassWord}}) ->
     case validate_password(PassWord) of
@@ -117,11 +139,10 @@ add(#{auth_data := #{<<"authed">> := true, <<"username">> := CreatedUser},
 add(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 
-
 %% @doc
 %% 编辑用户数据
 %% @end
-edit(#{auth_data := #{<<"authed">> := true, <<"username">> := CreatedUser},
+edit(#{auth_data := #{<<"authed">> := true, <<"loginname">> := CreatedUser},
       params := #{<<"userId">> := UserId, <<"loginName">> := LoginName,
           <<"email">> := Email, <<"userName">> := UserName}}) ->
       case validate_loginname(LoginName) of
@@ -181,9 +202,97 @@ edit(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 
 %% @doc
+%% 编辑用户数据
+%% @end
+editself(#{auth_data := #{<<"authed">> := true, <<"loginname">> := CreatedUser},
+      params := #{<<"loginName">> := LoginName, <<"email">> := Email, <<"userName">> := NewUserName}}) ->
+    case re:run(Email, "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$") of
+        {match, _} ->
+            try
+                mysql_pool:query(pool_db,
+                      "UPDATE eadm_user
+                      SET LoginName=?,
+                      UserName=?,
+                      Email=?,
+                      UpdatedUser=?
+                      WHERE LoginName=?;",
+                    [LoginName, NewUserName, Email, CreatedUser, CreatedUser]),
+                A = unicode:characters_to_binary("用户【"),
+                B = unicode:characters_to_binary("】编辑成功! "),
+                Info = #{<<"Alert">> => <<A/binary, NewUserName/binary, B/binary>>},
+                {json, [Info]}
+            catch
+                _:Error ->
+                    Alert = #{<<"Alert">> => unicode:characters_to_binary("用户编辑失败！") ++ binary_to_list(Error)},
+                    {json, [Alert]}
+            end;
+        _ ->
+            A = unicode:characters_to_binary("邮箱【"),
+            B = unicode:characters_to_binary("】格式错误! "),
+            Info = #{<<"Alert">> => <<A/binary, Email/binary, B/binary>>},
+            {json, [Info]}
+    end;
+editself(#{auth_data := #{<<"authed">> := false}}) ->
+    {redirect, "/login"}.
+
+%% @doc
+%% 修改用户密码
+%% @end
+password(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName},
+      params := #{<<"passwordOld">> := PasswordOld, <<"passwordNew">> := PasswordNew}}) ->
+    case validate_password(PasswordNew) of
+        {ok} ->
+            case eadm_utils:validate_login(LoginName, PasswordOld) of
+                true ->
+                    CryptoGram = eadm_utils:pass_encrypt(PasswordNew),
+                    try
+                        mysql_pool:query(pool_db,
+                            "UPDATE eadm_user
+                            SET UpdatedUser=?,
+                            UpdatedAt=NOW(),
+                            CryptoGram=?
+                            WHERE LoginName=?
+                              AND UserStatus=0
+                              AND Deleted=0;",
+                            [LoginName, CryptoGram, LoginName]),
+                        Info = #{<<"Alert">> => unicode:characters_to_binary("密码修改成功! ")},
+                        {json, [Info]}
+                    catch
+                        _:Error ->
+                            Alert = #{<<"Alert">> => unicode:characters_to_binary("用户密码修改失败! ") ++ binary_to_list(Error)},
+                            {json, [Alert]}
+                    end;
+                2 ->
+                    lager:info("User Not Fond!"),
+                    Alert = #{<<"Alert">> => unicode:characters_to_binary("用户不存在，请联系管理员！"),
+                        <<"logined">> => 0},
+                    {json, [Alert]};
+                3 ->
+                    lager:info("User Disable!"),
+                    Alert = #{<<"Alert">> => unicode:characters_to_binary("用户已禁用，请联系管理员！"),
+                        <<"logined">> => 0},
+                    {json, [Alert]};
+                _ ->
+                    lager:info("User Login Failed!"),
+                    Alert = #{<<"Alert">> => unicode:characters_to_binary("用户名或密码错误，请重新登录！"),
+                        <<"logined">> => 0},
+                    {json, [Alert]}
+            end;
+        {error, ErrInfo} ->
+            Alert = #{<<"Alert">> => unicode:characters_to_binary(ErrInfo)},
+            {json, [Alert]};
+        _ ->
+            Alert = #{<<"Alert">> => unicode:characters_to_binary("用户新增失败！")},
+            {json, [Alert]}
+    end;
+
+password(#{auth_data := #{<<"authed">> := false}}) ->
+    {redirect, "/login"}.
+
+%% @doc
 %% 重置用户密码
 %% @end
-reset(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName},
+reset(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName},
       bindings := #{<<"userId">> := UserId}}) ->
     % 重置密码123456
     CryptoGram = <<"4WpJ2hODluWuRFXsypv38CLIolSjGbe999q6gmCOa+0=">>,
@@ -193,7 +302,7 @@ reset(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName},
                                   UpdatedAt = NOW(),
                                   CryptoGram = ?
                                   WHERE Id = ?;",
-                                  [UserName, CryptoGram, UserId]),
+                                  [LoginName, CryptoGram, UserId]),
         Info = #{<<"Alert">> => unicode:characters_to_binary("用户密码重置成功! ")},
         {json, [Info]}
     catch
@@ -208,7 +317,7 @@ reset(#{auth_data := #{<<"authed">> := false}}) ->
 %% @doc
 %% 禁用用户
 %% @end
-disable(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName},
+disable(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName},
      bindings := #{<<"userId">> := UserId}}) ->
     try
         mysql_pool:query(pool_db, "UPDATE eadm_user
@@ -217,7 +326,7 @@ disable(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName},
                                       UpdatedAt = CURRENT_TIMESTAMP()
                                   WHERE Id = ?
                                     AND Deleted = 0;",
-                                  [UserName, UserId]),
+                                  [LoginName, UserId]),
         Info = #{<<"Alert">> => unicode:characters_to_binary("用户启禁用成功! ")},
         {json, [Info]}
     catch
@@ -232,7 +341,7 @@ disable(#{auth_data := #{<<"authed">> := false}}) ->
 %% @doc
 %% 删除用户数据
 %% @end
-delete(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName},
+delete(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName},
     bindings := #{<<"userId">> := UserId}}) ->
     try
         mysql_pool:query(pool_db, "UPDATE eadm_user
@@ -240,7 +349,7 @@ delete(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName},
                                   DeletedAt = NOW(),
                                   Deleted = 1
                                   WHERE Id = ?;",
-                                  [UserName, UserId]),
+                                  [LoginName, UserId]),
         Info = #{<<"Alert">> => unicode:characters_to_binary("用户删除成功! ")},
         {json, [Info]}
     catch
@@ -277,14 +386,14 @@ userrole(#{auth_data := #{<<"authed">> := false}}) ->
 %% @doc
 %% 新增用户角色
 %% @end
-userroleadd(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName}, params := RoleIdMap}) ->
+userroleadd(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName}, params := RoleIdMap}) ->
     [{RoleIds, _Value}] = maps:to_list(RoleIdMap),
     {ok, RoleIdList} = thoas:decode(RoleIds),
     InsertQuery = "INSERT INTO eadm_userrole(UserId, RoleId, CreatedUser) VALUES(?, ?, ?);",
     try
         lists:foreach(fun (Map) ->
             mysql_pool:query(pool_db, InsertQuery,
-                [maps:get(<<"userId">>, Map), maps:get(<<"roleId">>, Map), UserName])
+                [maps:get(<<"userId">>, Map), maps:get(<<"roleId">>, Map), LoginName])
             end,
             RoleIdList),
         Info = #{<<"Alert">> => unicode:characters_to_binary("用户角色新增成功! ")},
@@ -301,7 +410,7 @@ userroleadd(#{auth_data := #{<<"authed">> := false}}) ->
 %% @doc
 %% 删除用户角色数据
 %% @end
-userroledel(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName},
+userroledel(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName},
     bindings := #{<<"userRoleId">> := UserRoleId}}) ->
     try
         mysql_pool:query(pool_db, "UPDATE eadm_userrole
@@ -309,7 +418,7 @@ userroledel(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName},
                                   DeletedAt = NOW(),
                                   Deleted = 1
                                   WHERE Id = ?;",
-                                  [UserName, UserRoleId]),
+                                  [LoginName, UserRoleId]),
         Info = #{<<"Alert">> => unicode:characters_to_binary("用户角色删除成功! ")},
         {json, [Info]}
     catch

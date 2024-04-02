@@ -1,11 +1,11 @@
 %%%-------------------------------------------------------------------
 %%% @author wangcw
 %%% @copyright (C) 2024, REDGREAT
-%% @doc
-%%
-%% 我的财务逻辑处理
-%%
-%% @end
+%%% @doc
+%%%
+%%% 我的财务逻辑处理
+%%%
+%%% @end
 %%% Created : 2024-03-15 08:39:40
 %%%-------------------------------------------------------------------
 -module(eadm_finance_controller).
@@ -108,7 +108,7 @@ search(#{auth_data := #{<<"authed">> := false}}) ->
 %% @doc
 %% 删除财务数据
 %% @end
-delete(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName},
+delete(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName},
     bindings := #{<<"detailId">> := DetailId}}) ->
         try
             mysql_pool:query(pool_db, "UPDATE paybilldetail
@@ -116,7 +116,7 @@ delete(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName},
                                       DeletedAt = NOW(),
                                       Deleted = 1
                                       WHERE Id = ?;",
-                                      [UserName, DetailId]),
+                                      [LoginName, DetailId]),
             Info = #{<<"Alert">> => unicode:characters_to_binary("数据删成功! ")},
             {json, [Info]}
         catch

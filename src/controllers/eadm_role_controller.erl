@@ -1,11 +1,11 @@
 %%%-------------------------------------------------------------------
 %%% @author wangcw
 %%% @copyright (C) 2024, REDGREAT
-%% @doc
-%%
-%% 角色信息逻辑处理
-%%
-%% @end
+%%% @doc
+%%%
+%%% 角色信息逻辑处理
+%%%
+%%% @end
 %%% Created : 2024-03-26 16:07:25
 %%%-------------------------------------------------------------------
 -module(eadm_role_controller).
@@ -75,7 +75,7 @@ loadpermission(#{auth_data := #{<<"authed">> := false}}) ->
 %% @doc
 %% 更新角色权限信息
 %% @end
-updatepermission(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName},
+updatepermission(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName},
       params := #{<<"roleId">> := RoleId, <<"dashBoard">> := DashBoard, <<"health">> := Health,
         <<"locate">> := Locate, <<"finance">> := Finance, <<"finimp">> := Finimp,
         <<"findel">> := Findel, <<"crontab">> := Crontab, <<"userManage">> := Usermanage}}) ->
@@ -97,7 +97,7 @@ updatepermission(#{auth_data := #{<<"authed">> := true, <<"username">> := UserNa
             SET RolePermission = ?,
                 UpdatedUser = ?,
                 UpdatedAt = CURRENT_TIMESTAMP()
-            WHERE Id = ?;", [RolePermissionJson, UserName, RoleId]),
+            WHERE Id = ?;", [RolePermissionJson, LoginName, RoleId]),
         Info = #{<<"Alert">> => unicode:characters_to_binary("权限更新成功! ")},
         {json, [Info]}
     catch
@@ -112,16 +112,17 @@ updatepermission(#{auth_data := #{<<"authed">> := false}}) ->
 %% @doc
 %% 禁用角色
 %% @end
-disable(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName},
+disable(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName},
       bindings := #{<<"roleId">> := RoleId}}) ->
     try
-        mysql_pool:query(pool_db, "UPDATE eadm_role
-                                  SET RoleStatus = 1 - RoleStatus,
-                                      UpdatedUser = ?,
-                                      UpdatedAt = CURRENT_TIMESTAMP()
-                                  WHERE Id = ?
-                                    AND Deleted = 0;",
-                                  [UserName, RoleId]),
+        mysql_pool:query(pool_db,
+            "UPDATE eadm_role
+            SET RoleStatus = 1 - RoleStatus,
+                UpdatedUser = ?,
+                UpdatedAt = CURRENT_TIMESTAMP()
+            WHERE Id = ?
+              AND Deleted = 0;",
+            [LoginName, RoleId]),
         Info = #{<<"Alert">> => unicode:characters_to_binary("角色启禁用成功! ")},
         {json, [Info]}
     catch
@@ -136,15 +137,16 @@ disable(#{auth_data := #{<<"authed">> := false}}) ->
 %% @doc
 %% 删除角色数据
 %% @end
-delete(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName},
+delete(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName},
       bindings := #{<<"roleId">> := RoleId}}) ->
     try
-        mysql_pool:query(pool_db, "UPDATE eadm_role
-                                  SET DeletedUser = ?,
-                                    DeletedAt = NOW(),
-                                    Deleted = 1
-                                  WHERE Id = ?;",
-                                  [UserName, RoleId]),
+        mysql_pool:query(pool_db,
+            "UPDATE eadm_role
+            SET DeletedUser = ?,
+              DeletedAt = NOW(),
+              Deleted = 1
+            WHERE Id = ?;",
+            [LoginName, RoleId]),
         Info = #{<<"Alert">> => unicode:characters_to_binary("角色删除成功! ")},
         {json, [Info]}
     catch
@@ -185,9 +187,4 @@ getrolelist(#{auth_data := #{<<"authed">> := false}}) ->
 %%====================================================================
 %% Internal functions
 %%====================================================================
-switch_status(Switcher) when Switcher =:= <<"on">> ->
-    true;
-switch_status(Switcher) when Switcher =:= <<"off">> ->
-    false;
-switch_status(_) ->
-    false.
+

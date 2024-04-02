@@ -127,19 +127,17 @@ function loadFinanceData(sourceType, inorOut, startTime, endTime) {
 }
 
 function deleteRecord(detailId) {
-    if (typeof detailId !== 'undefined' && detailId !== null && detailId.trim() !== '') {
-        $.ajax({
-            url: '/data/finance/' + detailId,
-            type: 'DELETE',
-            success: function (response) {
-                if (response && response.length > 0 && response[0].Alert) {
-                    showWarningToast(response[0].Alert);
-                } else {
-                    showWarningToast("数据删除成功！");
-                }
+    $.ajax({
+        url: '/data/finance/' + detailId,
+        type: 'DELETE',
+        success: function (response) {
+            if (response && response.length > 0 && response[0].Alert) {
+                showWarningToast(response[0].Alert);
+            } else {
+                showWarningToast("数据删除成功！");
             }
-        });
-    }
+        }
+    });
 }
 
 function loadFinanceDetail(detailId) {

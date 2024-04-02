@@ -116,7 +116,7 @@ function loadUserData() {
 }
 
 function deleteUser(userId) {
-    if (typeof userId !== 'undefined' && userId !== null && userId.trim() !== '') {
+    if (typeof userId !== 'undefined' && userId !== null) {
         $.ajax({
             url: '/data/user/' + userId,
             type: 'DELETE',
@@ -132,7 +132,7 @@ function deleteUser(userId) {
 }
 
 function disableUser(userId) {
-    if (typeof userId !== 'undefined' && userId !== null && userId.trim() !== '') {
+    if (typeof userId !== 'undefined' && userId !== null) {
         $.ajax({
             url: '/data/user/disable/' + userId,
             type: 'POST',
@@ -148,7 +148,7 @@ function disableUser(userId) {
 }
 
 function resetUser(userId) {
-    if (typeof userId !== 'undefined' && userId !== null && userId.trim() !== '') {
+    if (typeof userId !== 'undefined' && userId !== null) {
         $.ajax({
             url: '/data/user/reset/' + userId,
             type: 'POST',
@@ -266,19 +266,17 @@ function loadUserRole(userId) {
 }
 
 function deleteUserRole(userRoleId) {
-    if (typeof userRoleId !== 'undefined' && userRoleId !== null && userRoleId.trim() !== '') {
-        $.ajax({
-            url: '/data/userrole/delete/' + userRoleId,
-            type: 'DELETE',
-            success: function (resdata) {
-                if (resdata && resdata.length > 0 && resdata[0].Alert) {
-                    showWarningToast(resdata[0].Alert);
-                } else {
-                    showWarningToast("数据删除成功！");
-                }
+    $.ajax({
+        url: '/data/userrole/delete/' + userRoleId,
+        type: 'DELETE',
+        success: function (resdata) {
+            if (resdata && resdata.length > 0 && resdata[0].Alert) {
+                showWarningToast(resdata[0].Alert);
+            } else {
+                showWarningToast("数据删除成功！");
             }
-        });
-    }
+        }
+    });
 }
 
 function loadRoleList(userId) {
@@ -374,7 +372,7 @@ function addUserRole(userRoleIds) {
             if (resdata && resdata.length > 0 && resdata[0].Alert) {
                 showWarningToast(resdata[0].Alert);
             } else {
-                    showWarningToast("服务器运行错误，请联系管理员！");
+                showWarningToast("服务器运行错误，请联系管理员！");
             }
         }
     });
@@ -396,7 +394,7 @@ function editUser(currentUserId) {
             if (resdata && resdata.length > 0 && resdata[0].Alert) {
                 showWarningToast(resdata[0].Alert);
             } else {
-                    showWarningToast("服务器运行错误，请联系管理员！");
+                showWarningToast("服务器运行错误，请联系管理员！");
             }
         }
     });
@@ -463,7 +461,7 @@ $(document).ready(function() {
         $('#del-user-confirm').modal('show');
         $('#del-user-confirm-btn').click(function () {
             let userId = delRow.data('id');
-            if (userId !== "未查到数据" && typeof userId !== 'undefined' && userId !== null && userId.trim() !== '') {
+            if (userId !== "未查到数据" && typeof userId !== 'undefined' && userId !== null) {
                 deleteUser(userId);
                 delRow.remove();
                 setTimeout(function () {
@@ -478,7 +476,7 @@ $(document).ready(function() {
     dataTableUser.on('click', '.disable-user-btn', function() {
         let disableRow = $(this).closest('tr');
         let userId = disableRow.data('id');
-        if (userId !== "未查到数据" && typeof userId !== 'undefined' && userId !== null && userId.trim() !== '') {
+        if (userId !== "未查到数据" && typeof userId !== 'undefined' && userId !== null) {
             disableUser(userId);
             setTimeout(function () {
                 loadUserData();
@@ -491,7 +489,7 @@ $(document).ready(function() {
     dataTableUser.on('click', '.reset-user-btn', function() {
         let resetRow = $(this).closest('tr');
         let userId = resetRow.data('id');
-        if (userId !== "未查到数据" && typeof userId !== 'undefined' && userId !== null && userId.trim() !== '') {
+        if (userId !== "未查到数据" && typeof userId !== 'undefined' && userId !== null) {
             resetUser(userId);
             setTimeout(function () {
                 loadUserData();
@@ -505,7 +503,7 @@ $(document).ready(function() {
     dataTableUser.on('click', '.user-role-btn', function() {
         let selectedRow = $(this).closest('tr');
         let userId = selectedRow.data('id');
-        if (userId !== "未查到数据" && typeof userId !== 'undefined' && userId !== null && userId.trim() !== '') {
+        if (userId !== "未查到数据" && typeof userId !== 'undefined' && userId !== null) {
             loadUserRole(userId);
             currentUserId = userId;
         } else {
@@ -528,7 +526,8 @@ $(document).ready(function() {
         $('#del-userrole-confirm').modal('show');
         $('#del-userrole-confirm-btn').click(function () {
             let userRoleId = delRow.data('id');
-            if (userRoleId !== "未查到数据" && typeof userRoleId !== 'undefined' && userRoleId !== null && userRoleId.trim() !== '') {
+            console.log("userRoleId: " + userRoleId);
+            if (userRoleId !== "未查到数据" && typeof userRoleId !== 'undefined' && userRoleId !== null) {
                 deleteUserRole(userRoleId);
                 delRow.remove();
                 setTimeout(function () {

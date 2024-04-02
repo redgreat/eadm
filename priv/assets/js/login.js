@@ -8,18 +8,40 @@
  *
  */
 
-document.querySelector('.footer').querySelector('p').textContent = "Copyright © wangcw 2020-" + new Date().getFullYear() + " All Rights Reserved";
-window.onload = function() {
-    let urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.has('error')) {
-        let error = urlParams.get('error');
-        if (error === 'invalid_credentials') {
-            // document.getElementById('loginfailed').textContent = "用户名或密码错误，请重新登录！";
-            document.getElementById('loginfailed').style.display = 'block';
-        } else if (error === 'user_disable') {
-            document.getElementById('userdisable').style.display = 'block';
-        } else if (error === 'user_notfond') {
-            document.getElementById('usernodfond').style.display = 'block';
+function login() {
+    const formData = {
+        loginName: $('#loginname').val(),
+        password: $('#password').val()
+    };
+    $.ajaxSetup({async:false});
+    $.ajax({
+        url: '/login',
+        type: 'POST',
+        data: formData,
+        success: function (resdata) {
+            if (resdata && resdata.length > 0) {
+                if (resdata[0].logined === 0) {
+                    $('#loginalert')
+                        .text(resdata[0].Alert)
+                        .show();
+                } else if (resdata[0].logined === 1) {
+                    window.location.href = "/";
+                }
+            }
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+          console.error('登录失败:', textStatus, errorThrown);
         }
-    }
-};
+    });
+}
+
+$(document).ready(function() {
+
+    let currentYear = new Date().getFullYear();
+    $('.footer p').text("Copyright © wangcw 2020-" + currentYear + " All Rights Reserved");
+
+    $('#loginform').on('submit', function(e) {
+        e.preventDefault();
+        login();
+    });
+});

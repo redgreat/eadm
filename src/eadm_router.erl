@@ -52,7 +52,8 @@ routes(_Environment) ->
       routes => [
           {"/health", { eadm_health_controller, index }, #{methods => [get]}},
           {"/location", { eadm_location_controller, index }, #{methods => [get]}},
-          {"/finance", { eadm_finance_controller, index }, #{methods => [get]}}
+          {"/finance", { eadm_finance_controller, index }, #{methods => [get]}},
+          {"/crontab", { eadm_crontab_controller, index }, #{methods => [get]}}
         ]
       },
       #{prefix => "user",
@@ -70,12 +71,17 @@ routes(_Environment) ->
           {"/finance", { eadm_finance_controller, search }, #{methods => [get]}},
           {"/finance/:detailId", { eadm_finance_controller, delete }, #{methods => [delete]}},
           {"/finance/:detailId", { eadm_finance_controller, searchdetail }, #{methods => [get]}},
+          {"/crontab/:cronName", { eadm_crontab_controller, search }, #{methods => [get]}},
           {"/useradd", { eadm_user_controller, add }, #{methods => [post]}},
           {"/useredit", { eadm_user_controller, edit }, #{methods => [post]}},
+          {"/usereditself", { eadm_user_controller, editself }, #{methods => [post]}},
+          {"/userpass", { eadm_user_controller, password }, #{methods => [post]}},
           {"/user/:userId", { eadm_user_controller, delete }, #{methods => [delete]}},
           {"/user/reset/:userId", { eadm_user_controller, reset }, #{methods => [post]}},
           {"/user/disable/:userId", { eadm_user_controller, disable }, #{methods => [post]}},
           {"/user", { eadm_user_controller, search }, #{methods => [get]}},
+          {"/userself", { eadm_user_controller, searchself }, #{methods => [get]}},
+          {"/password", { eadm_user_controller, password }, #{methods => [post]}},
           {"/userrole/:userId", { eadm_user_controller, userrole }, #{methods => [get]}},
           {"/userrole/delete/:userRoleId", { eadm_user_controller, userroledel }, #{methods => [delete]}},
           {"/userroleadd", { eadm_user_controller, userroleadd }, #{methods => [post]}},

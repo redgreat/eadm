@@ -1,11 +1,10 @@
-{% extends "base.dtl" %}
+{% extends "eadm_base.dtl" %}
 
 {% block title %}我的财务{% endblock %}
 
 {% block css %}
     <link href="/assets/vendor/datetimepicker/datetimepicker.min.css" rel="stylesheet">
     <link href="/assets/vendor/datatables/datatables.min.css" rel="stylesheet">
-    <link href="/assets/css/finance.css" rel="stylesheet">
 {% endblock %}
 {% block content %}
 
