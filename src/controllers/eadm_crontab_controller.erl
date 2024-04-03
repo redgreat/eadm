@@ -36,7 +36,7 @@ index(#{auth_data := #{<<"authed">> := false}}) ->
 search(#{auth_data := #{<<"authed">> := true}, bindings := #{<<"cronName">> := CronName}}) ->
     CronNamePattern = <<"%", CronName/binary, "%">>,
     {ok, Res_Col, Res_Data} = mysql_pool:query(pool_db,
-        "SELECT CronName, CronExp, CronMFA, StartDateTime, EndDateTime, CreatedAt
+        "SELECT CronName, CronExp, CronMFA, StartDateTime, EndDateTime, CronStatus, CreatedAt
         FROM eadm_crontab
         WHERE CronName LIKE ?
           AND Deleted=0

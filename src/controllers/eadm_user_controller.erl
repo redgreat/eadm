@@ -15,7 +15,7 @@
 %%% Application callbacks
 %%%===================================================================
 -export([index/1, search/1, searchself/1, add/1, edit/1, editself/1, reset/1, password/1,
-    delete/1, disable/1, userrole/1, userroleadd/1, userroledel/1]).
+    delete/1, disable/1, userrole/1, userroleadd/1, userroledel/1, userpermission/1]).
 
 %%====================================================================
 %% API functions
@@ -430,6 +430,16 @@ userroledel(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName}
 userroledel(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 
+%% @doc
+%% 获取角色权限数据
+%% @end
+userpermission(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName}}) ->
+    Permission = get_permission(LoginName),
+    {json, [Permission]};
+
+userpermission(#{auth_data := #{<<"authed">> := false}}) ->
+    {redirect, "/login"}.
+
 %%====================================================================
 %% Internal functions
 %%====================================================================
@@ -487,6 +497,19 @@ validate_loginname(LoginName) ->
         _ ->
             {error, 6}
     end.
+
+
+%% @doc
+%% 获取用户权限
+%% @end
+get_permission(LoginName) ->
+    {ok, _, ResData} = mysql_pool:query(pool_db,
+        "SELECT RolePermission
+        FROM vi_userpermission
+        WHERE LoginName=?
+        LIMIT 1;", [LoginName]),
+    {ok, ResMap} = thoas:decode(list_to_binary(ResData)),
+    ResMap.
 
 %% @doc
 %% 验证邮箱格式

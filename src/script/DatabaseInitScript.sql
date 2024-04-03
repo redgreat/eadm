@@ -262,6 +262,7 @@ CREATE TABLE `eadm_crontab` (
   `CronMFA` VARCHAR(50) NOT NULL COMMENT '任务备注',
   `StartDateTime` DATETIME COMMENT '任务开始时间',
   `EndDateTime` DATETIME COMMENT '任务结束时间',
+  `CronStatus` TINYINT NOT NULL DEFAULT 0 COMMENT '任务状态(0启用1禁用)',
   `CreatedUser` VARCHAR(50) DEFAULT NULL COMMENT '创建人',
   `CreatedAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP() COMMENT '数据写入时间',
   `UpdatedUser` VARCHAR(50) DEFAULT NULL COMMENT '更新人',
@@ -274,3 +275,8 @@ CREATE TABLE `eadm_crontab` (
 
 SELECT CronName, CronExp, CronMFA, StartDateTime, EndDateTime, CreatedAt
 FROM eadm_crontab;
+
+SELECT RolePermission
+FROM eadm_role
+WHERE Id = ?
+  AND Deleted = 0;

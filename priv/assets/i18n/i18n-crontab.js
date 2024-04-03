@@ -17,6 +17,7 @@ i18nCrontab.columnName = {
         "CronMFA": "任务备注",
         "StartDateTime": "任务开始时间",
         "EndDateTime": "任务结束时间",
-        "CreatedAt": "任务创建时间"
+        "CronStatus": "任务状态",
+        "CreatedAt": "任务创建时间",
     }
 };
