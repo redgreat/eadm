@@ -272,11 +272,3 @@ CREATE TABLE `eadm_crontab` (
   `Deleted` TINYINT NOT NULL DEFAULT 0 COMMENT '是否删除(0否1是)',
   KEY `IDX-CronName` (`CronName`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci ROW_FORMAT=DYNAMIC COMMENT '基础信息_定时任务信息表';
-
-SELECT CronName, CronExp, CronMFA, StartDateTime, EndDateTime, CreatedAt
-FROM eadm_crontab;
-
-SELECT RolePermission
-FROM eadm_role
-WHERE Id = ?
-  AND Deleted = 0;

@@ -23,8 +23,13 @@
 %% @doc
 %% index
 %% @end
-index(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName}}) ->
+index(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName,
+      <<"permission">> := #{<<"usermanage">> := true}}}) ->
     {ok, [{username, UserName}]};
+
+index(#{auth_data := #{<<"permission">> := #{<<"usermanage">> := false}}}) ->
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败! ")},
+    {json, [Alert]};
 
 index(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
@@ -32,7 +37,8 @@ index(#{auth_data := #{<<"authed">> := false}}) ->
 %% @doc
 %% 查询返回数据结果
 %% @end
-search(#{auth_data := #{<<"authed">> := true}}) ->
+search(#{auth_data := #{<<"authed">> := true,
+      <<"permission">> := #{<<"usermanage">> := true}}}) ->
     try
         {ok, Res_Col, Res_Data} = mysql_pool:query(pool_db,
             "SELECT Id, RoleName, RoleStatus, CreatedAt
@@ -46,13 +52,19 @@ search(#{auth_data := #{<<"authed">> := true}}) ->
             {json, [Alert]}
     end;
 
+search(#{auth_data := #{<<"permission">> := #{<<"usermanage">> := false}}}) ->
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败! ")},
+    {json, [Alert]};
+
 search(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 
 %% @doc
 %% 获取角色权限数据
 %% @end
-loadpermission(#{auth_data := #{<<"authed">> := true}, bindings := #{<<"roleId">> := RoleId}}) ->
+loadpermission(#{auth_data := #{<<"authed">> := true,
+      <<"permission">> := #{<<"usermanage">> := true}},
+      bindings := #{<<"roleId">> := RoleId}}) ->
     try
         {ok, _, ResData} = mysql_pool:query(pool_db,
             "SELECT RolePermission
@@ -69,13 +81,18 @@ loadpermission(#{auth_data := #{<<"authed">> := true}, bindings := #{<<"roleId">
             {json, [Alert]}
     end;
 
+loadpermission(#{auth_data := #{<<"permission">> := #{<<"usermanage">> := false}}}) ->
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败! ")},
+    {json, [Alert]};
+
 loadpermission(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 
 %% @doc
 %% 更新角色权限信息
 %% @end
-updatepermission(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName},
+updatepermission(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
+      <<"permission">> := #{<<"usermanage">> := true}},
       params := #{<<"roleId">> := RoleId, <<"dashBoard">> := DashBoard, <<"health">> := Health,
         <<"locate">> := Locate, <<"finance">> := Finance, <<"finimp">> := Finimp,
         <<"findel">> := Findel, <<"crontab">> := Crontab, <<"userManage">> := Usermanage}}) ->
@@ -106,13 +123,18 @@ updatepermission(#{auth_data := #{<<"authed">> := true, <<"loginname">> := Login
             {json, [Alert]}
     end;
 
+updatepermission(#{auth_data := #{<<"permission">> := #{<<"usermanage">> := false}}}) ->
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败! ")},
+    {json, [Alert]};
+
 updatepermission(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 
 %% @doc
 %% 禁用角色
 %% @end
-disable(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName},
+disable(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
+      <<"permission">> := #{<<"usermanage">> := true}},
       bindings := #{<<"roleId">> := RoleId}}) ->
     try
         mysql_pool:query(pool_db,
@@ -131,13 +153,18 @@ disable(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName},
             {json, [Alert]}
     end;
 
+disable(#{auth_data := #{<<"permission">> := #{<<"usermanage">> := false}}}) ->
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败! ")},
+    {json, [Alert]};
+
 disable(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 
 %% @doc
 %% 删除角色数据
 %% @end
-delete(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName},
+delete(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
+      <<"permission">> := #{<<"usermanage">> := true}},
       bindings := #{<<"roleId">> := RoleId}}) ->
     try
         mysql_pool:query(pool_db,
@@ -155,13 +182,18 @@ delete(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName},
             {json, [Alert]}
     end;
 
+delete(#{auth_data := #{<<"permission">> := #{<<"usermanage">> := false}}}) ->
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败! ")},
+    {json, [Alert]};
+
 delete(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 
 %% @doc
 %% 查询角色列表
 %% @end
-getrolelist(#{auth_data := #{<<"authed">> := true},
+getrolelist(#{auth_data := #{<<"authed">> := true,
+      <<"permission">> := #{<<"usermanage">> := true}},
       bindings := #{<<"userId">> := UserId}}) ->
     try
         {ok, Res_Col, Res_Data} = mysql_pool:query(pool_db,
@@ -180,6 +212,10 @@ getrolelist(#{auth_data := #{<<"authed">> := true},
             Alert = #{<<"Alert">> => unicode:characters_to_binary("数据查询失败! " ++ Error)},
             {json, [Alert]}
     end;
+
+getrolelist(#{auth_data := #{<<"permission">> := #{<<"usermanage">> := false}}}) ->
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败! ")},
+    {json, [Alert]};
 
 getrolelist(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.

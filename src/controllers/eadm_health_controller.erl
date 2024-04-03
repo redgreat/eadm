@@ -24,8 +24,13 @@
 %% @doc
 %% index
 %% @end
-index(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName}}) ->
+index(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName,
+      <<"permission">> := #{<<"health">> := true}}}) ->
     {ok, [{username, UserName}]};
+
+index(#{auth_data := #{<<"permission">> := #{<<"health">> := false}}}) ->
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败! ")},
+    {json, [Alert]};
 
 index(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
@@ -33,7 +38,8 @@ index(#{auth_data := #{<<"authed">> := false}}) ->
 %% @doc
 %% 查询返回数据结果
 %% @end
-search(#{auth_data := #{<<"authed">> := true},
+search(#{auth_data := #{<<"authed">> := true,
+      <<"permission">> := #{<<"health">> := true}},
     parsed_qs := #{<<"dataType">> := DataType, <<"startTime">> := StartTime, <<"endTime">> := EndTime}}) ->
     case {StartTime, EndTime} of
         {undefined, _} ->
@@ -126,6 +132,10 @@ search(#{auth_data := #{<<"authed">> := true},
                     end
             end
     end;
+
+search(#{auth_data := #{<<"permission">> := #{<<"health">> := false}}}) ->
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败! ")},
+    {json, [Alert]};
 
 search(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.

@@ -44,20 +44,25 @@ function loadUserData() {
                 render: function (data, type, full, meta) {
                     return `
                         <button class="btn btn-outline-primary btn-rounded user-role-btn"
-                          data-bs-toggle="modal" data-bs-target="#modal-user-role">
+                          data-bs-toggle="modal" data-bs-target="#modal-user-role"
+                          data-bs-toggle="tooltip" data-bs-placement="top" title="编辑用户角色">
                           <i class="fas fa-user-shield"></i>
                         </button>
                         <button class="btn btn-outline-primary btn-rounded edit-user-btn"
-                          data-bs-toggle="modal" data-bs-target="#modal-user-edit">
+                          data-bs-toggle="modal" data-bs-target="#modal-user-edit"
+                          data-bs-toggle="tooltip" data-bs-placement="top" title="编辑用户信息">
                           <i class="fas fa-pen"></i>
                         </button>
-                        <button class="btn btn-outline-primary btn-rounded disable-user-btn">
+                        <button class="btn btn-outline-primary btn-rounded disable-user-btn"
+                          data-bs-toggle="tooltip" data-bs-placement="top" title="启禁用户">
                           <i class="fas fa-toggle-on"></i>
                         </button>
-                        <button class="btn btn-outline-primary btn-rounded reset-user-btn">
+                        <button class="btn btn-outline-primary btn-rounded reset-user-btn"
+                          data-bs-toggle="tooltip" data-bs-placement="top" title="重置密码">
                           <i class="fas fa-user-cog"></i>
                         </button>
-                        <button class="btn btn-outline-danger btn-rounded delete-user-btn">
+                        <button class="btn btn-outline-danger btn-rounded delete-user-btn"
+                          data-bs-toggle="tooltip" data-bs-placement="top" title="删除用户">
                           <i class="fas fa-trash"></i>
                         </button>
                     `;

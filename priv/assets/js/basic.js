@@ -11,26 +11,28 @@
 function loadMemu() {
     $.getJSON('/data/userpermission', function (resdata) {
         let menuHtml = '';
-        const resobj = resdata[0];
-        if (resobj.dashboard === true) {
-            menuHtml += '<li> <a href="/"><i class="fas fa-home"></i> 信息看板</a></li>';
+        if ('data' in resdata[0]) {
+            const resobj = resdata[0].data;
+            if (resobj.dashboard === true) {
+                menuHtml += '<li> <a href="/"><i class="fas fa-home"></i> 信息看板</a></li>';
+            }
+            if (resobj.health === true) {
+                menuHtml += '<li><a href="/daily/health"><i class="fas fa-heartbeat"></i> 我的健康</a></li>';
+            }
+            if (resobj.locate === true) {
+                menuHtml += '<li><a href="/daily/location"><i class="fas fa-map-marked-alt"></i> 轨迹回放</a></li>';
+            }
+            if (resobj.finance.finlist === true) {
+                menuHtml += '<li><a href="/daily/finance"><i class="fas fa-money-bill"></i> 我的财务</a></li>';
+            }
+            if (resobj.crontab === true) {
+                menuHtml += '<li><a href="/daily/crontab"><i class="fas fa-hourglass-half"></i> 定时任务</a></li>';
+            }
+            if (resobj.usermanage === true) {
+                menuHtml += '<li><a href="/user"><i class="fas fa-user"></i> 用户信息</a></li>';
+            }
+            $('#menu-container').prepend(menuHtml);
         }
-        if (resobj.health === true) {
-            menuHtml += '<li><a href="/daily/health"><i class="fas fa-heartbeat"></i> 我的健康</a></li>';
-        }
-        if (resobj.locate === true) {
-            menuHtml += '<li><a href="/daily/location"><i class="fas fa-map-marked-alt"></i> 轨迹回放</a></li>';
-        }
-        if (resobj.finance.finlist === true) {
-            menuHtml += '<li><a href="/daily/finance"><i class="fas fa-money-bill"></i> 我的财务</a></li>';
-        }
-        if (resobj.crontab === true) {
-            menuHtml += '<li><a href="/daily/crontab"><i class="fas fa-hourglass-half"></i> 定时任务</a></li>';
-        }
-        if (resobj.usermanage === true) {
-            menuHtml += '<li><a href="/user"><i class="fas fa-user"></i> 用户信息</a></li>';
-        }
-        $('#menu-container').prepend(menuHtml);
     });
 }
 

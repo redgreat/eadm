@@ -24,8 +24,13 @@
 %% @doc
 %% index
 %% @end
-index(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName}}) ->
+index(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName,
+      <<"permission">> := #{<<"locate">> := true}}}) ->
     {ok, [{username, UserName}]};
+
+index(#{auth_data := #{<<"permission">> := #{<<"locate">> := false}}}) ->
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败! ")},
+    {json, [Alert]};
 
 index(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
@@ -33,7 +38,8 @@ index(#{auth_data := #{<<"authed">> := false}}) ->
 %% @doc
 %% 查询返回数据结果
 %% @end
-search(#{auth_data := #{<<"authed">> := true},
+search(#{auth_data := #{<<"authed">> := true,
+      <<"permission">> := #{<<"locate">> := true}},
     parsed_qs := #{<<"startTime">> := StartTime, <<"endTime">> := EndTime}}) ->
         MaxSearchSpan = application:get_env(restwong_cfg, max_search_span, 3),
         TimeDiff = eadm_utils:time_diff(StartTime, EndTime),
@@ -60,6 +66,10 @@ search(#{auth_data := #{<<"authed">> := true},
                         {json, [Alert]}
                 end
         end;
+
+search(#{auth_data := #{<<"permission">> := #{<<"locate">> := false}}}) ->
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败! ")},
+    {json, [Alert]};
 
 search(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.

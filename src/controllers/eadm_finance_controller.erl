@@ -24,8 +24,13 @@
 %% @doc
 %% index
 %% @end
-index(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName}}) ->
+index(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName,
+      <<"permission">> := #{<<"finance">> := #{<<"finlist">> := true}}}}) ->
     {ok, [{username, UserName}]};
+
+index(#{auth_data := #{<<"permission">> := #{<<"finance">> := #{<<"finlist">> := false}}}}) ->
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败! ")},
+    {json, [Alert]};
 
 index(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
@@ -33,8 +38,9 @@ index(#{auth_data := #{<<"authed">> := false}}) ->
 %% @doc
 %% 查询返回数据结果
 %% @end
-search(#{auth_data := #{<<"authed">> := true},
-    parsed_qs := #{<<"sourceType">> := SourceType, <<"inorOut">> := InOrOut,
+search(#{auth_data := #{<<"authed">> := true,
+      <<"permission">> := #{<<"finance">> := #{<<"finlist">> := true}}},
+      parsed_qs := #{<<"sourceType">> := SourceType, <<"inorOut">> := InOrOut,
         <<"startTime">> := StartTime, <<"endTime">> := EndTime}}) ->
     MaxSearchSpan = application:get_env(restwong_cfg, max_fin_search_span, 366),
     TimeDiff = eadm_utils:time_diff(StartTime, EndTime),
@@ -102,13 +108,18 @@ search(#{auth_data := #{<<"authed">> := true},
             end
     end;
 
+search(#{auth_data := #{<<"permission">> := #{<<"finance">> := #{<<"finlist">> := false}}}}) ->
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败! ")},
+    {json, [Alert]};
+
 search(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 
 %% @doc
 %% 删除财务数据
 %% @end
-delete(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName},
+delete(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
+      <<"permission">> := #{<<"finance">> := #{<<"findel">> := true}}},
     bindings := #{<<"detailId">> := DetailId}}) ->
         try
             mysql_pool:query(pool_db, "UPDATE paybilldetail
@@ -125,13 +136,18 @@ delete(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName},
                 {json, [Alert]}
         end;
 
+delete(#{auth_data := #{<<"permission">> := #{<<"finance">> := #{<<"findel">> := false}}}}) ->
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败! ")},
+    {json, [Alert]};
+
 delete(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 
 %% @doc
 %% 查询返回数据明细
 %% @end
-searchdetail(#{auth_data := #{<<"authed">> := true},
+searchdetail(#{auth_data := #{<<"authed">> := true,
+      <<"permission">> := #{<<"finance">> := #{<<"finlist">> := true}}},
     bindings := #{<<"detailId">> := DetailId}}) ->
     try
         Res_Data = mysql_pool:query(pool_db,
@@ -150,13 +166,18 @@ searchdetail(#{auth_data := #{<<"authed">> := true},
             {json, [Alert]}
     end;
 
+searchdetail(#{auth_data := #{<<"permission">> := #{<<"finance">> := #{<<"finlist">> := false}}}}) ->
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败! ")},
+    {json, [Alert]};
+
 searchdetail(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 
 %% @doc
 %% 处理上传数据
 %% @end
-upload(#{auth_data := #{<<"authed">> := true},
+upload(#{auth_data := #{<<"authed">> := true,
+      <<"permission">> := #{<<"finance">> := #{<<"finlist">> := true}}},
       json := #{<<"importType">> := ImportType, <<"uploadJson">> := UploadJson}}) ->
     case ImportType of
         <<"0">> ->
@@ -206,6 +227,10 @@ upload(#{auth_data := #{<<"authed">> := true},
         _ ->
             {json, [unicode:characters_to_binary("导入成功" ++ 1 ++ "行!")]}
     end;
+
+upload(#{auth_data := #{<<"permission">> := #{<<"finance">> := #{<<"finimp">> := false}}}}) ->
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败! ")},
+    {json, [Alert]};
 
 upload(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.

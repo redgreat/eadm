@@ -24,8 +24,13 @@
 %% @doc
 %% index
 %% @end
-index(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName}}) ->
+index(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName,
+      <<"permission">> := #{<<"usermanage">> := true}}}) ->
     {ok, [{username, UserName}]};
+
+index(#{auth_data := #{<<"permission">> := #{<<"usermanage">> := false}}}) ->
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败! ")},
+    {json, [Alert]};
 
 index(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
@@ -47,13 +52,18 @@ search(#{auth_data := #{<<"authed">> := true, <<"permission">> := #{<<"usermanag
             {json, [Alert]}
     end;
 
+search(#{auth_data := #{<<"permission">> := #{<<"usermanage">> := false}}}) ->
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败! ")},
+    {json, [Alert]};
+
 search(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 
 %% @doc
 %% 查询返回数据结果
 %% @end
-searchself(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName}}) ->
+searchself(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
+      <<"permission">> := #{<<"usermanage">> := true}}}) ->
     try
         {ok, _, ResData} = mysql_pool:query(pool_db,
             "SELECT LoginName, UserName, Email
@@ -69,18 +79,23 @@ searchself(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName}}
             {json, [Alert]}
     end;
 
+searchself(#{auth_data := #{<<"permission">> := #{<<"usermanage">> := false}}}) ->
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败! ")},
+    {json, [Alert]};
+
 searchself(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 
 %% @doc
 %% 新增用户数据
 %% @end
-add(#{auth_data := #{<<"authed">> := true, <<"loginname">> := CreatedUser},
+add(#{auth_data := #{<<"authed">> := true, <<"loginname">> := CreatedUser,
+      <<"permission">> := #{<<"usermanage">> := true}},
       params := #{<<"loginName">> := LoginName, <<"email">> := Email,
       <<"userName">> := UserName, <<"password">> := PassWord}}) ->
     case validate_password(PassWord) of
         {ok} ->
-            case validate_loginname(LoginName) of
+            case validate_addloginname(LoginName) of
                 {ok} ->
                     case re:run(Email, "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$") of
                         {match, _} ->
@@ -136,16 +151,21 @@ add(#{auth_data := #{<<"authed">> := true, <<"loginname">> := CreatedUser},
             {json, [Alert]}
     end;
 
+add(#{auth_data := #{<<"permission">> := #{<<"usermanage">> := false}}}) ->
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败! ")},
+    {json, [Alert]};
+
 add(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 
 %% @doc
 %% 编辑用户数据
 %% @end
-edit(#{auth_data := #{<<"authed">> := true, <<"loginname">> := CreatedUser},
+edit(#{auth_data := #{<<"authed">> := true, <<"loginname">> := CreatedUser,
+      <<"permission">> := #{<<"usermanage">> := true}},
       params := #{<<"userId">> := UserId, <<"loginName">> := LoginName,
           <<"email">> := Email, <<"userName">> := UserName}}) ->
-      case validate_loginname(LoginName) of
+      case validate_editloginname(UserId, LoginName) of
           {ok} ->
               case re:run(Email, "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$") of
                   {match, _} ->
@@ -198,13 +218,18 @@ edit(#{auth_data := #{<<"authed">> := true, <<"loginname">> := CreatedUser},
               {json, [Alert]}
       end;
 
+edit(#{auth_data := #{<<"permission">> := #{<<"usermanage">> := false}}}) ->
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败! ")},
+    {json, [Alert]};
+
 edit(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 
 %% @doc
 %% 编辑用户数据
 %% @end
-editself(#{auth_data := #{<<"authed">> := true, <<"loginname">> := CreatedUser},
+editself(#{auth_data := #{<<"authed">> := true, <<"loginname">> := CreatedUser,
+      <<"permission">> := #{<<"usermanage">> := true}},
       params := #{<<"loginName">> := LoginName, <<"email">> := Email, <<"userName">> := NewUserName}}) ->
     case re:run(Email, "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$") of
         {match, _} ->
@@ -232,13 +257,19 @@ editself(#{auth_data := #{<<"authed">> := true, <<"loginname">> := CreatedUser},
             Info = #{<<"Alert">> => <<A/binary, Email/binary, B/binary>>},
             {json, [Info]}
     end;
+
+editself(#{auth_data := #{<<"permission">> := #{<<"usermanage">> := false}}}) ->
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败! ")},
+    {json, [Alert]};
+
 editself(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 
 %% @doc
 %% 修改用户密码
 %% @end
-password(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName},
+password(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
+      <<"permission">> := #{<<"usermanage">> := true}},
       params := #{<<"passwordOld">> := PasswordOld, <<"passwordNew">> := PasswordNew}}) ->
     case validate_password(PasswordNew) of
         {ok} ->
@@ -286,13 +317,18 @@ password(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName},
             {json, [Alert]}
     end;
 
+password(#{auth_data := #{<<"permission">> := #{<<"usermanage">> := false}}}) ->
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败! ")},
+    {json, [Alert]};
+
 password(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 
 %% @doc
 %% 重置用户密码
 %% @end
-reset(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName},
+reset(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
+      <<"permission">> := #{<<"usermanage">> := true}},
       bindings := #{<<"userId">> := UserId}}) ->
     % 重置密码123456
     CryptoGram = <<"4WpJ2hODluWuRFXsypv38CLIolSjGbe999q6gmCOa+0=">>,
@@ -311,13 +347,18 @@ reset(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName},
             {json, [Alert]}
     end;
 
+reset(#{auth_data := #{<<"permission">> := #{<<"usermanage">> := false}}}) ->
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败! ")},
+    {json, [Alert]};
+
 reset(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 
 %% @doc
 %% 禁用用户
 %% @end
-disable(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName},
+disable(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
+      <<"permission">> := #{<<"usermanage">> := true}},
      bindings := #{<<"userId">> := UserId}}) ->
     try
         mysql_pool:query(pool_db, "UPDATE eadm_user
@@ -335,13 +376,18 @@ disable(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName},
             {json, [Alert]}
     end;
 
+disable(#{auth_data := #{<<"permission">> := #{<<"usermanage">> := false}}}) ->
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败! ")},
+    {json, [Alert]};
+
 disable(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 
 %% @doc
 %% 删除用户数据
 %% @end
-delete(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName},
+delete(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
+      <<"permission">> := #{<<"usermanage">> := true}},
     bindings := #{<<"userId">> := UserId}}) ->
     try
         mysql_pool:query(pool_db, "UPDATE eadm_user
@@ -358,13 +404,18 @@ delete(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName},
             {json, [Alert]}
     end;
 
+delete(#{auth_data := #{<<"permission">> := #{<<"usermanage">> := false}}}) ->
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败! ")},
+    {json, [Alert]};
+
 delete(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 
 %% @doc
 %% 获取用户角色
 %% @end
-userrole(#{auth_data := #{<<"authed">> := true},
+userrole(#{auth_data := #{<<"authed">> := true,
+      <<"permission">> := #{<<"usermanage">> := true}},
       bindings := #{<<"userId">> := UserId}}) ->
     try
         {ok, Res_Col, Res_Data} = mysql_pool:query(pool_db,
@@ -380,13 +431,18 @@ userrole(#{auth_data := #{<<"authed">> := true},
             {json, [Alert]}
     end;
 
+userrole(#{auth_data := #{<<"permission">> := #{<<"usermanage">> := false}}}) ->
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败! ")},
+    {json, [Alert]};
+
 userrole(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 
 %% @doc
 %% 新增用户角色
 %% @end
-userroleadd(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName}, params := RoleIdMap}) ->
+userroleadd(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
+      <<"permission">> := #{<<"usermanage">> := true}}, params := RoleIdMap}) ->
     [{RoleIds, _Value}] = maps:to_list(RoleIdMap),
     {ok, RoleIdList} = thoas:decode(RoleIds),
     InsertQuery = "INSERT INTO eadm_userrole(UserId, RoleId, CreatedUser) VALUES(?, ?, ?);",
@@ -404,14 +460,19 @@ userroleadd(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName}
             {json, [Alert]}
     end;
 
+userroleadd(#{auth_data := #{<<"permission">> := #{<<"usermanage">> := false}}}) ->
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败! ")},
+    {json, [Alert]};
+
 userroleadd(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 
 %% @doc
 %% 删除用户角色数据
 %% @end
-userroledel(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName},
-    bindings := #{<<"userRoleId">> := UserRoleId}}) ->
+userroledel(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
+      <<"permission">> := #{<<"usermanage">> := true}},
+      bindings := #{<<"userRoleId">> := UserRoleId}}) ->
     try
         mysql_pool:query(pool_db, "UPDATE eadm_userrole
                                   SET DeletedUser = ?,
@@ -427,11 +488,16 @@ userroledel(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName}
             {json, [Alert]}
     end;
 
+userroledel(#{auth_data := #{<<"permission">> := #{<<"usermanage">> := false}}}) ->
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败! ")},
+    {json, [Alert]};
+
 userroledel(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 
 %% @doc
 %% 获取角色权限数据
+%% 需特殊处理权限验证，需要登录成功所以要验authed=true，无需数据权限不需验permission
 %% @end
 userpermission(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName}}) ->
     Permission = get_permission(LoginName),
@@ -467,9 +533,9 @@ validate_password(_) ->
     {error, "密码格式错误！"}.
 
 %% @doc
-%% 验证登录名
+%% 验证登录名是否有重复(新增)
 %% @end
-validate_loginname(LoginName) ->
+validate_addloginname(LoginName) ->
     AllowedChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-",
     Regex = "^[" ++ AllowedChars ++ "]+$",
     case re:run(LoginName, Regex, [global, {capture, none}]) of
@@ -498,6 +564,40 @@ validate_loginname(LoginName) ->
             {error, 6}
     end.
 
+%% @doc
+%% 验证登录名是否有重复(修改)
+%% @end
+validate_editloginname(UserId, LoginName) ->
+    % io:format("UserId: ~p, LoginName: ~p~n", [UserId, LoginName]),
+    AllowedChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-",
+    Regex = "^[" ++ AllowedChars ++ "]+$",
+    case re:run(LoginName, Regex, [global, {capture, none}]) of
+        match ->
+            case byte_size(LoginName) of
+                L when L < 6 ->
+                    {error, 1};
+                L when L > 18 ->
+                    {error, 2};
+                _ ->
+                    try
+                        case mysql_pool:query(pool_db,
+                            "SELECT 1 FROM eadm_user WHERE Id<>? AND LoginName=? AND Deleted=1;",
+                            [UserId, LoginName]) of
+                            {ok, _, []} ->
+                                {ok};
+                            {ok, _, _} ->
+                                {error, 3};
+                            _ ->
+                                {error, 4}
+                        end
+                    catch
+                        _ ->
+                            {error, 5}
+                    end
+            end;
+        _ ->
+            {error, 6}
+    end.
 
 %% @doc
 %% 获取用户权限
@@ -509,7 +609,7 @@ get_permission(LoginName) ->
         WHERE LoginName=?
         LIMIT 1;", [LoginName]),
     {ok, ResMap} = thoas:decode(list_to_binary(ResData)),
-    ResMap.
+    #{<<"data">> => ResMap}.
 
 %% @doc
 %% 验证邮箱格式
