@@ -1,6 +1,7 @@
 # @author wangcw
 # @copyright (C) 2024, REDGREAT
 # Created : 2024-03-26 09:37
+# 表结构设计
 
 USE eadm;
 
@@ -272,3 +273,84 @@ CREATE TABLE `eadm_crontab` (
   `Deleted` TINYINT NOT NULL DEFAULT 0 COMMENT '是否删除(0否1是)',
   KEY `IDX-CronName` (`CronName`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci ROW_FORMAT=DYNAMIC COMMENT '基础信息_定时任务信息表';
+
+# 首页报表
+DROP TABLE IF EXISTS eadm.eadm_dashboard;
+CREATE TABLE eadm.eadm_dashboard(
+    Id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY COMMENT '自增主键',
+    DataType SMALLINT NOT NULL COMMENT '数据类型(1心率2步数3睡眠4里程5每月里程6每月消费)',
+    DateType SMALLINT NOT NULL COMMENT '统计周期类型(1日2周3月4年)',
+    LoginName VARCHAR(50) NOT NULL COMMENT '登录名',
+    DataValue VARCHAR(500) COMMENT '数据值',
+    DataJson JSON COMMENT '数据JSON',
+    CheckDate DATE NOT NULL COMMENT '数据日期',
+    InsertTime DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '插入时间',
+    UpdateTime DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    CONSTRAINT UQ_DDCL UNIQUE (DataType, DateType, CheckDate, LoginName),
+    KEY `NON-DataType` (DataType),
+    KEY `NON-DateType` (DateType),
+    KEY `NON-LoginName` (LoginName),
+    KEY `NON-CheckDate` (CheckDate)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci ROW_FORMAT=DYNAMIC COMMENT='首页_看板报表';
+
+# 过程运行日志
+DROP TABLE IF EXISTS `sys_proclog`;
+CREATE TABLE `sys_proclog` (
+  `Id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY COMMENT '自增主键',
+  `ProcName` VARCHAR(50) COMMENT '过程名',
+  `TimeSpan` INT COMMENT '耗时时长(秒)',
+  `Result` TINYINT NOT NULL DEFAULT '1' COMMENT '是否成功(0否1是)',
+  `ErrCode` VARCHAR(5) COMMENT '错误代码',
+  `ErrMessage` VARCHAR(5000) COMMENT '错误详细信息',
+  `InsertTime` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '日志记录时间',
+  KEY `NON-ProcName` (`ProcName`),
+  KEY `NON-InsertTime` (`InsertTime`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci ROW_FORMAT=DYNAMIC COMMENT='系统域_过程执行日志';
+
+# 设备信息
+DROP TABLE IF EXISTS `eadm_device`;
+CREATE TABLE `eadm_device` (
+  `Id` CHAR(12) NOT NULL PRIMARY KEY COMMENT '自定义主键(ED)',
+  `DeviceNo` VARCHAR(50) COMMENT '设备号',
+  `Imei` VARCHAR(50) COMMENT '设备IMEI',
+  `SimNo` VARCHAR(50) COMMENT 'SIM卡号',
+  `Remark` VARCHAR(200) COMMENT '设备描述',
+  `CreatedUser` VARCHAR(50) DEFAULT NULL COMMENT '创建人',
+  `CreatedAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP() COMMENT '数据写入时间',
+  `UpdatedUser` VARCHAR(50) DEFAULT NULL COMMENT '更新人',
+  `UpdatedAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP()  ON UPDATE CURRENT_TIMESTAMP() COMMENT '更新时间',
+  `DeletedUser` VARCHAR(50) DEFAULT NULL COMMENT '删除人',
+  `DeletedAt` DATETIME DEFAULT NULL COMMENT '删除时间',
+  `Deleted` TINYINT NOT NULL DEFAULT 0 COMMENT '是否删除(0否1是)',
+  KEY `NON-DeviceNo` (`DeviceNo`),
+  KEY `NON-SimNo` (`SimNo`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci ROW_FORMAT=DYNAMIC COMMENT='业务域_设备信息';
+
+INSERT INTO eadm_device(Id, DeviceNo, Remark, CreatedUser)
+VALUES(fn_nextval('ED'), '16053489111', '充电宝', 'wangcw'),
+      (fn_nextval('ED'), '868977061978771', '手表', 'wangcw');
+
+# 人员设备对应关系
+DROP TABLE IF EXISTS `eadm_userdevice`;
+CREATE TABLE `eadm_userdevice` (
+  `Id` BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY COMMENT '自增主键',
+  `UserId` CHAR(12) COMMENT '用户Id(eadm_user.Id)',
+  `LoginName` VARCHAR(50) COMMENT '用户登录名(eadm_user.LoginName)',
+  `DeviceNo` VARCHAR(50) COMMENT '设备Id(eadm_device.DeviceNo)',
+  `CreatedUser` VARCHAR(50) DEFAULT NULL COMMENT '创建人',
+  `CreatedAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP() COMMENT '数据写入时间',
+  `UpdatedUser` VARCHAR(50) DEFAULT NULL COMMENT '更新人',
+  `UpdatedAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP()  ON UPDATE CURRENT_TIMESTAMP() COMMENT '更新时间',
+  `DeletedUser` VARCHAR(50) DEFAULT NULL COMMENT '删除人',
+  `DeletedAt` DATETIME DEFAULT NULL COMMENT '删除时间',
+  `Deleted` TINYINT NOT NULL DEFAULT 0 COMMENT '是否删除(0否1是)',
+  KEY `NON-UserId` (`UserId`),
+  KEY `NON-LoginName` (`LoginName`),
+  KEY `NON-DeviceNo` (`DeviceNo`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci ROW_FORMAT=DYNAMIC COMMENT='业务域_人员设备对应关系';
+
+INSERT INTO eadm_userdevice(UserId, LoginName, DeviceNo)
+SELECT 'EU9999999998', 'wangcw', DeviceNo
+FROM eadm_device;
+
+SELECT * FROM eadm_userdevice;

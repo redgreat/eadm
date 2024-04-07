@@ -66,6 +66,7 @@ routes(_Environment) ->
       #{prefix => "data",
       security => {eadm_auth, auth},
       routes => [
+          {"/dasboard", { eadm_dashboard_controller, search }, #{methods => [get]}},
           {"/health", { eadm_health_controller, search }, #{methods => [get]}},
           {"/location", { eadm_location_controller, search }, #{methods => [get]}},
           {"/finance", { eadm_finance_controller, search }, #{methods => [get]}},
