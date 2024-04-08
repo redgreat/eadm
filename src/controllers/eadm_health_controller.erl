@@ -68,7 +68,7 @@ search(#{auth_data := #{<<"authed">> := true,
                         _ ->
                             case DataType of
                                 <<"1">> ->
-                                    {ok, Res_Col, Res_Data} = mysql_pool:query(pool_db,
+                                    {ok, ResCol, ResData} = mysql_pool:query(pool_db,
                                         "SELECT DATE_FORMAT(CONVERT_TZ(`UtcTime`,'+00:00','+08:00'), '%Y-%m-%d %H:%i:%s') AS UtcTime, Steps
                                         FROM watchdaily
                                         WHERE UtcTime >= ?
@@ -77,7 +77,7 @@ search(#{auth_data := #{<<"authed">> := true,
                                         ORDER BY UtcTime DESC;",
                                         [StartTime, EndTime]);
                                 <<"2">> ->
-                                    {ok, Res_Col, Res_Data} = mysql_pool:query(pool_db,
+                                    {ok, ResCol, ResData} = mysql_pool:query(pool_db,
                                         "SELECT DATE_FORMAT(CONVERT_TZ(`UtcTime`,'+00:00','+08:00'), '%Y-%m-%d %H:%i:%s') AS UtcTime, Heartbeat
                                         FROM watchdaily
                                         WHERE UtcTime >= ?
@@ -86,7 +86,7 @@ search(#{auth_data := #{<<"authed">> := true,
                                         ORDER BY UtcTime DESC;",
                                         [StartTime, EndTime]);
                                 <<"3">> ->
-                                    {ok, Res_Col, Res_Data} = mysql_pool:query(pool_db,
+                                    {ok, ResCol, ResData} = mysql_pool:query(pool_db,
                                         "SELECT DATE_FORMAT(CONVERT_TZ(`UtcTime`,'+00:00','+08:00'), '%Y-%m-%d %H:%i:%s') AS UtcTime,
                                         BodyTemperature, WristTemperature
                                         FROM watchdaily
@@ -96,7 +96,7 @@ search(#{auth_data := #{<<"authed">> := true,
                                         ORDER BY UtcTime DESC;",
                                         [StartTime, EndTime]);
                                 <<"4">> ->
-                                    {ok, Res_Col, Res_Data} = mysql_pool:query(pool_db,
+                                    {ok, ResCol, ResData} = mysql_pool:query(pool_db,
                                         "SELECT DATE_FORMAT(CONVERT_TZ(`UtcTime`,'+00:00','+08:00'), '%Y-%m-%d %H:%i:%s') AS UtcTime,
                                         Diastolic, Shrink
                                         FROM watchdaily
@@ -106,7 +106,7 @@ search(#{auth_data := #{<<"authed">> := true,
                                         ORDER BY UtcTime DESC;",
                                         [StartTime, EndTime]);
                                 <<"5">> ->
-                                    {ok, Res_Col, Res_Data} = mysql_pool:query(pool_db,
+                                    {ok, ResCol, ResData} = mysql_pool:query(pool_db,
                                         "SELECT DATE_FORMAT(CONVERT_TZ(`UtcTime`,'+00:00','+08:00'), '%Y-%m-%d %H:%i:%s') AS UtcTime,
                                         SleepType, SleepStartTime, SleepEndTime, SleepMinute
                                         FROM watchdaily
@@ -116,7 +116,7 @@ search(#{auth_data := #{<<"authed">> := true,
                                         ORDER BY UtcTime DESC;",
                                         [StartTime, EndTime]);
                                 <<"6">> ->
-                                    {ok, Res_Col, Res_Data} = mysql_pool:query(pool_db,
+                                    {ok, ResCol, ResData} = mysql_pool:query(pool_db,
                                         "SELECT DATE_FORMAT(CONVERT_TZ(`UtcTime`,'+00:00','+08:00'), '%Y-%m-%d %H:%i:%s') AS UtcTime, Battery
                                         FROM watchdaily
                                         WHERE UtcTime >= ?
@@ -125,9 +125,9 @@ search(#{auth_data := #{<<"authed">> := true,
                                         ORDER BY UtcTime DESC;",
                                         [StartTime, EndTime]);
                                 _ ->
-                                    {ok, Res_Col, Res_Data} = {}
+                                    {ok, ResCol, ResData} = {}
                             end,
-                            Response = eadm_utils:return_as_json(Res_Col, Res_Data),
+                            Response = eadm_utils:return_as_json(ResCol, ResData),
                             {json, Response}
                     end
             end

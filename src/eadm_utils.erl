@@ -19,7 +19,8 @@
 %%%===================================================================
 -export([to_json/1, get_exp_bin/0]).
 -export([as_map/1, as_map/3, return_as_map/1, return_as_map/2, return_as_json/1, return_as_json/2,
-    validate_date_time/1, time_diff/2, utc_to_cts/1, cts_to_utc/1, pass_encrypt/1, validate_login/2, verify_password/2]).
+    validate_date_time/1, time_diff/2, utc_to_cts/1, cts_to_utc/1, pass_encrypt/1, validate_login/2, verify_password/2,
+    current_date_binary/0, yesterday_date_binary/0, lastyear_date_binary/0]).
 
 %%====================================================================
 %% API functions
@@ -189,6 +190,43 @@ str_from_datetime(DateTime) ->
     {{Year, Month, Day}, {Hour, Minute, Second}} = DateTime,
     iolist_to_binary(io_lib:format("~4..0w-~2..0w-~2..0w ~2..0w:~2..0w:~2..0w",
     [Year, Month, Day, Hour, Minute, Second])).
+
+%% @private
+%% @doc
+%% 获取当前日期二进制字符串(<<"YYYY-MM-DD">>).
+%% @end
+current_date_binary() ->
+    {{Year, Month, Day}, _} = calendar:universal_time(),
+    DateBin = list_to_binary(io_lib:format("~4..0B-~2..0B-~2..0B", [Year, Month, Day])),
+    DateBin.
+
+%% @private
+%% @doc
+%% 获取昨日日期二进制字符串(<<"YYYY-MM-DD">>).
+%% @end
+yesterday_date_binary() ->
+    {{Year, Month, Day}, _} = calendar:universal_time(),
+    TodayDays = calendar:date_to_gregorian_days({Year, Month, Day}),
+    YesterdayDays = TodayDays - 1,
+    {YesterdayYear, YesterdayMonth, YesterdayDay} = calendar:gregorian_days_to_date(YesterdayDays),
+    YesterdayBin = list_to_binary(io_lib:format("~4..0B-~2..0B-~2..0B", [YesterdayYear, YesterdayMonth, YesterdayDay])),
+    YesterdayBin.
+
+%% @private
+%% @doc
+%% 获取去年日期二进制字符串(<<"YYYY-MM-DD">>).
+%% @end
+lastyear_date_binary() ->
+    {{Year, Month, Day}, _} = calendar:universal_time(),
+    TodayDays = calendar:date_to_gregorian_days({Year, Month, Day}),
+    DaysInAYear = case calendar:is_leap_year(Year) of
+        true -> 366;
+        false -> 365
+    end,
+    LastYearDays = TodayDays - DaysInAYear,
+    {LastYear, LastYearMonth, LastYearDay} = calendar:gregorian_days_to_date(LastYearDays),
+    LastYearBin = list_to_binary(io_lib:format("~4..0B-~2..0B-~2..0B", [LastYear, LastYearMonth, LastYearDay])),
+    LastYearBin.
 
 %% @private
 %% @doc

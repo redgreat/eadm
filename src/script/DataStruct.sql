@@ -278,12 +278,12 @@ CREATE TABLE `eadm_crontab` (
 DROP TABLE IF EXISTS eadm.eadm_dashboard;
 CREATE TABLE eadm.eadm_dashboard(
     Id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY COMMENT '自增主键',
-    DataType SMALLINT NOT NULL COMMENT '数据类型(1心率2步数3睡眠4里程5每月里程6每月消费)',
+    DataType SMALLINT NOT NULL COMMENT '数据类型(1心率2步数3睡眠4里程5每月里程6每月收入7每月支出)',
     DateType SMALLINT NOT NULL COMMENT '统计周期类型(1日2周3月4年)',
     LoginName VARCHAR(50) NOT NULL COMMENT '登录名',
     DataValue VARCHAR(500) COMMENT '数据值',
     DataJson JSON COMMENT '数据JSON',
-    CheckDate DATE NOT NULL COMMENT '数据日期',
+    CheckDate VARCHAR(20) NOT NULL COMMENT '数据日期',
     InsertTime DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '插入时间',
     UpdateTime DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     CONSTRAINT UQ_DDCL UNIQUE (DataType, DateType, CheckDate, LoginName),

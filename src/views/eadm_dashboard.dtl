@@ -114,7 +114,6 @@
                     <div class="content">
                         <div class="head">
                             <h5 class="mb-0">年度里程</h5>
-                            <p class="text-muted">每月GFS定位行程</p>
                         </div>
                         <div class="canvas-wrapper">
                             <canvas class="chart" id="location"></canvas>
@@ -127,7 +126,6 @@
                     <div class="content">
                         <div class="head">
                             <h5 class="mb-0">年度财务</h5>
-                            <p class="text-muted">每月支出/收入</p>
                         </div>
                         <div class="canvas-wrapper">
                             <canvas class="chart" id="finance"></canvas>
@@ -158,7 +156,7 @@
                 <div class="row">
                     <div class="dfd text-center">
                         <i class="orange large-icon mb-2 fas fa-reply-all"></i>
-                        <h4 class="mb-0" id="financeYear">+22,566</h4>
+                        <h4 class="mb-0" id="financeYear"></h4>
                         <p class="text-muted">年度消费</p>
                     </div>
                 </div>
@@ -171,7 +169,7 @@
                 <div class="row">
                     <div class="dfd text-center">
                         <i class="grey large-icon mb-2 fas fa-envelope"></i>
-                        <h4 class="mb-0" sleepYear>+15,566</h4>
+                        <h4 class="mb-0" id="sleepYear"></h4>
                         <p class="text-muted">年度睡眠</p>
                     </div>
                 </div>
@@ -197,4 +195,5 @@
 
 {% block js_scripts %}
     <script src="/assets/js/dashboard.js"></script>
+    <script src="/assets/vendor/chartsjs/Chart.min.js"></script>
 {% endblock %}

@@ -53,7 +53,7 @@ search(#{auth_data := #{<<"authed">> := true,
             try
                 case {SourceType, InOrOut} of
                     {<<"0">>, <<"0">>} ->
-                        {ok, Res_Col, Res_Data} = mysql_pool:query(pool_db,
+                        {ok, ResCol, ResData} = mysql_pool:query(pool_db,
                             "SELECT Id, `Source` AS SourceType, InOrOut, TradeType, Amount, TradeTime
                             FROM paybilldetail
                             WHERE TradeTime >= ?
@@ -61,10 +61,10 @@ search(#{auth_data := #{<<"authed">> := true,
                               AND Deleted = 0
                             ORDER BY TradeTime;",
                             [StartTime, EndTime]),
-                        Response = eadm_utils:return_as_json(Res_Col, Res_Data),
+                        Response = eadm_utils:return_as_json(ResCol, ResData),
                         {json, Response};
                     {<<"0">>, _} ->
-                        {ok, Res_Col, Res_Data} = mysql_pool:query(pool_db,
+                        {ok, ResCol, ResData} = mysql_pool:query(pool_db,
                             "SELECT Id, `Source` AS SourceType, InOrOut, TradeType, Amount, TradeTime
                             FROM paybilldetail
                             WHERE TradeTime >= ?
@@ -73,10 +73,10 @@ search(#{auth_data := #{<<"authed">> := true,
                               AND Deleted = 0
                             ORDER BY TradeTime;",
                             [StartTime, EndTime, InOrOut]),
-                        Response = eadm_utils:return_as_json(Res_Col, Res_Data),
+                        Response = eadm_utils:return_as_json(ResCol, ResData),
                         {json, Response};
                     {_, <<"0">>} ->
-                        {ok, Res_Col, Res_Data} = mysql_pool:query(pool_db,
+                        {ok, ResCol, ResData} = mysql_pool:query(pool_db,
                             "SELECT Id, `Source` AS SourceType, InOrOut, TradeType, Amount, TradeTime
                             FROM paybilldetail
                             WHERE TradeTime >= ?
@@ -85,10 +85,10 @@ search(#{auth_data := #{<<"authed">> := true,
                               AND Deleted = 0
                             ORDER BY TradeTime;",
                             [StartTime, EndTime, SourceType]),
-                        Response = eadm_utils:return_as_json(Res_Col, Res_Data),
+                        Response = eadm_utils:return_as_json(ResCol, ResData),
                         {json, Response};
                     {_, _} ->
-                        {ok, Res_Col, Res_Data} = mysql_pool:query(pool_db,
+                        {ok, ResCol, ResData} = mysql_pool:query(pool_db,
                             "SELECT Id, `Source` AS SourceType, InOrOut, TradeType, Amount, TradeTime
                             FROM paybilldetail
                             WHERE TradeTime >= ?
@@ -98,7 +98,7 @@ search(#{auth_data := #{<<"authed">> := true,
                               AND Deleted = 0
                             ORDER BY TradeTime;",
                             [StartTime, EndTime, SourceType, InOrOut]),
-                        Response = eadm_utils:return_as_json(Res_Col, Res_Data),
+                        Response = eadm_utils:return_as_json(ResCol, ResData),
                         {json, Response}
                 end
             catch
