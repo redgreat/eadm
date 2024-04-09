@@ -61,6 +61,7 @@ CALL proc_DashBoard('2022-11-08');
 
 CALL proc_DashBoard('2023-11-08');
 
+CALL proc_DashBoard('2024-02-08');
 
 UPDATE paybilldetail
 SET InOrOut=CASE InOrOut WHEN '收入' THEN 1 WHEN '支出' THEN 2 ELSE 0 END
@@ -68,11 +69,5 @@ WHERE 1=1;
 
 SELECT *
 FROM eadm_dashboard;
-
-SELECT CAST(RIGHT(CheckDate, 2) AS INT) AS CheckDate1, DataValue
-        FROM eadm_dashboard
-        WHERE DataType=6
-        ORDER BY CheckDate;
-
 
 SELECT * FROM sys_proclog ORDER BY InsertTime DESC;

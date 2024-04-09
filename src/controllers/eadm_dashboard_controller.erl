@@ -63,7 +63,7 @@ search(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName}}) ->
           AND DataType=7
         ORDER BY CheckDate;",[LoginName]),
 
-    ResList = get_tl(ResData) ++ [get_hd(ResLocation)] ++ [get_tl(ResLocation)]
+    ResList = ResData ++ [get_hd(ResLocation)] ++ [get_tl(ResLocation)]
         ++ [get_hd(ResFinanceIn)] ++ [get_tl(ResFinanceIn)] ++ [get_tl(ResFinanceOut)],
     {json, ResList};
 
