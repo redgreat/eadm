@@ -167,11 +167,48 @@ function loadFinanceDetail(detailId) {
     }
 }
 
+function readAndProcessWorkbook(file, importType, processCallback) {
+    const fileExtension = file.name.split('.').pop().toLowerCase();
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        let data;
+        if (fileExtension === 'csv') {
+            const decoder = new TextDecoder('utf-8');
+            data = decoder.decode(new Uint8Array(e.target.result));
+            let workbook = XLSX.read(data, {type: 'binary'});
+        } else if (['xlsx', 'xls'].includes(fileExtension)) {
+            data = new Uint8Array(e.target.result);
+            let workbook = XLSX.read(data, {type: 'array'});
+        } else {
+            throw new Error(`Unsupported file extension: ${fileExtension}`);
+        }
+        const firstSheetName = workbook.SheetNames[0];
+        if (!firstSheetName) {
+            throw new Error("Excel file has no worksheets");
+        }
+        const worksheet = workbook.Sheets[firstSheetName];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, {raw: false});
+        const cleanedData = jsonData.map(item => {
+            Object.keys(item).forEach(key => {
+                if (item[key] !== undefined && item[key] !== null) {
+                    item[key] = String(item[key]).trim();
+                }
+            });
+            return item;
+        });
+        processCallback(importType, cleanedData);
+    };
+    reader.readAsArrayBuffer(file);
+}
+
 function processFile(importType, uploadJson) {
+
     const uploadParams = {
         importType: importType,
         uploadJson: uploadJson
     };
+    // console.log("uploadParams: "+ JSON.stringify(uploadParams));
+
     // 发送AJAX请求
     $.ajax({
         url: '/upload/finance',
@@ -214,6 +251,7 @@ $(document).ready(function() {
         const importType = $('#importType').val();
         let fileInput = $('#finance-imp-file')[0];
         let uploadFile = fileInput.files[0];
+        let workbook;
 
         if (uploadFile) {
             if (uploadFile.size <= 10 * 1024 * 1024) {
@@ -224,26 +262,61 @@ $(document).ready(function() {
 
                     let reader = new FileReader();
                     reader.onload = function(e) {
-                        let data = new Uint8Array(e.target.result);
-                        let workbook = XLSX.read(data, {type: 'array'});
+                        if (fileExtension === 'csv') {
+                            const decoder = new TextDecoder('utf-8');
+                            let data = decoder.decode(new Uint8Array(e.target.result));
+                            let workbook = XLSX.read(data, {type: 'binary'});
+                            let firstSheetName = workbook.SheetNames[0];
+                            if (firstSheetName) {
+                                let worksheet = workbook.Sheets[firstSheetName];
+                                let jsonData = XLSX.utils.sheet_to_json(worksheet, {raw: false});
+                                let cleanedData = jsonData.map(item => {
+                                    Object.keys(item).forEach(key => {
+                                        if (item[key] !== undefined && item[key] !== null) {
+                                            item[key] = String(item[key]).trim();
+                                        }
+                                    });
+                                    return item;
+                                });
+                                processFile(importType, cleanedData);
 
-                        // 只读取第一个工作表
-                        let firstSheetName = workbook.SheetNames[0];
-                        if (firstSheetName) {
-                            let worksheet = workbook.Sheets[firstSheetName];
-                            let jsonData = XLSX.utils.sheet_to_json(worksheet, {raw:false});
-                            // console.log("jsonData: "+ JSON.stringify(jsonData));
-                            processFile(importType, jsonData);
-
+                            } else {
+                                const toastElList = [].slice.call(document.querySelectorAll('.toast'));
+                                const toastList = toastElList.map(function (toastEl) {
+                                    const toastBodyEl = toastEl.querySelector('.toast-body');
+                                    toastBodyEl.textContent = "Excel文件没有工作表!";
+                                    return new bootstrap.Toast(toastEl);
+                                });
+                                toastList.forEach(toast => toast.show());
+                            }
                         } else {
-                            const toastElList = [].slice.call(document.querySelectorAll('.toast'));
-                            const toastList = toastElList.map(function (toastEl) {
-                                const toastBodyEl = toastEl.querySelector('.toast-body');
-                                toastBodyEl.textContent = "Excel文件没有工作表!";
-                                return new bootstrap.Toast(toastEl);
-                            });
-                            toastList.forEach(toast => toast.show());
+                            let data = new Uint8Array(e.target.result);
+                            let workbook = XLSX.read(data, {type: 'array'});
+                            let firstSheetName = workbook.SheetNames[0];
+                            if (firstSheetName) {
+                                let worksheet = workbook.Sheets[firstSheetName];
+                                let jsonData = XLSX.utils.sheet_to_json(worksheet, {raw: false});
+                                let cleanedData = jsonData.map(item => {
+                                    Object.keys(item).forEach(key => {
+                                        if (item[key] !== undefined && item[key] !== null) {
+                                            item[key] = String(item[key]).trim();
+                                        }
+                                    });
+                                    return item;
+                                });
+                                processFile(importType, cleanedData);
+
+                            } else {
+                                const toastElList = [].slice.call(document.querySelectorAll('.toast'));
+                                const toastList = toastElList.map(function (toastEl) {
+                                    const toastBodyEl = toastEl.querySelector('.toast-body');
+                                    toastBodyEl.textContent = "Excel文件没有工作表!";
+                                    return new bootstrap.Toast(toastEl);
+                                });
+                                toastList.forEach(toast => toast.show());
+                            }
                         }
+
                     };
                     reader.readAsArrayBuffer(uploadFile);
                 } else {

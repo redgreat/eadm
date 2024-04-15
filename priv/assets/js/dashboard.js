@@ -14,7 +14,7 @@ function loadChart() {
 
     $.getJSON('/data/dashboard', function (resdata) {
 
-        console.log("resdata: " + JSON.stringify(resdata));
+        // console.log("resdata: " + JSON.stringify(resdata));
 
         $('#locationWeek').text(resdata[0]);
         $('#stepsWeek').text(resdata[1]);

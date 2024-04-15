@@ -150,7 +150,7 @@ searchdetail(#{auth_data := #{<<"authed">> := true,
       <<"permission">> := #{<<"finance">> := #{<<"finlist">> := true}}},
     bindings := #{<<"detailId">> := DetailId}}) ->
     try
-        Res_Data = mysql_pool:query(pool_db,
+        ResData = mysql_pool:query(pool_db,
             "SELECT Owner, `Source` AS SourceType, InOrOut, CounterParty, CounterBank, CounterAccount,
                GoodsComment, PayMethod, Amount, Balance, Currency, PayStatus,
                TradeType, TradeOrderNo, CounterorderNo, TradeTime, BillComment
@@ -158,7 +158,7 @@ searchdetail(#{auth_data := #{<<"authed">> := true,
              WHERE Deleted = 0
                AND Id = ?;",
             [DetailId]),
-        Response = eadm_utils:as_map(Res_Data),
+        Response = eadm_utils:as_map(ResData),
         {json, Response}
     catch
         _:Error ->
@@ -217,15 +217,106 @@ upload(#{auth_data := #{<<"authed">> := true,
             Info = #{<<"Alert">> => unicode:characters_to_binary("导入成功" ++ integer_to_list(count_maps(UploadJson)) ++ "行!")},
             {json, [Info]};
         <<"1">> ->
-            {json, [unicode:characters_to_binary("导入成功" ++ 1 ++ "行!")]};
+            lists:foreach(
+                fun(Map) ->
+                    try
+                        mysql_pool:query(pool_db,
+                            "INSERT INTO paybilldetail(Owner, Source, TradeTime, TradeType, CounterParty, GoodsComment,
+                            InOrOut, Amount, PayMethod, PayStatus, TradeOrderNo, CounterOrderNo, BillComment)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
+                            [maps:get(<<"Owner">>, Map, null),
+                             maps:get(<<"Source">>, Map, null),
+                             maps:get(<<"TradeTime">>, Map, null),
+                             maps:get(<<"TradeType">>, Map, null),
+                             maps:get(<<"CounterParty">>, Map, null),
+                             maps:get(<<"GoodsComment">>, Map, null),
+                             maps:get(<<"InOrOut">>, Map, null),
+                             maps:get(<<"Amount">>, Map, null),
+                             maps:get(<<"PayMethod">>, Map, null),
+                             maps:get(<<"PayStatus">>, Map, null),
+                             maps:get(<<"TradeOrderNo">>, Map, null),
+                             maps:get(<<"CounterOrderNo">>, Map, null),
+                             maps:get(<<"BillComment">>, Map, null)]
+                        )
+                    catch
+                        _:Error ->
+                            Alert = #{<<"Alert">> => unicode:characters_to_binary("数据插入失败! " ++ Error)},
+                            {json, [Alert]}
+                    end
+                end,
+                UploadJson),
+            Info = #{<<"Alert">> => unicode:characters_to_binary("导入成功" ++ integer_to_list(count_maps(UploadJson)) ++ "行!")},
+            {json, [Info]};
         <<"2">> ->
-            {json, [unicode:characters_to_binary("导入成功" ++ 1 ++ "行!")]};
+            lists:foreach(
+                fun(Map) ->
+                    try
+                        mysql_pool:query(pool_db,
+                            "INSERT INTO paybilldetail(Owner, Source, TradeOrderNo, CounterOrderNo, TradeTime,
+                            PayMethod, CounterParty, GoodsComment, Amount, InOrOut, PayStatus, BillComment)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
+                            [maps:get(<<"Owner">>, Map, null),
+                             maps:get(<<"Source">>, Map, null),
+                             maps:get(<<"TradeOrderNo">>, Map, null),
+                             maps:get(<<"CounterOrderNo">>, Map, null),
+                             maps:get(<<"TradeTime">>, Map, null),
+                             maps:get(<<"PayMethod">>, Map, null),
+                             maps:get(<<"CounterParty">>, Map, null),
+                             maps:get(<<"GoodsComment">>, Map, null),
+                             maps:get(<<"Amount">>, Map, null),
+                             maps:get(<<"InOrOut">>, Map, null),
+                             maps:get(<<"PayStatus">>, Map, null),
+                             maps:get(<<"BillComment">>, Map, null)]
+                        )
+                    catch
+                        _:Error ->
+                            Alert = #{<<"Alert">> => unicode:characters_to_binary("数据插入失败! " ++ Error)},
+                            {json, [Alert]}
+                    end
+                end,
+                UploadJson),
+            Info = #{<<"Alert">> => unicode:characters_to_binary("导入成功" ++ integer_to_list(count_maps(UploadJson)) ++ "行!")},
+            {json, [Info]};
         <<"3">> ->
-            {json, [unicode:characters_to_binary("导入成功" ++ 1 ++ "行!")]};
+            lists:foreach(
+                fun(Map) ->
+                    InCome = maps:get(<<"Amount">>, Map),
+                    case InCome of
+                        _ when InCome > 0 ->
+                        InOrOut = unicode:characters_to_binary("收入");
+                        _ ->
+                        InOrOut = unicode:characters_to_binary("支出")
+                    end,
+                    try
+                        mysql_pool:query(pool_db,
+                            "INSERT INTO paybilldetail(Owner, Source, TradeTime, CounterParty,
+                            CounterBank, CounterAccount, GoodsComment, Amount, Balance, InOrOut)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
+                            [maps:get(<<"Owner">>, Map, null),
+                             maps:get(<<"Source">>, Map, null),
+                             maps:get(<<"TradeTime">>, Map, null),
+                             maps:get(<<"CounterParty">>, Map, null),
+                             maps:get(<<"CounterBank">>, Map, null),
+                             maps:get(<<"CounterAccount">>, Map, null),
+                             maps:get(<<"GoodsComment">>, Map, null),
+                             InCome,
+                             maps:get(<<"Balance">>, Map, null),
+                             InOrOut]
+                        )
+                    catch
+                        _:Error ->
+                            Alert = #{<<"Alert">> => unicode:characters_to_binary("数据插入失败! " ++ Error)},
+                            {json, [Alert]}
+                    end
+                end,
+                UploadJson),
+            Info = #{<<"Alert">> => unicode:characters_to_binary("导入成功" ++ integer_to_list(count_maps(UploadJson)) ++ "行!")},
+            {json, [Info]};
         <<"4">> ->
-            {json, [unicode:characters_to_binary("导入成功" ++ 1 ++ "行!")]};
+            Info = #{<<"Alert">> => unicode:characters_to_binary("导入成功" ++ integer_to_list(count_maps(UploadJson)) ++ "行!")},
+            {json, [Info]};
         _ ->
-            {json, [unicode:characters_to_binary("导入成功" ++ 1 ++ "行!")]}
+            {json, [unicode:characters_to_binary("导入格式不对!")]}
     end;
 
 upload(#{auth_data := #{<<"permission">> := #{<<"finance">> := #{<<"finimp">> := false}}}}) ->

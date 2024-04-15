@@ -44,10 +44,12 @@ function loadRoleData() {
                 targets: -1, // 将按钮添加到最后一列
                 render: function () {
                     return `
-                        <button class="btn btn-outline-primary btn-rounded disable-role-btn">
+                        <button class="btn btn-outline-primary btn-rounded disable-role-btn"
+                          data-bs-toggle="tooltip" data-bs-placement="top" title="启禁角色">
                             <i class="fas fa-toggle-on"></i>
                         </button>
-                        <button class="btn btn-outline-primary btn-rounded edit-role-btn">
+                        <button class="btn btn-outline-primary btn-rounded edit-role-btn"
+                          data-bs-toggle="tooltip" data-bs-placement="top" title="编辑角色">
                             <i class="fas fa-pen"></i>
                         </button>
                     `;

@@ -31,8 +31,8 @@ BEGIN
     INSERT INTO eadm_dashboard(DataType, DateType, LoginName, DataValue, CheckDate)
     SELECT 1, 2, 'wangcw', IFNULL(ROUND(AVG(Heartbeat)),0), InDate
 	FROM eadm.watchdaily
-	WHERE UtcTime >= DATE_ADD(InDate, INTERVAL -7 DAY)
-	  AND UtcTime < InDate
+	WHERE CONVERT_TZ(UtcTime,'+00:00','+08:00') >= DATE_ADD(InDate, INTERVAL -7 DAY)
+	  AND CONVERT_TZ(UtcTime,'+00:00','+08:00') < InDate
 	  AND Heartbeat IS NOT NULL;
 
     # 周平均步数
@@ -41,10 +41,10 @@ BEGIN
 	FROM (
 	SELECT MAX(Steps) AS MaxSteps
     FROM eadm.watchdaily
-	WHERE UtcTime >= DATE_ADD(InDate, INTERVAL -7 DAY)
-	  AND UtcTime < InDate
+	WHERE CONVERT_TZ(UtcTime,'+00:00','+08:00') >= DATE_ADD(InDate, INTERVAL -7 DAY)
+	  AND CONVERT_TZ(UtcTime,'+00:00','+08:00') < InDate
 	  AND Steps IS NOT NULL
-	GROUP BY DATE_FORMAT(UtcTime, '%Y-%m-%d')) AS S
+	GROUP BY DATE_FORMAT(CONVERT_TZ(UtcTime,'+00:00','+08:00'), '%Y-%m-%d')) AS S
 	WHERE S.MaxSteps IS NOT NULL;
 
     # 周平均睡眠
@@ -53,10 +53,10 @@ BEGIN
 	FROM (
 	SELECT SUM(SleepMinute) AS SumSleepMinute
     FROM eadm.watchdaily
-	WHERE UtcTime >= DATE_ADD(InDate, INTERVAL -7 DAY)
-	  AND UtcTime < InDate
+	WHERE CONVERT_TZ(UtcTime,'+00:00','+08:00') >= DATE_ADD(InDate, INTERVAL -7 DAY)
+	  AND CONVERT_TZ(UtcTime,'+00:00','+08:00') < InDate
 	  AND SleepMinute IS NOT NULL
-	GROUP BY DATE_FORMAT(UtcTime, '%Y-%m-%d')) AS S
+	GROUP BY DATE_FORMAT(CONVERT_TZ(UtcTime,'+00:00','+08:00'), '%Y-%m-%d')) AS S
 	WHERE S.SumSleepMinute IS NOT NULL;
 
     # 周平均里程
@@ -65,10 +65,10 @@ BEGIN
 	FROM (
 	SELECT MAX(mileage) - MIN(mileage) AS DuaMileAge
     FROM eadm.carlocdaily
-	WHERE dev_upload >= DATE_ADD(InDate, INTERVAL -7 DAY)
-	  AND dev_upload < InDate
+	WHERE CONVERT_TZ(dev_upload,'+00:00','+08:00') >= DATE_ADD(InDate, INTERVAL -7 DAY)
+	  AND CONVERT_TZ(dev_upload,'+00:00','+08:00') < InDate
 	  AND mileage IS NOT NULL
-	GROUP BY DATE_FORMAT(dev_upload, '%Y-%m-%d')) AS S
+	GROUP BY DATE_FORMAT(CONVERT_TZ(dev_upload,'+00:00','+08:00'), '%Y-%m-%d')) AS S
 	WHERE S.DuaMileAge IS NOT NULL
 	  AND S.DuaMileAge !=0;
 
@@ -76,8 +76,8 @@ BEGIN
     INSERT INTO eadm_dashboard(DataType, DateType, LoginName, DataValue, CheckDate)
     SELECT 1, 4, 'wangcw', IFNULL(ROUND(AVG(Heartbeat)),0), InDate
 	FROM eadm.watchdaily
-	WHERE UtcTime >= DATE_ADD(InDate, INTERVAL -1 YEAR)
-	  AND UtcTime < InDate
+	WHERE CONVERT_TZ(UtcTime,'+00:00','+08:00') >= DATE_ADD(InDate, INTERVAL -1 YEAR)
+	  AND CONVERT_TZ(UtcTime,'+00:00','+08:00') < InDate
 	  AND Heartbeat IS NOT NULL;
 
     # 年度平均步数
@@ -86,10 +86,10 @@ BEGIN
 	FROM (
 	SELECT MAX(Steps) AS MaxSteps
     FROM eadm.watchdaily
-	WHERE UtcTime >= DATE_ADD(InDate, INTERVAL -1 YEAR)
-	  AND UtcTime < InDate
+	WHERE CONVERT_TZ(UtcTime,'+00:00','+08:00') >= DATE_ADD(InDate, INTERVAL -1 YEAR)
+	  AND CONVERT_TZ(UtcTime,'+00:00','+08:00') < InDate
 	  AND Steps IS NOT NULL
-	GROUP BY DATE_FORMAT(UtcTime, '%Y-%m-%d')) AS S
+	GROUP BY DATE_FORMAT(CONVERT_TZ(UtcTime,'+00:00','+08:00'), '%Y-%m-%d')) AS S
 	WHERE S.MaxSteps IS NOT NULL;
 
     # 年度平均睡眠
@@ -98,18 +98,18 @@ BEGIN
 	FROM (
 	SELECT SUM(SleepMinute) AS SumSleepMinute
     FROM eadm.watchdaily
-	WHERE UtcTime >= DATE_ADD(InDate, INTERVAL -1 YEAR)
-	  AND UtcTime < InDate
+	WHERE CONVERT_TZ(UtcTime,'+00:00','+08:00') >= DATE_ADD(InDate, INTERVAL -1 YEAR)
+	  AND CONVERT_TZ(UtcTime,'+00:00','+08:00') < InDate
 	  AND SleepMinute IS NOT NULL
-	GROUP BY DATE_FORMAT(UtcTime, '%Y-%m-%d')) AS S
+	GROUP BY DATE_FORMAT(CONVERT_TZ(UtcTime,'+00:00','+08:00'), '%Y-%m-%d')) AS S
 	WHERE S.SumSleepMinute IS NOT NULL;
 
     # 年度总里程
 	INSERT INTO eadm_dashboard(DataType, DateType, LoginName, DataValue, CheckDate)
 	SELECT 4, 4, 'wangcw', IFNULL(MAX(mileage) - MIN(mileage),0), InDate
     FROM eadm.carlocdaily
-	WHERE dev_upload >= CONCAT(YEAR(InDate), '-01-01')
-	  AND dev_upload < InDate
+	WHERE CONVERT_TZ(dev_upload,'+00:00','+08:00') >= CONCAT(YEAR(InDate), '-01-01')
+	  AND CONVERT_TZ(dev_upload,'+00:00','+08:00') < InDate
 	  AND mileage IS NOT NULL;
 
 	# 每月里程
@@ -128,13 +128,13 @@ BEGIN
            (5, 3, 0, 'wangcw', DATE_FORMAT(DATE_ADD(InDate, INTERVAL -11 MONTH),'%Y-%m'));
 
 	UPDATE eadm_dashboard A,
-	    (SELECT DATE_FORMAT(B.dev_upload, '%Y-%m') AS CheckMonth,
+	    (SELECT DATE_FORMAT(CONVERT_TZ(B.dev_upload,'+00:00','+08:00'), '%Y-%m') AS CheckMonth,
             MAX(B.mileage)-MIN(B.mileage) AS mileage
         FROM eadm.carlocdaily B,
              eadm_userdevice C
         WHERE B.device_id=C.DeviceNo
           AND C.LoginName='wangcw'
-        GROUP BY DATE_FORMAT(B.dev_upload, '%Y-%m')
+        GROUP BY DATE_FORMAT(CONVERT_TZ(B.dev_upload,'+00:00','+08:00'), '%Y-%m')
         ORDER BY CheckMonth) D
 	SET A.DataValue=D.mileage
 	WHERE A.DateType=3
@@ -160,7 +160,7 @@ BEGIN
 	    (SELECT DATE_FORMAT(TradeTime, '%Y-%m') AS CheckMonth,
             SUM(IFNULL(Amount,0)) AS Amount
         FROM paybilldetail B
-        WHERE B.InOrOut=1
+        WHERE B.InOrOut='收入'
         GROUP BY DATE_FORMAT(B.TradeTime, '%Y-%m')) C
 	SET A.DataValue=C.Amount
 	WHERE A.DateType=3
@@ -186,7 +186,7 @@ BEGIN
 	    (SELECT DATE_FORMAT(TradeTime, '%Y-%m') AS CheckMonth,
             SUM(IFNULL(Amount,0)) AS Amount
         FROM paybilldetail B
-        WHERE B.InOrOut IN (0, 2)
+        WHERE B.InOrOut <> '收入'
         GROUP BY DATE_FORMAT(B.TradeTime, '%Y-%m')) C
 	SET A.DataValue=C.Amount
 	WHERE A.DateType=3

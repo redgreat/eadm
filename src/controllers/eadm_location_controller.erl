@@ -52,14 +52,14 @@ search(#{auth_data := #{<<"authed">> := true,
                 {json, [Alert]};
             _ ->
                 try
-                    {ok, _, Res_Data} = mysql_pool:query(pool_db,
+                    {ok, _, ResData} = mysql_pool:query(pool_db,
                         "SELECT lng, lat
                         FROM carlocdaily
                         WHERE dev_upload >= ?
                           AND dev_upload < ?
                         ORDER BY dev_upload DESC;",
                         [CtsStartTime, CtsEndTime]),
-                    {json, Res_Data}
+                    {json, ResData}
                 catch
                     _:Error ->
                         Alert = #{<<"Alert">> => unicode:characters_to_binary("查询失败! " ++ Error)},
