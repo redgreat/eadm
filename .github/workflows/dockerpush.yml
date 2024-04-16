@@ -55,11 +55,3 @@ jobs:
           context: .
           push: true
           tags: redgreat/eadm:${{ github.ref_name }}
-
-      - name: docker image build & push
-        id: docker_build
-        uses: docker/build-push-action@v5.3.0
-        with:
-            context: .
-            push: true
-            tags: redgreat/eadm:latest
