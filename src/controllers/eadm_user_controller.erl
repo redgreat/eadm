@@ -610,14 +610,3 @@ get_permission(LoginName) ->
         LIMIT 1;", [LoginName]),
     {ok, ResMap} = thoas:decode(list_to_binary(ResData)),
     #{<<"data">> => ResMap}.
-
-%% @doc
-%% 验证邮箱格式
-%% @end
-validate_email(Email) ->
-    case re:run(Email, "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$") of
-        match ->
-            true;
-        _ ->
-            false
-    end.

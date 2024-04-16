@@ -76,8 +76,6 @@ jobs:
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.PUBLISH_TOKEN }}
-        run:
-          tar -czvf eadm-${{ github.ref_name }}.tar.gz _build/default/rel/eadm-${{ github.ref_name }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ./eadm-${{ github.ref_name }}.tar.gz

@@ -39,7 +39,7 @@ to_json(Tuple) when is_tuple(Tuple) ->
     to_json(erlang:tuple_to_list(Tuple));
 to_json(Map) when is_map(Map) ->
     %% What should we do here? Nothing?
-    maps:map(fun(Key, Value) ->
+    maps:map(fun(_, Value) ->
                      to_json(Value)
              end, Map);
 to_json(Pid) when is_pid(Pid) ->
