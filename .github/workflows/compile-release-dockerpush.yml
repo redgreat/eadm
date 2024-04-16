@@ -39,11 +39,6 @@ jobs:
           rebar3 as prod release
           tar -czvf eadm-${{ github.ref_name }}.tar.gz _build/default/rel/eadm-${{ github.ref_name }}
 
-      # - uses: test-summary/action@vv2.3
-      #   if: always()
-      #   with:
-      #     paths: '_build/test/logs/**/report.xml'
-
       # 设置Docker构建环境
       - name: Set up Docker Buildx
         id: buildx
