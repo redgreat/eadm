@@ -13,3 +13,4 @@ README.md
 !priv
 !src
 !rebar.*
+/config/prod_db.config.prod
