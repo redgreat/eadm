@@ -1,9 +1,12 @@
 name: 编译发包并推送docker镜像
 
 on:
+  # push:
+  #   branches: [main]
+
   push:
-    branches: [main]
-  pull_request:
+    tags:
+        - 'v*'
 
 env:
   OTP-VERSION: 26.2.2
