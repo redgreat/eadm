@@ -28,7 +28,6 @@ jobs:
           otp-version: ${{ env.OTP-VERSION }}
           rebar3-version: ${{ env.REBAR3-VERSION }}
 
-      # 缓存
       - uses: actions/cache@v4.0.2
         id: rebar3-cache
         with:
@@ -37,8 +36,7 @@ jobs:
             _build
           key: ${{ runner.os }}-${{ env.OTP-VERSION }}-${{ env.REBAR3-VERSION }}-${{ hashFiles('rebar.lock') }}
 
-      # 编译
-      - name: Compile
+      - name: compile
         run: |
           rebar3 clean
           rebar3 as prod release
