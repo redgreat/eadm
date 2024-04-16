@@ -39,7 +39,7 @@ jobs:
           rebar3 as prod release
           tar -czvf eadm-${{ github.ref_name }}.tar.gz _build/prod/rel/eadm
 
-      - name: Create Release
+      - name: release create
         id: create_release
         uses: actions/create-release@v1
         env:
@@ -50,7 +50,7 @@ jobs:
           draft: false
           prerelease: false
 
-      - name: Upload Release Asset
+      - name: release upload
         id: upload-release-asset
         uses: actions/upload-release-asset@v1
         env:
