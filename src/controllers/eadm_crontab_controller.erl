@@ -59,5 +59,3 @@ search(#{auth_data := #{<<"authed">> := false}}) ->
 %%====================================================================
 %% Internal functions
 %%====================================================================
-event_dashboard() ->
-    mysql_pool:query(pool_db,"CALL eadm.proc_DashBoard();",[]).

@@ -37,7 +37,7 @@ jobs:
         run: |
           rebar3 clean
           rebar3 as prod release
-          tar -czvf eadm-${{ github.ref_name }}.tar.gz _build/default/rel/eadm-${{ github.ref_name }}
+          tar -czvf eadm-${{ github.ref_name }}.tar.gz _build/default/rel/eadm
 
       # 设置Docker构建环境
       - name: Set up Docker Buildx
