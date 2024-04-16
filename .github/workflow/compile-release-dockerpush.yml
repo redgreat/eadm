@@ -1,4 +1,4 @@
-name: 编译并推送docker镜像
+name: 编译发包并推送docker镜像
 
 on:
   push:
@@ -36,16 +36,13 @@ jobs:
       - name: Compile
         run: |
           rebar3 clean
-          rebar3 compile
+          rebar3 as prod release
+          tar -czvf eadm-${{ github.ref_name }}.tar.gz _build/default/rel/eadm-${{ github.ref_name }}
 
-      - run: rebar3 check
-
-      - run: rebar3 test
-
-      - uses: test-summary/action@vv2.3
-        if: always()
-        with:
-          paths: '_build/test/logs/**/report.xml'
+      # - uses: test-summary/action@vv2.3
+      #   if: always()
+      #   with:
+      #     paths: '_build/test/logs/**/report.xml'
 
       # 设置Docker构建环境
       - name: Set up Docker Buildx
@@ -67,3 +64,27 @@ jobs:
           context: .
           push: true
           tags: redgreat/eadm:latest
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.PUBLISH_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.PUBLISH_TOKEN }}
+        run:
+          tar -czvf eadm-${{ github.ref_name }}.tar.gz _build/default/rel/eadm-${{ github.ref_name }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./eadm-${{ github.ref_name }}.tar.gz
+          asset_name: eadm-${{ github.ref_name }}.tar.gz
+          asset_content_type: application/octet-stream
