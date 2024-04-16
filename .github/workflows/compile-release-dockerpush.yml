@@ -80,6 +80,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.PUBLISH_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./eadm.tar.gz
-          asset_name: eadm.tar.gz
+          asset_path: ./eadm-${{ github.ref_name }}.tar.gz
+          asset_name: eadm-${{ github.ref_name }}.tar.gz
           asset_content_type: application/octet-stream
