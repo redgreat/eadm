@@ -125,7 +125,7 @@ search(#{auth_data := #{<<"authed">> := true,
                                         ORDER BY UtcTime DESC;",
                                         [StartTime, EndTime]);
                                 _ ->
-                                    {ok, ResCol, ResData} = _
+                                    {ResCol, ResData} = {undefined, undefined}
                             end,
                             Response = eadm_utils:return_as_json(ResCol, ResData),
                             {json, Response}
