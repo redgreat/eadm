@@ -20,6 +20,27 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - uses: actions/checkout@v3
+
+      - name: Free disk space
+        run: |
+          # Free disk space.
+          echo "::group::Before"
+          df -h /
+          echo "::endgroup::"
+          echo "::group::Removing unneeded softwares and files..."
+          for DIR in /usr/local/lib/android /usr/share/dotnet /opt/ghc
+          do
+            if [ -d "$DIR" ]; then
+                echo "Removing $DIR..."
+                sudo rm -r "$DIR"
+            fi
+          done
+          echo "::endgroup::"
+          echo "::group::After"
+          df -h /
+          echo "::endgroup::"
+
       - uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
@@ -155,10 +176,6 @@ jobs:
         if: ${{ steps.prep.outputs.is_release == 'yes' }}
         run: |
           docker buildx imagetools inspect ${{ env.DOCKER_IMAGE_NAME }}:${{ steps.prep.outputs.version }}
-
-      - name: Checkout
-        uses: actions/checkout@v3
-        if: ${{ steps.prep.outputs.release_type == 'standard' }}
 
       - name: Dockerhub description
         if: ${{ steps.prep.outputs.release_type == 'standard' }}
