@@ -163,6 +163,7 @@ jobs:
         id: docker_build
         uses: docker/build-push-action@v5.3.0
         with:
+          context: .
           push: ${{ steps.prep.outputs.is_release == 'yes' }}
           provenance: false
           platforms: ${{ env.PLATFORMS }}
