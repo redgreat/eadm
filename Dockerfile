@@ -8,7 +8,6 @@ WORKDIR /opt/eadm
 
 RUN apk add --no-cache ncurses-libs libgcc libstdc++
 
-RUN ls _build/prod/rel/eadm
 COPY _build/prod/rel/eadm /opt/eadm/
 
 VOLUME /opt/eadm
