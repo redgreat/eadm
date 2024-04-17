@@ -20,25 +20,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Free disk space
-        run: |
-          # Free disk space.
-          echo "::group::Before"
-          df -h /
-          echo "::endgroup::"
-          echo "::group::Removing unneeded softwares and files..."
-          for DIR in /usr/local/lib/android /usr/share/dotnet /opt/ghc
-          do
-            if [ -d "$DIR" ]; then
-                echo "Removing $DIR..."
-                sudo rm -r "$DIR"
-            fi
-          done
-          echo "::endgroup::"
-          echo "::group::After"
-          df -h /
-          echo "::endgroup::"
-
       - uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
@@ -47,6 +28,14 @@ jobs:
         with:
           otp-version: ${{ env.OTP-VERSION }}
           rebar3-version: ${{ env.REBAR3-VERSION }}
+
+      - uses: actions/cache@v4.0.2
+        id: rebar3-cache
+        with:
+          path: |
+            ~/.cache/rebar3
+            _build
+          key: ${{ runner.os }}-${{ env.OTP-VERSION }}-${{ env.REBAR3-VERSION }}-${{ hashFiles('rebar.lock') }}
 
       - name: compile
         run: |
