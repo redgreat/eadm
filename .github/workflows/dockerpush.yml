@@ -58,13 +58,7 @@ jobs:
             _build
           key: ${{ runner.os }}-${{ env.OTP-VERSION }}-${{ env.REBAR3-VERSION }}-${{ hashFiles('rebar.lock') }}
 
-      - name: compile
-        run: |
-          rebar3 clean
-          rebar3 as prod release
-          tar -czvf eadm-${{ github.ref_name }:1}.tar.gz _build/prod/rel/eadm
-
-      - name: Prepare
+      - name: prepare
         id: prep
         run: |
           # Determine the Docker container version.
@@ -120,28 +114,34 @@ jobs:
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
           echo "label_version=${LABEL_VERSION}" >> $GITHUB_OUTPUT
           echo "tags=${TAGS}" >> $GITHUB_OUTPUT
-          # echo "build_date=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_OUTPUT
+          echo "build_date=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_OUTPUT
 
-      - name: release create
-        id: create_release
+      - name: compile
+        run: |
+          rebar3 clean
+          rebar3 as prod release
+          tar -czvf eadm-${{ steps.prep.outputs.label_version }}.tar.gz _build/prod/rel/eadm
+
+      - name: create release
+        id: create-release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.PUBLISH_TOKEN }}
         with:
           tag_name: ${{ github.ref_name }}
-          release_name: eadm-${{ github.ref_name }:1}
+          release_name: eadm-${{ steps.prep.outputs.label_version }}
           draft: false
           prerelease: false
 
-      - name: release upload
+      - name: upload release asset
         id: upload-release-asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.PUBLISH_TOKEN }}
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./eadm-${{ github.ref_name }:1}.tar.gz
-          asset_name: eadm-${{ github.ref_name }:1}.tar.gz
+          upload_url: ${{ steps.create-release.outputs.upload_url }}
+          asset_path: ./eadm-${{ steps.prep.outputs.label_version }}.tar.gz
+          asset_name: eadm-${{ steps.prep.outputs.label_version }}.tar.gz
           asset_content_type: application/octet-stream
 
       - name: setup QEMU
