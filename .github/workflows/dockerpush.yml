@@ -62,7 +62,7 @@ jobs:
         run: |
           rebar3 clean
           rebar3 as prod release
-          tar -czvf eadm-${{ github.ref_name }}.tar.gz _build/prod/rel/eadm
+          tar -czvf eadm-${{ github.ref_name }:1}.tar.gz _build/prod/rel/eadm
 
       - name: Prepare
         id: prep
@@ -120,7 +120,7 @@ jobs:
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
           echo "label_version=${LABEL_VERSION}" >> $GITHUB_OUTPUT
           echo "tags=${TAGS}" >> $GITHUB_OUTPUT
-          echo "build_date=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_OUTPUT
+          # echo "build_date=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_OUTPUT
 
       - name: release create
         id: create_release
@@ -128,8 +128,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.PUBLISH_TOKEN }}
         with:
-          tag_name: ${VERSION}
-          release_name: eadm-${{ github.ref_name }}
+          tag_name: ${{ github.ref_name }}
+          release_name: eadm-${{ github.ref_name }:1}
           draft: false
           prerelease: false
 
@@ -140,8 +140,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.PUBLISH_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./eadm-${{ github.ref_name }}.tar.gz
-          asset_name: eadm-${{ github.ref_name }}.tar.gz
+          asset_path: ./eadm-${{ github.ref_name }:1}.tar.gz
+          asset_name: eadm-${{ github.ref_name }:1}.tar.gz
           asset_content_type: application/octet-stream
 
       - name: setup QEMU
@@ -166,7 +166,7 @@ jobs:
           push: ${{ steps.prep.outputs.is_release == 'yes' }}
           provenance: false
           platforms: ${{ env.PLATFORMS }}
-          tags: redgreat/eadm:${{ github.ref_name }}
+          tags: ${{ steps.prep.outputs.tags }}
           build-args: |
               DOCKER_IMAGE_VERSION=${{ steps.prep.outputs.label_version }}
           cache-from: type=gha,scope=${{ env.DOCKER_IMAGE_NAME }}
