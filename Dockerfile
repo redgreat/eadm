@@ -19,10 +19,12 @@ ENV \
 
 EXPOSE 8080
 
+RUN set-cont-env DOCKER_IMAGE_VERSION "$DOCKER_IMAGE_VERSION"
+
 LABEL \
       org.label-schema.name="eadm" \
       org.label-schema.description="erlang书写自用管理，提供日常数据统计查询。" \
-      org.label-schema.version="${$DOCKER_IMAGE_VERSION:-unknown}" \
+      org.label-schema.version="${DOCKER_IMAGE_VERSION:-unknown}" \
       org.label-schema.vcs-url="https://github.com/redgreat/eadm" \
       org.label-schema.schema-version="1.0"
 
