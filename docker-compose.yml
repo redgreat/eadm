@@ -5,10 +5,19 @@ services:
     container_name: eadm
     restart: unless-stopped
     ports:
-      - '8086:8080'
+      - '8080:8090'
     volumes:
       - ./config/prod_db.config:/opt/eadm/releases/0.1.0/prod_db.config
-      - ./config/sys.config:/opt/eadm/releases/0.1.0/sys.config
-      - ./config/vm.args:/opt/eadm/releases/0.1.0/vm.args
+      - ./config/prod_sys.config.src:/opt/eadm/releases/0.1.0/prod_sys.config.src
+      - ./config/vm.args.src:/opt/eadm/releases/0.1.0/vm.args.src
     environment:
       DISABLE_IPV6: 'true'
+
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 500M
+    mem_swappiness: 0
+    oom_kill_disable: true
