@@ -26,4 +26,4 @@ LABEL \
       org.label-schema.vcs-url="https://github.com/redgreat/eadm" \
       org.label-schema.schema-version="1.0"
 
-CMD ["/opt/eadm/bin/eadm", "foreground"]
+# CMD ["/opt/eadm/bin/eadm", "foreground"]
