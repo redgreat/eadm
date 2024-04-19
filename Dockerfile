@@ -8,7 +8,7 @@ WORKDIR /opt/eadm
 
 RUN apk add --no-cache ncurses-libs libgcc libstdc++
 
-COPY _build/prod/rel/eadm /opt/eadm
+COPY _build/prod/rel/eadm /opt/eadm/
 
 VOLUME /opt/eadm
 
@@ -17,7 +17,7 @@ ENV \
     TZ='Asia/Shanghai' \
     LANG='zh_CN.UTF-8'
 
-EXPOSE 8080
+EXPOSE 8090
 
 LABEL \
       org.label-schema.name="eadm" \
@@ -26,4 +26,4 @@ LABEL \
       org.label-schema.vcs-url="https://github.com/redgreat/eadm" \
       org.label-schema.schema-version="1.0"
 
-# CMD ["/opt/eadm/bin/eadm", "foreground"]
+CMD ["/opt/eadm/bin/eadm", "foreground"]

@@ -10,6 +10,7 @@
     kernel,
     stdlib,
     nova,
+    mysql_pool,
     lager
    ]},
   {env,[]},
