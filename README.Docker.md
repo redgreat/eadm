@@ -16,9 +16,16 @@
 
 ## 运行
 ```shell
-docker run -d \
-    --name=eadm \
-    -p 8080:8080 \
-    -v /docker/appdata/nginx-proxy-manager:/config:rw \
-    redgreat/eadm
+docker run -itd \
+-m 1G \
+--memory-reservation 500M \
+--memory-swappiness=0 \
+-oom-kill-disable \
+--cpu-shares=0 \
+--restart=always \
+-v ./config/prod_db.config:/opt/eadm/releases/0.1.0/prod_db.config \
+-v ./config/prod_sys.config.src:/opt/eadm/releases/0.1.0/prod_sys.config.src \
+-v ./config/vm.args.src:/opt/eadm/releases/0.1.0/vm.args.src
+-p 8080:8090 \
+--name eadm redgreat/eadm
 ```
