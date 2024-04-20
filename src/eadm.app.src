@@ -9,7 +9,8 @@
    [
     kernel,
     stdlib,
-    nova
+    nova,
+    mysql_pool
    ]},
   {env,[]},
   {modules, []},

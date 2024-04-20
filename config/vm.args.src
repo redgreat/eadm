@@ -1,6 +1,12 @@
 -sname 'eadm'
 -setcookie 'eadm_cookie'
 
-+A30
++P 1024
++Q 1024
++K true native
++a 64
++A 1
 +C multi_time_warp
 +sbwt none
+
+-mnesia dir '"/var/eadm_db"'
