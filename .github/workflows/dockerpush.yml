@@ -13,11 +13,11 @@ env:
   OTP-VERSION: 26.2.4
   REBAR3-VERSION: 3.23.0
   DOCKER_IMAGE_NAME: redgreat/eadm
-  PLATFORMS: linux/amd64,linux/386,linux/arm/v6,linux/arm/v7,linux/arm64/v8
+  PLATFORMS: linux/amd64,linux/386,linux/arm/v7,linux/arm64/v8,linux/ppc64le,linux/mips64le,linux/s390x
 
 jobs:
   check:
-    runs-on: alpine-3.19
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v3
@@ -119,7 +119,7 @@ jobs:
       - name: compile
         run: |
           rebar3 clean
-          rebar3 as prod release
+          rebar3 as prod
           tar -czvf eadm-${{ steps.prep.outputs.label_version }}.tar.gz _build/prod/rel/eadm
 
       - name: create release

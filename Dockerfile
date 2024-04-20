@@ -1,3 +1,12 @@
+FROM --platform=$BUILDPLATFORM erlang:26.2.4-alpine AS builder
+
+WORKDIR /eadmbuild
+
+COPY . .
+
+RUN apk add --update git
+RUN rebar3 as prod release
+
 FROM --platform=$BUILDPLATFORM alpine:3.19
 
 ARG DOCKER_IMAGE_VERSION
@@ -8,7 +17,7 @@ WORKDIR /opt/eadm
 
 RUN apk add --no-cache ncurses-libs libgcc libstdc++
 
-COPY _build/prod/rel/eadm /opt/eadm/
+COPY --from=builder /eadmbuild/_build/prod/rel/eadm /opt/eadm/
 
 VOLUME /opt/eadm
 
