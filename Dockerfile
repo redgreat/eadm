@@ -1,4 +1,4 @@
-FROM amd64/alpine:3.19
+FROM --platform=$BUILDPLATFORM alpine:3.19
 
 ARG DOCKER_IMAGE_VERSION
 
