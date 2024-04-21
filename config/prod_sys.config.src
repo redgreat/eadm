@@ -29,7 +29,7 @@
       {error_logger_mf_maxfiles, 255}           % 255 files max
   ]},
   {lager, [
-      {log_root, "logs"}
+      {log_root, "/var/log"}
       %% What handlers to install with what arguments
       , {handlers, [
           {lager_console_backend, [{level, debug},{level, debug},{formatter, lager_default_formatter},
