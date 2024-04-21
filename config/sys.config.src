@@ -17,7 +17,7 @@
                                            parse_bindings => true,
                                            read_urlencoded_body=>true,
                                            parse_qs=>true}},
-      {pre_request, nova_cors_plugin, #{allow_origins => [<<"http://localhost:8090/">>]}}
+      {pre_request, nova_cors_plugin, #{allow_origins => [<<"*">>]}}
       ]}
     ]},
   {sasl, [
@@ -29,7 +29,7 @@
       {error_logger_mf_maxfiles, 255}           % 255 files max
   ]},
   {lager, [
-      {log_root, "/var/log"}
+      {log_root, "/var/log/eadm/"}
       %% What handlers to install with what arguments
       , {handlers, [
           {lager_console_backend, [{level, debug},{level, debug},{formatter, lager_default_formatter},

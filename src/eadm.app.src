@@ -10,7 +10,8 @@
     kernel,
     stdlib,
     nova,
-    mysql_pool
+    mysql_pool,
+    lagger
    ]},
   {env,[]},
   {modules, []},
