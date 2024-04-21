@@ -10,6 +10,7 @@ services:
       - ./config/prod_db.config:/opt/eadm/releases/0.1.0/prod_db.config
       - ./config/prod_sys.config.src:/opt/eadm/releases/0.1.0/sys.config.src
       - ./config/vm.args.src:/opt/eadm/releases/0.1.0/vm.args.src
+      - ./log/:/var/log/eadm/
     environment:
       DISABLE_IPV6: 'true'
 
