@@ -34,7 +34,7 @@ CREATE TABLE `sys_sequence` (
   `CurrentValue` BIGINT NOT NULL COMMENT '序列当前值',
   `Increment` SMALLINT NOT NULL COMMENT '步长',
   `InsertTime` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP() COMMENT '数据写入时间'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci ROW_FORMAT=DYNAMIC COMMENT='系统_自定义序列信息表';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC COMMENT='系统_自定义序列信息表';
 
 # 写入自增序列值
 # TRUNCATE TABLE sys_sequence;
@@ -87,7 +87,7 @@ CREATE TABLE `sys_dict` (
   `Deleted` TINYINT NOT NULL DEFAULT 0 COMMENT '是否删除(0否1是)',
   UNIQUE KEY `UNI_DictNo` (`DictNo`) USING BTREE,
   KEY `IDX` (`ParentId`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci ROW_FORMAT=DYNAMIC ROW_FORMAT=DYNAMIC COMMENT='系统_字典信息表';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC ROW_FORMAT=DYNAMIC COMMENT='系统_字典信息表';
 
 # 基础信息_租户信息表
 DROP TABLE IF EXISTS `eadm_tenant`;
@@ -103,7 +103,7 @@ CREATE TABLE `eadm_tenant` (
   `DeletedUser` VARCHAR(50) DEFAULT NULL COMMENT '删除人',
   `DeletedAt` DATETIME DEFAULT NULL COMMENT '删除时间',
   `Deleted` TINYINT NOT NULL DEFAULT 0 COMMENT '是否删除(0否1是)'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci ROW_FORMAT=DYNAMIC COMMENT '基础信息_租户信息表';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC COMMENT '基础信息_租户信息表';
 
 INSERT INTO eadm_tenant(Id, TenantName, Remark)
 VALUES(fn_nextval('ET'),'REDGREAT', '主租户');
@@ -146,7 +146,7 @@ CREATE TABLE `eadm_user` (
   KEY `IDX-TenantId` (`TenantId`),
   KEY `IDX-LoginName` (`LoginName`),
   KEY `IDX-UpdatedAt` (`UpdatedAt`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci ROW_FORMAT=DYNAMIC COMMENT '基础信息_用户信息表';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC COMMENT '基础信息_用户信息表';
 
 INSERT INTO eadm_user(Id, TenantId, LoginName, UserName, Email, CryptoGram)
 VALUES(fn_nextval('EU'), 'ET9999999998','wangcw', '王存伟', 'rubygreat@msn.com', 'q122/4GBpiCNq83AbPQN/+kYq0KwczLxiWfLaLKk4NY=');
@@ -181,7 +181,7 @@ CREATE TABLE `eadm_role` (
   `DeletedAt` DATETIME DEFAULT NULL COMMENT '删除时间',
   `Deleted` TINYINT NOT NULL DEFAULT 0 COMMENT '是否删除(0否1是)',
   KEY `IDX-RoleName` (`RoleName`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci ROW_FORMAT=DYNAMIC COMMENT '基础信息_角色信息表';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC COMMENT '基础信息_角色信息表';
 
 # 写入数据
 INSERT INTO eadm_role(Id, RoleName, RolePermission)
@@ -216,7 +216,7 @@ CREATE TABLE `eadm_userrole` (
   `Deleted` TINYINT NOT NULL DEFAULT 0 COMMENT '是否删除(0否1是)',
   KEY `IDX-UserId` (`UserId`),
   KEY `IDX-RoleId` (`RoleId`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci ROW_FORMAT=DYNAMIC COMMENT '基础信息_用户角色对应关系表';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC COMMENT '基础信息_用户角色对应关系表';
 
 INSERT INTO eadm_userrole(UserId, RoleId)
 VALUES('EU9999999998', 'ER9999999998');
@@ -272,7 +272,7 @@ CREATE TABLE `eadm_crontab` (
   `DeletedAt` DATETIME DEFAULT NULL COMMENT '删除时间',
   `Deleted` TINYINT NOT NULL DEFAULT 0 COMMENT '是否删除(0否1是)',
   KEY `IDX-CronName` (`CronName`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci ROW_FORMAT=DYNAMIC COMMENT '基础信息_定时任务信息表';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC COMMENT '基础信息_定时任务信息表';
 
 # 首页报表
 DROP TABLE IF EXISTS eadm.eadm_dashboard;
@@ -291,7 +291,7 @@ CREATE TABLE eadm.eadm_dashboard(
     KEY `NON-DateType` (DateType),
     KEY `NON-LoginName` (LoginName),
     KEY `NON-CheckDate` (CheckDate)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci ROW_FORMAT=DYNAMIC COMMENT='首页_看板报表';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC COMMENT='首页_看板报表';
 
 # 过程运行日志
 DROP TABLE IF EXISTS `sys_proclog`;
@@ -305,7 +305,7 @@ CREATE TABLE `sys_proclog` (
   `InsertTime` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '日志记录时间',
   KEY `NON-ProcName` (`ProcName`),
   KEY `NON-InsertTime` (`InsertTime`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci ROW_FORMAT=DYNAMIC COMMENT='系统域_过程执行日志';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC COMMENT='系统域_过程执行日志';
 
 # 设备信息
 DROP TABLE IF EXISTS `eadm_device`;
@@ -324,7 +324,7 @@ CREATE TABLE `eadm_device` (
   `Deleted` TINYINT NOT NULL DEFAULT 0 COMMENT '是否删除(0否1是)',
   KEY `NON-DeviceNo` (`DeviceNo`),
   KEY `NON-SimNo` (`SimNo`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci ROW_FORMAT=DYNAMIC COMMENT='业务域_设备信息';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC COMMENT='业务域_设备信息';
 
 INSERT INTO eadm_device(Id, DeviceNo, Remark, CreatedUser)
 VALUES(fn_nextval('ED'), '16053489111', '充电宝', 'wangcw'),
@@ -347,7 +347,7 @@ CREATE TABLE `eadm_userdevice` (
   KEY `NON-UserId` (`UserId`),
   KEY `NON-LoginName` (`LoginName`),
   KEY `NON-DeviceNo` (`DeviceNo`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci ROW_FORMAT=DYNAMIC COMMENT='业务域_人员设备对应关系';
+) ENGINE=InnoDB ROW_FORMAT=DYNAMIC COMMENT='业务域_人员设备对应关系';
 
 INSERT INTO eadm_userdevice(UserId, LoginName, DeviceNo)
 SELECT 'EU9999999998', 'wangcw', DeviceNo

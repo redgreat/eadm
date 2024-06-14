@@ -36,32 +36,32 @@ index(#{auth_data := #{<<"authed">> := false}}) ->
 search(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName}}) ->
 
     {ok, _, ResData} = mysql_pool:query(pool_db,
-        "SELECT DataValue
-        FROM eadm_dashboard
-        WHERE LoginName=?
-          AND DataType IN (1, 2, 3, 4)
-        ORDER BY DateType, DataType;",[LoginName]),
+        "select datavalue
+        from eadm_dashboard
+        where loginname=?
+          and datatype in (1, 2, 3, 4)
+        order by datetype, datatype;",[LoginName]),
 
     {ok, _, ResLocation} = mysql_pool:query(pool_db,
-        "SELECT CAST(RIGHT(CheckDate, 2) AS INT) AS Month, DataValue
-        FROM eadm_dashboard
-        WHERE LoginName=?
-          AND DataType=5
-        ORDER BY CheckDate;",[LoginName]),
+        "select cast(right(checkdate, 2) as int) as month, datavalue
+        from eadm_dashboard
+        where loginname=?
+          and datatype=5
+        order by checkdate;",[LoginName]),
 
     {ok, _, ResFinanceIn} = mysql_pool:query(pool_db,
-        "SELECT CAST(RIGHT(CheckDate, 2) AS INT) AS Month, DataValue
-        FROM eadm_dashboard
-        WHERE LoginName=?
-          AND DataType=6
-        ORDER BY CheckDate;",[LoginName]),
+        "select cast(right(checkdate, 2) as int) as month, datavalue
+        from eadm_dashboard
+        where loginname=?
+          and datatype=6
+        order by checkdate;",[LoginName]),
 
     {ok, _, ResFinanceOut} = mysql_pool:query(pool_db,
-        "SELECT CAST(RIGHT(CheckDate, 2) AS INT) AS Month, DataValue
-        FROM eadm_dashboard
-        WHERE LoginName=?
-          AND DataType=7
-        ORDER BY CheckDate;",[LoginName]),
+        "select cast(right(checkdate, 2) as int) as month, datavalue
+        from eadm_dashboard
+        where loginname=?
+          and datatype=7
+        order by checkdate;",[LoginName]),
 
     ResList = ResData ++ [get_hd(ResLocation)] ++ [get_tl(ResLocation)]
         ++ [get_hd(ResFinanceIn)] ++ [get_tl(ResFinanceIn)] ++ [get_tl(ResFinanceOut)],

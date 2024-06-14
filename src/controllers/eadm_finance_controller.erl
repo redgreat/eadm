@@ -54,49 +54,49 @@ search(#{auth_data := #{<<"authed">> := true,
                 case {SourceType, InOrOut} of
                     {<<"0">>, <<"0">>} ->
                         {ok, ResCol, ResData} = mysql_pool:query(pool_db,
-                            "SELECT Id, `Source` AS SourceType, InOrOut, TradeType, Amount, TradeTime
-                            FROM paybilldetail
-                            WHERE TradeTime >= ?
-                              AND TradeTime < ?
-                              AND Deleted = 0
-                            ORDER BY TradeTime;",
+                            "select id, sourcetype, inorout, tradetype, amount, tradetime
+                            from fn_paybilldetail
+                            where tradetime>=?
+                              and tradetime<?
+                              and deleted=0
+                            order by tradetime;",
                             [StartTime, EndTime]),
                         Response = eadm_utils:return_as_json(ResCol, ResData),
                         {json, Response};
                     {<<"0">>, _} ->
                         {ok, ResCol, ResData} = mysql_pool:query(pool_db,
-                            "SELECT Id, `Source` AS SourceType, InOrOut, TradeType, Amount, TradeTime
-                            FROM paybilldetail
-                            WHERE TradeTime >= ?
-                              AND TradeTime < ?
-                              AND InOrOut = ?
-                              AND Deleted = 0
-                            ORDER BY TradeTime;",
+                            "select id, sourcetype, inorout, tradetype, amount, tradetime
+                            from fn_paybilldetail
+                            where tradetime>=?
+                              and tradetime<?
+                              and inorout=?
+                              and deleted=0
+                            order by tradetime;",
                             [StartTime, EndTime, InOrOut]),
                         Response = eadm_utils:return_as_json(ResCol, ResData),
                         {json, Response};
                     {_, <<"0">>} ->
                         {ok, ResCol, ResData} = mysql_pool:query(pool_db,
-                            "SELECT Id, `Source` AS SourceType, InOrOut, TradeType, Amount, TradeTime
-                            FROM paybilldetail
-                            WHERE TradeTime >= ?
-                              AND TradeTime < ?
-                              AND `Source` = ?
-                              AND Deleted = 0
-                            ORDER BY TradeTime;",
+                            "select id, sourcetype, inorout, tradetype, amount, tradetime
+                            from paybilldetail
+                            where tradetime>=?
+                              and tradetime<?
+                              and sourcetype=?
+                              and deleted=0
+                            order by tradetime;",
                             [StartTime, EndTime, SourceType]),
                         Response = eadm_utils:return_as_json(ResCol, ResData),
                         {json, Response};
                     {_, _} ->
                         {ok, ResCol, ResData} = mysql_pool:query(pool_db,
-                            "SELECT Id, `Source` AS SourceType, InOrOut, TradeType, Amount, TradeTime
-                            FROM paybilldetail
-                            WHERE TradeTime >= ?
-                              AND TradeTime < ?
-                              AND `Source` = ?
-                              AND InOrOut = ?
-                              AND Deleted = 0
-                            ORDER BY TradeTime;",
+                            "select id, sourcetype, inorout, tradetype, amount, tradetime
+                            from paybilldetail
+                            where tradetime>=?
+                              and tradetime<?
+                              and sourcetype=?
+                              and inorout=?
+                              and deleted=0
+                            order by tradetime;",
                             [StartTime, EndTime, SourceType, InOrOut]),
                         Response = eadm_utils:return_as_json(ResCol, ResData),
                         {json, Response}
@@ -122,11 +122,11 @@ delete(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
       <<"permission">> := #{<<"finance">> := #{<<"findel">> := true}}},
     bindings := #{<<"detailId">> := DetailId}}) ->
         try
-            mysql_pool:query(pool_db, "UPDATE paybilldetail
-                                      SET DeletedUser = ?,
-                                      DeletedAt = NOW(),
-                                      Deleted = 1
-                                      WHERE Id = ?;",
+            mysql_pool:query(pool_db, "update paybilldetail
+                                      set deleteduser = ?,
+                                      deletedat = now(),
+                                      deleted = 1
+                                      where id = ?;",
                                       [LoginName, DetailId]),
             Info = #{<<"Alert">> => unicode:characters_to_binary("数据删成功! ")},
             {json, [Info]}
