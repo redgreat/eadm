@@ -124,7 +124,7 @@ delete(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
         try
             mysql_pool:query(pool_db, "update paybilldetail
                                       set deleteduser = ?,
-                                      deletedat = now(),
+                                      deletedat = current_timestamp,
                                       deleted = 1
                                       where id = ?;",
                                       [LoginName, DetailId]),
@@ -151,12 +151,12 @@ searchdetail(#{auth_data := #{<<"authed">> := true,
     bindings := #{<<"detailId">> := DetailId}}) ->
     try
         ResData = mysql_pool:query(pool_db,
-            "SELECT Owner, `Source` AS SourceType, InOrOut, CounterParty, CounterBank, CounterAccount,
-               GoodsComment, PayMethod, Amount, Balance, Currency, PayStatus,
-               TradeType, TradeOrderNo, CounterorderNo, TradeTime, BillComment
-             FROM paybilldetail
-             WHERE Deleted = 0
-               AND Id = ?;",
+            "select owner, sourcetype, inorout, counterparty, counterbank, counteraccount,
+               goodscomment, paymethod, amount, balance, currency, paystatus,
+               tradetype, tradeorderno, counterorderno, tradetime, billcomment
+             from fn_paybilldetail
+             where deleted is false
+               and id = ?;",
             [DetailId]),
         Response = eadm_utils:as_map(ResData),
         {json, Response}
@@ -185,10 +185,10 @@ upload(#{auth_data := #{<<"authed">> := true,
                 fun(Map) ->
                     try
                         mysql_pool:query(pool_db,
-                            "INSERT INTO paybilldetail(Owner, Source, InOrOut, CounterParty, CounterBank,
-                             CounterAccount, GoodsComment, PayMethod, Amount, Balance, Currency, PayStatus,
-                             TradeType, TradeOrderNo, CounterorderNo, TradeTime, BillComment)
-                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
+                            "insert into fn_paybilldetail(owner, sourcetype, inorout, counterparty, counterbank,
+                             counteraccount, goodscomment, paymethod, amount, balance, currency, paystatus,
+                             tradetype, tradeorderno, counterorderno, tradetime, billcomment)
+                            values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
                             [maps:get(<<"Owner">>, Map, null),
                              maps:get(<<"Source">>, Map, null),
                              maps:get(<<"InOrOut">>, Map, null),
@@ -221,9 +221,9 @@ upload(#{auth_data := #{<<"authed">> := true,
                 fun(Map) ->
                     try
                         mysql_pool:query(pool_db,
-                            "INSERT INTO paybilldetail(Owner, Source, TradeTime, TradeType, CounterParty, GoodsComment,
-                            InOrOut, Amount, PayMethod, PayStatus, TradeOrderNo, CounterOrderNo, BillComment)
-                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
+                            "insert into fn_paybilldetail(owner, sourcetype, tradetime, tradetype, counterparty, goodscomment,
+                            inorout, amount, paymethod, paystatus, tradeorderno, counterorderno, billcomment)
+                            values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
                             [maps:get(<<"Owner">>, Map, null),
                              maps:get(<<"Source">>, Map, null),
                              maps:get(<<"TradeTime">>, Map, null),
@@ -252,9 +252,9 @@ upload(#{auth_data := #{<<"authed">> := true,
                 fun(Map) ->
                     try
                         mysql_pool:query(pool_db,
-                            "INSERT INTO paybilldetail(Owner, Source, TradeOrderNo, CounterOrderNo, TradeTime,
-                            PayMethod, CounterParty, GoodsComment, Amount, InOrOut, PayStatus, BillComment)
-                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
+                            "insert into fn_paybilldetail(owner, sourcetype, tradeorderno, counterorderno, tradetime,
+                            paymethod, counterparty, goodscomment, amount, inorout, paystatus, billcomment)
+                            values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
                             [maps:get(<<"Owner">>, Map, null),
                              maps:get(<<"Source">>, Map, null),
                              maps:get(<<"TradeOrderNo">>, Map, null),
@@ -289,9 +289,9 @@ upload(#{auth_data := #{<<"authed">> := true,
                     end,
                     try
                         mysql_pool:query(pool_db,
-                            "INSERT INTO paybilldetail(Owner, Source, TradeTime, CounterParty,
-                            CounterBank, CounterAccount, GoodsComment, Amount, Balance, InOrOut)
-                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
+                            "insert into fn_paybilldetail(owner, sourcetype, tradetime, counterparty,
+                            counterbank, counteraccount, goodscomment, amount, balance, inorout)
+                            values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
                             [maps:get(<<"Owner">>, Map, null),
                              maps:get(<<"Source">>, Map, null),
                              maps:get(<<"TradeTime">>, Map, null),

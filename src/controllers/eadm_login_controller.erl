@@ -77,10 +77,10 @@ logout(Req) ->
 %% @end
 get_permission(LoginName) ->
     {ok, _, Res_Data} = mysql_pool:query(pool_db,
-        "SELECT RolePermission
-        FROM vi_userpermission
-        WHERE LoginName=?
-        LIMIT 1;", [LoginName]),
+        "select rolepermission
+        from vi_userpermission
+        where loginname=?
+        limit 1;", [LoginName]),
     {ok, Response} = thoas:decode(list_to_binary(Res_Data)),
     Response.
 
@@ -89,8 +89,8 @@ get_permission(LoginName) ->
 %% @end
 get_username(LoginName) ->
     {ok, _, Res_Data} = mysql_pool:query(pool_db,
-        "SELECT UserName
-        FROM eadm_user
-        WHERE LoginName=?
-        LIMIT 1;", [LoginName]),
+        "select username
+        from eadm_user
+        where loginname=?
+        limit 1;", [LoginName]),
     hd(hd(Res_Data)).

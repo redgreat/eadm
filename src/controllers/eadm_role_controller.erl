@@ -41,9 +41,9 @@ search(#{auth_data := #{<<"authed">> := true,
       <<"permission">> := #{<<"usermanage">> := true}}}) ->
     try
         {ok, Res_Col, Res_Data} = mysql_pool:query(pool_db,
-            "SELECT Id, RoleName, RoleStatus, CreatedAt
-            FROM vi_role
-            ORDER BY CreatedAt;", []),
+            "select id, rolename, rolestatus, createdat
+            from vi_role
+            order by createdat;", []),
         Response = eadm_utils:return_as_json(Res_Col, Res_Data),
         {json, Response}
     catch
@@ -67,10 +67,10 @@ loadpermission(#{auth_data := #{<<"authed">> := true,
       bindings := #{<<"roleId">> := RoleId}}) ->
     try
         {ok, _, ResData} = mysql_pool:query(pool_db,
-            "SELECT RolePermission
-            FROM eadm_role
-            WHERE Id = ?
-              AND Deleted = 0;",
+            "select rolepermission
+            from eadm_role
+            where id = ?
+              and deleted is false;",
             [RoleId]),
         ResBin = list_to_binary(ResData),
         {ok, ResJson} = thoas:decode(ResBin),
@@ -110,11 +110,11 @@ updatepermission(#{auth_data := #{<<"authed">> := true, <<"loginname">> := Login
     RolePermissionJson = thoas:encode(RolePermissionMap),
     try
         mysql_pool:query(pool_db,
-            "UPDATE eadm_role
-            SET RolePermission = ?,
-                UpdatedUser = ?,
-                UpdatedAt = CURRENT_TIMESTAMP()
-            WHERE Id = ?;", [RolePermissionJson, LoginName, RoleId]),
+            "update eadm_role
+            set rolepermission = ?,
+                updateduser = ?,
+                updatedat = current_timestamp
+            where id = ?;", [RolePermissionJson, LoginName, RoleId]),
         Info = #{<<"Alert">> => unicode:characters_to_binary("权限更新成功! ")},
         {json, [Info]}
     catch
@@ -138,12 +138,12 @@ disable(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
       bindings := #{<<"roleId">> := RoleId}}) ->
     try
         mysql_pool:query(pool_db,
-            "UPDATE eadm_role
-            SET RoleStatus = 1 - RoleStatus,
-                UpdatedUser = ?,
-                UpdatedAt = CURRENT_TIMESTAMP()
-            WHERE Id = ?
-              AND Deleted = 0;",
+            "update eadm_role
+            set rolestatus = 1 - rolestatus,
+                updateduser = ?,
+                updatedat = current_timestamp
+            where id = ?
+              and deleted is false;",
             [LoginName, RoleId]),
         Info = #{<<"Alert">> => unicode:characters_to_binary("角色启禁用成功! ")},
         {json, [Info]}
@@ -168,11 +168,11 @@ delete(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
       bindings := #{<<"roleId">> := RoleId}}) ->
     try
         mysql_pool:query(pool_db,
-            "UPDATE eadm_role
-            SET DeletedUser = ?,
-              DeletedAt = NOW(),
-              Deleted = 1
-            WHERE Id = ?;",
+            "update eadm_role
+            set deleteduser = ?,
+              deletedat = now(),
+              deleted = true
+            where id = ?;",
             [LoginName, RoleId]),
         Info = #{<<"Alert">> => unicode:characters_to_binary("角色删除成功! ")},
         {json, [Info]}
@@ -197,14 +197,14 @@ getrolelist(#{auth_data := #{<<"authed">> := true,
       bindings := #{<<"userId">> := UserId}}) ->
     try
         {ok, Res_Col, Res_Data} = mysql_pool:query(pool_db,
-            "SELECT A.Id, A.RoleName, A.CreatedAt
-            FROM vi_role A
-            WHERE NOT EXISTS(SELECT 1
-                FROM eadm_userrole B
-                WHERE B.RoleId=A.Id
-                AND B.UserId=?
-                AND B.Deleted=0)
-            ORDER BY A.CreatedAt;", [UserId]),
+            "select a.id, a.rolename, a.createdat
+            from vi_role a
+            where not exists(select 1
+                from eadm_userrole b
+                where b.roleid=a.id
+                and b.userid=?
+                and b.deleted is false)
+            order by a.createdat;", [UserId]),
         Response = eadm_utils:return_as_json(Res_Col, Res_Data),
         {json, Response}
     catch

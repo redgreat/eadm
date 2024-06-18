@@ -10,10 +10,13 @@
     kernel,
     stdlib,
     nova,
-    mysql_pool,
+    epgsql,
+    poolboy,
     lager
    ]},
-  {env,[]},
+  {env,[
+      {pools, []}
+  ]},
   {modules, []},
   {maintainers, [wangcw]},
   {licenses, ["Apache-2.0"]},

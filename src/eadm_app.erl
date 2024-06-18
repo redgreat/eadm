@@ -38,7 +38,6 @@
 %%--------------------------------------------------------------------
 start(_StartType, _StartArgs) ->
     application:start(lager),
-    mysql_pool:start(),
     eadm_sup:start_link().
 
 %%--------------------------------------------------------------------
@@ -52,5 +51,4 @@ start(_StartType, _StartArgs) ->
 %%--------------------------------------------------------------------
 stop(_State) ->
     application:stop(lager),
-    mysql_pool:stop(),
     ok.

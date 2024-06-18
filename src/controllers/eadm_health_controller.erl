@@ -69,60 +69,60 @@ search(#{auth_data := #{<<"authed">> := true,
                             case DataType of
                                 <<"1">> ->
                                     {ok, ResCol, ResData} = mysql_pool:query(pool_db,
-                                        "SELECT DATE_FORMAT(CONVERT_TZ(`UtcTime`,'+00:00','+08:00'), '%Y-%m-%d %H:%i:%s') AS UtcTime, Steps
-                                        FROM watchdaily
-                                        WHERE UtcTime >= ?
-                                        AND UtcTime < ?
-                                        AND Steps IS NOT NULL
-                                        ORDER BY UtcTime DESC;",
+                                        "select to_char(ptime, 'yyyy-mm-dd hh24:mi:ss') as utctime, steps
+                                        from lc_watchdaily
+                                        where ptime >= ?
+                                        and ptime < ?
+                                        and steps is not null
+                                        order by ptime desc;",
                                         [StartTime, EndTime]);
                                 <<"2">> ->
                                     {ok, ResCol, ResData} = mysql_pool:query(pool_db,
-                                        "SELECT DATE_FORMAT(CONVERT_TZ(`UtcTime`,'+00:00','+08:00'), '%Y-%m-%d %H:%i:%s') AS UtcTime, Heartbeat
-                                        FROM watchdaily
-                                        WHERE UtcTime >= ?
-                                        AND UtcTime < ?
-                                        AND Heartbeat IS NOT NULL
-                                        ORDER BY UtcTime DESC;",
+                                        "select to_char(ptime, 'yyyy-mm-dd hh24:mi:ss') as utctime, heartbeat
+                                        from lc_watchdaily
+                                        where ptime >= ?
+                                        and ptime < ?
+                                        and heartbeat is not null
+                                        order by ptime desc;",
                                         [StartTime, EndTime]);
                                 <<"3">> ->
                                     {ok, ResCol, ResData} = mysql_pool:query(pool_db,
-                                        "SELECT DATE_FORMAT(CONVERT_TZ(`UtcTime`,'+00:00','+08:00'), '%Y-%m-%d %H:%i:%s') AS UtcTime,
-                                        BodyTemperature, WristTemperature
-                                        FROM watchdaily
-                                        WHERE UtcTime >= ?
-                                        AND UtcTime < ?
-                                        AND BodyTemperature IS NOT NULL
-                                        ORDER BY UtcTime DESC;",
+                                        "select to_char(ptime, 'yyyy-mm-dd hh24:mi:ss') as utctime,
+                                        bodytemperature, wristtemperature
+                                        from lc_watchdaily
+                                        where ptime >= ?
+                                        and ptime < ?
+                                        and bodytemperature is not null
+                                        order by ptime desc;",
                                         [StartTime, EndTime]);
                                 <<"4">> ->
                                     {ok, ResCol, ResData} = mysql_pool:query(pool_db,
-                                        "SELECT DATE_FORMAT(CONVERT_TZ(`UtcTime`,'+00:00','+08:00'), '%Y-%m-%d %H:%i:%s') AS UtcTime,
-                                        Diastolic, Shrink
-                                        FROM watchdaily
-                                        WHERE UtcTime >= ?
-                                        AND UtcTime < ?
-                                        AND Diastolic IS NOT NULL
-                                        ORDER BY UtcTime DESC;",
+                                        "select to_char(ptime, 'yyyy-mm-dd hh24:mi:ss') as utctime,
+                                        diastolic, shrink
+                                        from lc_watchdaily
+                                        where ptime >= ?
+                                        and ptime < ?
+                                        and diastolic is not null
+                                        order by ptime desc;",
                                         [StartTime, EndTime]);
                                 <<"5">> ->
                                     {ok, ResCol, ResData} = mysql_pool:query(pool_db,
-                                        "SELECT DATE_FORMAT(CONVERT_TZ(`UtcTime`,'+00:00','+08:00'), '%Y-%m-%d %H:%i:%s') AS UtcTime,
-                                        SleepType, SleepStartTime, SleepEndTime, SleepMinute
-                                        FROM watchdaily
-                                        WHERE UtcTime >= ?
-                                        AND UtcTime < ?
-                                        AND SleepType IS NOT NULL
-                                        ORDER BY UtcTime DESC;",
+                                        "select to_char(ptime, 'yyyy-mm-dd hh24:mi:ss') as utctime,
+                                        sleeptype, sleepstarttime, sleependtime, sleepminute
+                                        from lc_watchdaily
+                                        where ptime >= ?
+                                        and ptime < ?
+                                        and sleeptype is not null
+                                        order by ptime desc;",
                                         [StartTime, EndTime]);
                                 <<"6">> ->
                                     {ok, ResCol, ResData} = mysql_pool:query(pool_db,
-                                        "SELECT DATE_FORMAT(CONVERT_TZ(`UtcTime`,'+00:00','+08:00'), '%Y-%m-%d %H:%i:%s') AS UtcTime, Battery
-                                        FROM watchdaily
-                                        WHERE UtcTime >= ?
-                                        AND UtcTime < ?
-                                        AND Battery IS NOT NULL
-                                        ORDER BY UtcTime DESC;",
+                                        "select to_char(ptime, 'yyyy-mm-dd hh24:mi:ss') as utctime, battery
+                                        from lc_watchdaily
+                                        where ptime >= ?
+                                        and ptime < ?
+                                        and battery is not null
+                                        order by ptime desc;",
                                         [StartTime, EndTime]);
                                 _ ->
                                     {ResCol, ResData} = {undefined, undefined}

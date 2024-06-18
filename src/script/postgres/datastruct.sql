@@ -1,827 +1,831 @@
 -- @author wangcw
--- @copyright (C) 2024, REDGREAT
--- Created : 2024-05-17 10:00:44
--- Postgres表结构设计
+-- @copyright (c) 2024, redgreat
+-- created : 2024-05-17 10:00:44
+-- postgres表结构设计
 
-SET TIME ZONE 'Asia/Shanghai';
+-- 设置查询路径
+-- alter role user_eadm set search_path to eadm, public;
+
+--设置 本地时区
+set time zone 'asia/shanghai';
 
 -- 表最后一次更新时间函数
-DROP FUNCTION IF EXISTS "public"."lastupdate" CASCADE;
-CREATE OR REPLACE FUNCTION "public"."lastupdate"()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.updatedat := CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
+drop function if exists lastupdate cascade;
+create or replace function lastupdate()
+returns trigger as $$
+begin
+    new.updatedat := current_timestamp;
+    return new;
+end;
+$$ language plpgsql;
 
 -- 创建序列
-DROP SEQUENCE IF EXISTS SD CASCADE;
-CREATE SEQUENCE SD
-START 1
-INCREMENT BY 1
-MAXVALUE 9999999999
-CACHE 10;
+drop sequence if exists sd cascade;
+create sequence sd
+start 1
+increment by 1
+maxvalue 9999999999
+cache 10;
 
 -- 系统_字典信息表
-DROP TABLE IF EXISTS "public"."sys_dict" CASCADE;
-CREATE TABLE "public"."sys_dict" (
-  id CHAR(12) DEFAULT ('SD' || LPAD((nextval('SD')::VARCHAR), 10, '0')),
-  dictno VARCHAR(50) NOT NULL,
-  dictname VARCHAR(100) NOT NULL,
-  parentid CHAR(12),
-  createduser VARCHAR(50),
-  createdat TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-  updateduser VARCHAR(50),
-  updatedat TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-  deleteduser VARCHAR(50),
-  deletedat TIMESTAMPTZ,
-  deleted BOOLEAN NOT NULL DEFAULT FALSE
+drop table if exists sys_dict cascade;
+create table sys_dict (
+  id char(12) default ('sd' || lpad((nextval('sd')::varchar), 10, '0')),
+  dictno varchar(50) not null,
+  dictname varchar(100) not null,
+  parentid char(12),
+  createduser varchar(50),
+  createdat timestamptz default current_timestamp,
+  updateduser varchar(50),
+  updatedat timestamptz default current_timestamp,
+  deleteduser varchar(50),
+  deletedat timestamptz,
+  deleted boolean not null default false
 );
 
-ALTER TABLE "public"."sys_dict" OWNER TO "user_eadm";
-ALTER TABLE "public"."sys_dict" DROP CONSTRAINT IF EXISTS "pk_sysdict_id" CASCADE;
-ALTER TABLE "public"."sys_dict" ADD CONSTRAINT "pk_sysdict_id" PRIMARY KEY ("id");
-ALTER TABLE "public"."sys_dict" DROP CONSTRAINT IF EXISTS "uni_sysdict_dictno" CASCADE;
-ALTER TABLE "public"."sys_dict" ADD CONSTRAINT "uni_sysdict_dictno" UNIQUE ("dictno");
-ALTER TABLE "public"."sys_dict" DROP CONSTRAINT IF EXISTS "fk_parentid_sysdict_id" CASCADE;
-ALTER TABLE "public"."sys_dict" ADD CONSTRAINT "fk_parentid_sysdict_id" FOREIGN KEY ("parentid")
-    REFERENCES "public"."sys_dict" ("id") ON DELETE RESTRICT ON UPDATE RESTRICT;
+alter table sys_dict owner to user_eadm;
+alter table sys_dict drop constraint if exists pk_sysdict_id cascade;
+alter table sys_dict add constraint pk_sysdict_id primary key (id);
+alter table sys_dict drop constraint if exists uni_sysdict_dictno cascade;
+alter table sys_dict add constraint uni_sysdict_dictno unique (dictno);
+alter table sys_dict drop constraint if exists fk_parentid_sysdict_id cascade;
+alter table sys_dict add constraint fk_parentid_sysdict_id foreign key (parentid)
+    references sys_dict (id) on delete restrict on update restrict;
 
-DROP INDEX IF EXISTS "non_sysdict_parentid";
-CREATE INDEX "non_sysdict_parentid" ON "public"."sys_dict" USING BTREE ("parentid" ASC NULLS LAST);
+drop index if exists non_sysdict_parentid;
+create index non_sysdict_parentid on sys_dict using btree (parentid asc nulls last);
 
-COMMENT ON COLUMN "public"."sys_dict"."id" IS '自定义主键(SD)';
-COMMENT ON COLUMN "public"."sys_dict"."dictno" IS '字典编码';
-COMMENT ON COLUMN "public"."sys_dict"."dictname" IS '字典名称';
-COMMENT ON COLUMN "public"."sys_dict"."parentid" IS '父级Id';
-COMMENT ON COLUMN "public"."sys_dict"."createduser" IS '创建人';
-COMMENT ON COLUMN "public"."sys_dict"."createdat" IS '创建时间';
-COMMENT ON COLUMN "public"."sys_dict"."updateduser" IS '更新人';
-COMMENT ON COLUMN "public"."sys_dict"."updatedat" IS '更新时间';
-COMMENT ON COLUMN "public"."sys_dict"."deleteduser" IS '删除人';
-COMMENT ON COLUMN "public"."sys_dict"."deletedat" IS '删除时间';
-COMMENT ON COLUMN "public"."sys_dict"."deleted" IS '是否删除(0否1是)';
-COMMENT ON TABLE "public"."sys_dict" IS '系统_字典信息表';
+comment on column sys_dict.id is '自定义主键(sd)';
+comment on column sys_dict.dictno is '字典编码';
+comment on column sys_dict.dictname is '字典名称';
+comment on column sys_dict.parentid is '父级id';
+comment on column sys_dict.createduser is '创建人';
+comment on column sys_dict.createdat is '创建时间';
+comment on column sys_dict.updateduser is '更新人';
+comment on column sys_dict.updatedat is '更新时间';
+comment on column sys_dict.deleteduser is '删除人';
+comment on column sys_dict.deletedat is '删除时间';
+comment on column sys_dict.deleted is '是否删除(0否1是)';
+comment on table sys_dict is '系统_字典信息表';
 
 -- 表最后一次更新时间触发器
-DROP TRIGGER IF EXISTS "dict_lastupdate" ON "public"."sys_dict" CASCADE;
+drop trigger if exists dict_lastupdate on sys_dict cascade;
 
-CREATE OR REPLACE TRIGGER "dict_lastupdate"
-BEFORE UPDATE ON "public"."sys_dict"
-FOR EACH ROW
-EXECUTE FUNCTION "public"."lastupdate"();
+create or replace trigger dict_lastupdate
+before update on sys_dict
+for each row
+execute function lastupdate();
 
 -- 基础信息_租户信息表
-DROP SEQUENCE IF EXISTS ET CASCADE;
-CREATE SEQUENCE ET
-START 1
-INCREMENT BY 1
-MAXVALUE 9999999999
-CACHE 10;
+drop sequence if exists et cascade;
+create sequence et
+start 1
+increment by 1
+maxvalue 9999999999
+cache 10;
 
-DROP TABLE IF EXISTS "public"."eadm_tenant" CASCADE;
-CREATE TABLE "public"."eadm_tenant" (
-  id CHAR(12) NOT NULL DEFAULT ('ET' || LPAD((nextval('ET')::VARCHAR), 10, '0')),
-  tenantname VARCHAR(20) NOT NULL,
-  remark VARCHAR(100),
-  enable BOOLEAN NOT NULL DEFAULT TRUE,
-  createduser VARCHAR(50),
-  createdat TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-  updateduser VARCHAR(50),
-  updatedat TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-  deleteduser VARCHAR(50),
-  deletedat TIMESTAMPTZ,
-  deleted BOOLEAN NOT NULL DEFAULT FALSE
+drop table if exists eadm_tenant cascade;
+create table eadm_tenant (
+  id char(12) not null default ('et' || lpad((nextval('et')::varchar), 10, '0')),
+  tenantname varchar(20) not null,
+  remark varchar(100),
+  enable boolean not null default true,
+  createduser varchar(50),
+  createdat timestamptz default current_timestamp,
+  updateduser varchar(50),
+  updatedat timestamptz default current_timestamp,
+  deleteduser varchar(50),
+  deletedat timestamptz,
+  deleted boolean not null default false
 );
 
-ALTER TABLE "public"."eadm_tenant" OWNER TO "user_eadm";
-ALTER TABLE "public"."eadm_tenant" DROP CONSTRAINT IF EXISTS "pk_tenant_id" CASCADE;
-ALTER TABLE "public"."eadm_tenant" ADD CONSTRAINT "pk_tenant_id" PRIMARY KEY ("id");
-ALTER TABLE "public"."eadm_tenant" DROP CONSTRAINT IF EXISTS "uni_tenant_tenantname" CASCADE;
-ALTER TABLE "public"."eadm_tenant" ADD CONSTRAINT "uni_tenant_tenantname" UNIQUE ("tenantname");
+alter table eadm_tenant owner to user_eadm;
+alter table eadm_tenant drop constraint if exists pk_tenant_id cascade;
+alter table eadm_tenant add constraint pk_tenant_id primary key (id);
+alter table eadm_tenant drop constraint if exists uni_tenant_tenantname cascade;
+alter table eadm_tenant add constraint uni_tenant_tenantname unique (tenantname);
 
-DROP INDEX IF EXISTS "non_tenant_enable";
-CREATE INDEX "non_tenant_enable" ON "public"."eadm_tenant" USING BTREE ("enable" ASC NULLS LAST);
+drop index if exists non_tenant_enable;
+create index non_tenant_enable on eadm_tenant using btree (enable asc nulls last);
 
-COMMENT ON COLUMN "public"."eadm_tenant"."id" IS '自定义主键(ET)';
-COMMENT ON COLUMN "public"."eadm_tenant"."tenantname" IS '租户名称';
-COMMENT ON COLUMN "public"."eadm_tenant"."remark" IS '备注信息';
-COMMENT ON COLUMN "public"."eadm_tenant"."enable" IS '是否可用(0否1是)';
-COMMENT ON COLUMN "public"."eadm_tenant"."createduser" IS '创建人';
-COMMENT ON COLUMN "public"."eadm_tenant"."createdat" IS '创建时间';
-COMMENT ON COLUMN "public"."eadm_tenant"."updateduser" IS '更新人';
-COMMENT ON COLUMN "public"."eadm_tenant"."updatedat" IS '更新时间';
-COMMENT ON COLUMN "public"."eadm_tenant"."deleteduser" IS '删除人';
-COMMENT ON COLUMN "public"."eadm_tenant"."deletedat" IS '删除时间';
-COMMENT ON COLUMN "public"."eadm_tenant"."deleted" IS '是否删除(0否1是)';
-COMMENT ON TABLE "public"."eadm_tenant" IS '基础信息_租户信息表';
+comment on column eadm_tenant.id is '自定义主键(et)';
+comment on column eadm_tenant.tenantname is '租户名称';
+comment on column eadm_tenant.remark is '备注信息';
+comment on column eadm_tenant.enable is '是否可用(0否1是)';
+comment on column eadm_tenant.createduser is '创建人';
+comment on column eadm_tenant.createdat is '创建时间';
+comment on column eadm_tenant.updateduser is '更新人';
+comment on column eadm_tenant.updatedat is '更新时间';
+comment on column eadm_tenant.deleteduser is '删除人';
+comment on column eadm_tenant.deletedat is '删除时间';
+comment on column eadm_tenant.deleted is '是否删除(0否1是)';
+comment on table eadm_tenant is '基础信息_租户信息表';
 
 -- 表最后一次更新时间触发器
-DROP TRIGGER IF EXISTS "tenant_lastupdate" ON "public"."eadm_tenant" CASCADE;
+drop trigger if exists tenant_lastupdate on eadm_tenant cascade;
 
-CREATE OR REPLACE TRIGGER "tenant_lastupdate"
-BEFORE UPDATE ON "public"."eadm_tenant"
-FOR EACH ROW
-EXECUTE FUNCTION "public"."lastupdate"();
+create or replace trigger tenant_lastupdate
+before update on eadm_tenant
+for each row
+execute function lastupdate();
 
 --写入数据
-TRUNCATE TABLE "public"."eadm_tenant";
+truncate table eadm_tenant;
 
-INSERT INTO "public"."eadm_tenant"(tenantname, remark)
-VALUES('REDGREAT', '主租户');
+insert into eadm_tenant(tenantname, remark)
+values('redgreat', '主租户');
 
-INSERT INTO "public"."eadm_tenant"(tenantname, remark)
-VALUES('管理客户', '手动添加客户');
+insert into eadm_tenant(tenantname, remark)
+values('管理客户', '手动添加客户');
 
-INSERT INTO "public"."eadm_tenant"(tenantname, remark)
-VALUES('注册客户', '界面注册客户');
+insert into eadm_tenant(tenantname, remark)
+values('注册客户', '界面注册客户');
 
--- SELECT * FROM "public"."eadm_tenant";
+-- select * from eadm_tenant;
 
 -- 获取商户名称
-DROP FUNCTION IF EXISTS "public"."gettenantname" CASCADE;
-CREATE OR REPLACE FUNCTION "public"."gettenantname"(IN inid CHAR(12))
-RETURNS VARCHAR(100) AS $$
-BEGIN
-    RETURN (SELECT tenantname FROM "public"."eadm_tenant" WHERE id=inid AND enable IS TRUE AND deleted IS FALSE LIMIT 1);
-END
-$$ LANGUAGE plpgsql;
+drop function if exists gettenantname cascade;
+create or replace function gettenantname(in inid char(12))
+returns varchar(100) as $$
+begin
+    return (select tenantname from eadm_tenant where id=inid and enable is true and deleted is false limit 1);
+end
+$$ language plpgsql;
 
--- SELECT "public"."gettenantname"('ET0000000001');
+-- select gettenantname('et0000000001');
 
 -- 用户表
-DROP SEQUENCE IF EXISTS EU CASCADE;
-CREATE SEQUENCE EU
-START 1
-INCREMENT BY 1
-MAXVALUE 9999999999
-CACHE 10;
+drop sequence if exists eu cascade;
+create sequence eu
+start 1
+increment by 1
+maxvalue 9999999999
+cache 10;
 
-DROP TABLE IF EXISTS "public"."eadm_user" CASCADE;
-CREATE TABLE "public"."eadm_user" (
-  id CHAR(12) NOT NULL DEFAULT ('EU' || LPAD((nextval('EU')::VARCHAR), 10, '0')),
-  tenantid CHAR(12) NOT NULL,
-  loginname VARCHAR(50) NOT NULL,
-  username VARCHAR(50) NOT NULL,
-  email VARCHAR(20),
-  passwd VARCHAR(50) NOT NULL,
-  userstatus SMALLINT NOT NULL DEFAULT 0,
-  createduser VARCHAR(50),
-  createdat TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-  updateduser VARCHAR(50),
-  updatedat TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-  deleteduser VARCHAR(50),
-  deletedat TIMESTAMPTZ,
-  deleted BOOLEAN NOT NULL DEFAULT FALSE
+drop table if exists eadm_user cascade;
+create table eadm_user (
+  id char(12) not null default ('eu' || lpad((nextval('eu')::varchar), 10, '0')),
+  tenantid char(12) not null,
+  loginname varchar(50) not null,
+  username varchar(50) not null,
+  email varchar(20),
+  passwd varchar(50) not null,
+  userstatus smallint not null default 0,
+  createduser varchar(50),
+  createdat timestamptz default current_timestamp,
+  updateduser varchar(50),
+  updatedat timestamptz default current_timestamp,
+  deleteduser varchar(50),
+  deletedat timestamptz,
+  deleted boolean not null default false
 );
 
-ALTER TABLE "public"."eadm_user" OWNER TO "user_eadm";
-ALTER TABLE "public"."eadm_user" DROP CONSTRAINT IF EXISTS "pk_user_id" CASCADE;
-ALTER TABLE "public"."eadm_user" ADD CONSTRAINT "pk_user_id" PRIMARY KEY ("id");
+alter table eadm_user owner to user_eadm;
+alter table eadm_user drop constraint if exists pk_user_id cascade;
+alter table eadm_user add constraint pk_user_id primary key (id);
 
-ALTER TABLE "public"."eadm_user" DROP CONSTRAINT IF EXISTS "fk_tenantid_tenant_id" CASCADE;
-ALTER TABLE "public"."eadm_user" ADD CONSTRAINT "fk_tenantid_tenant_id" FOREIGN KEY ("tenantid")
-    REFERENCES "public"."eadm_tenant" ("id") ON DELETE RESTRICT ON UPDATE RESTRICT;
+alter table eadm_user drop constraint if exists fk_tenantid_tenant_id cascade;
+alter table eadm_user add constraint fk_tenantid_tenant_id foreign key (tenantid)
+    references eadm_tenant (id) on delete restrict on update restrict;
 
-ALTER TABLE "public"."eadm_user" DROP CONSTRAINT IF EXISTS "uni_user_loginname" CASCADE;
-ALTER TABLE "public"."eadm_user" ADD CONSTRAINT "uni_user_loginname" UNIQUE ("loginname");
+alter table eadm_user drop constraint if exists uni_user_loginname cascade;
+alter table eadm_user add constraint uni_user_loginname unique (loginname);
 
-DROP INDEX IF EXISTS "non_user_userstatus";
-CREATE INDEX "non_user_userstatus" ON "public"."eadm_user" USING BTREE ("userstatus" ASC NULLS LAST);
-DROP INDEX IF EXISTS "non_user_updatedat";
-CREATE INDEX "non_user_updatedat" ON "public"."eadm_user" USING BTREE ("updatedat" DESC NULLS LAST);
+drop index if exists non_user_userstatus;
+create index non_user_userstatus on eadm_user using btree (userstatus asc nulls last);
+drop index if exists non_user_updatedat;
+create index non_user_updatedat on eadm_user using btree (updatedat desc nulls last);
 
-COMMENT ON COLUMN "public"."eadm_user"."id" IS '自定义主键(EU)';
-COMMENT ON COLUMN "public"."eadm_user"."tenantid" IS '租户Id';
-COMMENT ON COLUMN "public"."eadm_user"."loginname" IS '用户登录名';
-COMMENT ON COLUMN "public"."eadm_user"."username" IS '用户姓名';
-COMMENT ON COLUMN "public"."eadm_user"."email" IS '用户邮件';
-COMMENT ON COLUMN "public"."eadm_user"."passwd" IS '密码';
-COMMENT ON COLUMN "public"."eadm_user"."userstatus" IS '用户状态(0启用1禁用)';
-COMMENT ON COLUMN "public"."eadm_user"."createduser" IS '创建人';
-COMMENT ON COLUMN "public"."eadm_user"."createdat" IS '创建时间';
-COMMENT ON COLUMN "public"."eadm_user"."updateduser" IS '更新人';
-COMMENT ON COLUMN "public"."eadm_user"."updatedat" IS '更新时间';
-COMMENT ON COLUMN "public"."eadm_user"."deleteduser" IS '删除人';
-COMMENT ON COLUMN "public"."eadm_user"."deletedat" IS '删除时间';
-COMMENT ON COLUMN "public"."eadm_user"."deleted" IS '是否删除(0否1是)';
-COMMENT ON TABLE "public"."eadm_user" IS '基础信息_用户信息表';
+comment on column eadm_user.id is '自定义主键(eu)';
+comment on column eadm_user.tenantid is '租户id';
+comment on column eadm_user.loginname is '用户登录名';
+comment on column eadm_user.username is '用户姓名';
+comment on column eadm_user.email is '用户邮件';
+comment on column eadm_user.passwd is '密码';
+comment on column eadm_user.userstatus is '用户状态(0启用1禁用)';
+comment on column eadm_user.createduser is '创建人';
+comment on column eadm_user.createdat is '创建时间';
+comment on column eadm_user.updateduser is '更新人';
+comment on column eadm_user.updatedat is '更新时间';
+comment on column eadm_user.deleteduser is '删除人';
+comment on column eadm_user.deletedat is '删除时间';
+comment on column eadm_user.deleted is '是否删除(0否1是)';
+comment on table eadm_user is '基础信息_用户信息表';
 
 -- 最后一次更新时间
-DROP TRIGGER IF EXISTS "user_lastupdate" ON "public"."eadm_user" CASCADE;
+drop trigger if exists user_lastupdate on eadm_user cascade;
 
-CREATE OR REPLACE TRIGGER "user_lastupdate"
-BEFORE UPDATE ON "public"."eadm_user"
-FOR EACH ROW
-EXECUTE FUNCTION "public"."lastupdate"();
+create or replace trigger user_lastupdate
+before update on eadm_user
+for each row
+execute function lastupdate();
 
 -- 写入用户数据
 
--- SELECT * FROM "public"."eadm_tenant";
+-- select * from eadm_tenant;
 
-TRUNCATE TABLE "public"."eadm_user";
+truncate table eadm_user;
 
-INSERT INTO "public"."eadm_user"(tenantid, loginname, username, email, passwd)
-VALUES('ET0000000001','wangcw', '王存伟', 'rubygreat@msn.com', 'q122/4GBpiCNq83AbPQN/+kYq0KwczLxiWfLaLKk4NY=');
+insert into eadm_user(tenantid, loginname, username, email, passwd)
+values('et0000000001','wangcw', '王存伟', 'rubygreat@msn.com', 'q122/4gbpicnq83abpqn/+kyq0kwczlxiwflalkk4ny=');
 
-INSERT INTO "public"."eadm_user"(tenantid, loginname, username, email, passwd)
-VALUES('ET0000000001','wongcw', '王存偉', 'rubygreat@msn.com', 'q122/4GBpiCNq83AbPQN/+kYq0KwczLxiWfLaLKk4NY=');
+insert into eadm_user(tenantid, loginname, username, email, passwd)
+values('et0000000001','wongcw', '王存偉', 'rubygreat@msn.com', 'q122/4gbpicnq83abpqn/+kyq0kwczlxiwflalkk4ny=');
 
-INSERT INTO "public"."eadm_user"(tenantid, loginname, username, email, passwd)
-VALUES('ET0000000001','jiangyf', '姜玉凤', '1234567@qq.com', 'q122/4GBpiCNq83AbPQN/+kYq0KwczLxiWfLaLKk4NY=');
+insert into eadm_user(tenantid, loginname, username, email, passwd)
+values('et0000000001','jiangyf', '姜玉凤', '1234567@qq.com', 'q122/4gbpicnq83abpqn/+kyq0kwczlxiwflalkk4ny=');
 
 
 -- 用户视图
-CREATE OR REPLACE VIEW "public"."vi_user"
-AS
-SELECT Id, "gettenantname"(tenantid) AS tenantname, loginname, username, email,
-       CASE userstatus WHEN 1 THEN '禁用' WHEN 0 THEN '启用' END AS userstatus, createdat
-FROM "public"."eadm_user"
-  WHERE deleted IS FALSE;
+create or replace view vi_user
+as
+select id, gettenantname(tenantid) as tenantname, loginname, username, email,
+       case userstatus when 1 then '禁用' when 0 then '启用' end as userstatus, createdat
+from eadm_user
+  where deleted is false;
 
--- SELECT * FROM vi_user;
+-- select * from vi_user;
 
 -- 用户角色
-DROP SEQUENCE IF EXISTS ER CASCADE;
-CREATE SEQUENCE ER
-START 1
-INCREMENT BY 1
-MAXVALUE 9999999999
-CACHE 10;
+drop sequence if exists er cascade;
+create sequence er
+start 1
+increment by 1
+maxvalue 9999999999
+cache 10;
 
-DROP TABLE IF EXISTS "public"."eadm_role" CASCADE;
-CREATE TABLE "public"."eadm_role" (
-  id CHAR(12) NOT NULL DEFAULT ('ER' || LPAD((nextval('ER')::VARCHAR), 10, '0')),
-  rolename VARCHAR(50) NOT NULL,
-  rolepermission JSON,
-  rolestatus SMALLINT NOT NULL DEFAULT 0,
-  createduser VARCHAR(50),
-  createdat TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-  updateduser VARCHAR(50),
-  updatedat TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-  deleteduser VARCHAR(50),
-  deletedat TIMESTAMPTZ,
-  deleted BOOLEAN NOT NULL DEFAULT FALSE
+drop table if exists eadm_role cascade;
+create table eadm_role (
+  id char(12) not null default ('er' || lpad((nextval('er')::varchar), 10, '0')),
+  rolename varchar(50) not null,
+  rolepermission json,
+  rolestatus smallint not null default 0,
+  createduser varchar(50),
+  createdat timestamptz default current_timestamp,
+  updateduser varchar(50),
+  updatedat timestamptz default current_timestamp,
+  deleteduser varchar(50),
+  deletedat timestamptz,
+  deleted boolean not null default false
 );
 
-ALTER TABLE "public"."eadm_role" OWNER TO "user_eadm";
-ALTER TABLE "public"."eadm_role" DROP CONSTRAINT IF EXISTS "pk_role_id" CASCADE;
-ALTER TABLE "public"."eadm_role" ADD CONSTRAINT "pk_role_id" PRIMARY KEY ("id");
+alter table eadm_role owner to user_eadm;
+alter table eadm_role drop constraint if exists pk_role_id cascade;
+alter table eadm_role add constraint pk_role_id primary key (id);
 
-DROP INDEX IF EXISTS "non_role_rolename";
-CREATE INDEX "non_role_rolename" ON "public"."eadm_role" USING BTREE ("rolename" ASC NULLS LAST);
-DROP INDEX IF EXISTS "non_user_rolestatus";
-CREATE INDEX "non_user_rolestatus" ON "public"."eadm_role" USING BTREE ("rolestatus" ASC NULLS LAST);
+drop index if exists non_role_rolename;
+create index non_role_rolename on eadm_role using btree (rolename asc nulls last);
+drop index if exists non_user_rolestatus;
+create index non_user_rolestatus on eadm_role using btree (rolestatus asc nulls last);
 
-COMMENT ON COLUMN "public"."eadm_role"."id" IS '自定义主键(ER)';
-COMMENT ON COLUMN "public"."eadm_role"."rolename" IS '角色名称';
-COMMENT ON COLUMN "public"."eadm_role"."rolepermission" IS '角色权限';
-COMMENT ON COLUMN "public"."eadm_role"."rolestatus" IS '角色状态(0启用1禁用)';
-COMMENT ON COLUMN "public"."eadm_role"."createduser" IS '创建人';
-COMMENT ON COLUMN "public"."eadm_role"."createdat" IS '创建时间';
-COMMENT ON COLUMN "public"."eadm_role"."updateduser" IS '更新人';
-COMMENT ON COLUMN "public"."eadm_role"."updatedat" IS '更新时间';
-COMMENT ON COLUMN "public"."eadm_role"."deleteduser" IS '删除人';
-COMMENT ON COLUMN "public"."eadm_role"."deletedat" IS '删除时间';
-COMMENT ON COLUMN "public"."eadm_role"."deleted" IS '是否删除(0否1是)';
-COMMENT ON TABLE "public"."eadm_role" IS '基础信息_角色信息表';
+comment on column eadm_role.id is '自定义主键(er)';
+comment on column eadm_role.rolename is '角色名称';
+comment on column eadm_role.rolepermission is '角色权限';
+comment on column eadm_role.rolestatus is '角色状态(0启用1禁用)';
+comment on column eadm_role.createduser is '创建人';
+comment on column eadm_role.createdat is '创建时间';
+comment on column eadm_role.updateduser is '更新人';
+comment on column eadm_role.updatedat is '更新时间';
+comment on column eadm_role.deleteduser is '删除人';
+comment on column eadm_role.deletedat is '删除时间';
+comment on column eadm_role.deleted is '是否删除(0否1是)';
+comment on table eadm_role is '基础信息_角色信息表';
 
 -- 最后一次更新时间
-DROP TRIGGER IF EXISTS "role_lastupdate" ON "public"."eadm_role" CASCADE;
+drop trigger if exists role_lastupdate on eadm_role cascade;
 
-CREATE OR REPLACE TRIGGER "role_lastupdate"
-BEFORE UPDATE ON "public"."eadm_role"
-FOR EACH ROW
-EXECUTE FUNCTION "public"."lastupdate"();
+create or replace trigger role_lastupdate
+before update on eadm_role
+for each row
+execute function lastupdate();
 
 -- 写入数据
-TRUNCATE TABLE "public"."eadm_role";
+truncate table eadm_role;
 
-INSERT INTO "public"."eadm_role"(rolename, rolepermission)
-VALUES('超级管理员', '{}');
+insert into eadm_role(rolename, rolepermission)
+values('超级管理员', '{}');
 
-INSERT INTO "public"."eadm_role"(rolename, rolepermission)
-VALUES('注册租户', '{}');
+insert into eadm_role(rolename, rolepermission)
+values('注册租户', '{}');
 
-INSERT INTO "public"."eadm_role"(rolename, rolepermission)
-VALUES('分配租户', '{}');
+insert into eadm_role(rolename, rolepermission)
+values('分配租户', '{}');
 
 -- 角色视图
-CREATE OR REPLACE VIEW "public"."vi_role"
-AS
-SELECT id, rolename, rolepermission, CASE rolestatus WHEN 1 THEN '禁用' WHEN 0 THEN '启用' END AS rolestatus, createdat
-FROM "public"."eadm_role"
-  WHERE deleted IS FALSE;
+create or replace view vi_role
+as
+select id, rolename, rolepermission, case rolestatus when 1 then '禁用' when 0 then '启用' end as rolestatus, createdat
+from eadm_role
+  where deleted is false;
 
--- SELECT * FROM "public"."eadm_role";
+-- select * from eadm_role;
 
 -- 用户角色对应关系
-DROP TABLE IF EXISTS "public"."eadm_userrole" CASCADE;
-CREATE TABLE "public"."eadm_userrole" (
-  id SERIAL,
-  userid CHAR(12) NOT NULL,
-  roleid CHAR(12) NOT NULL,
-  createduser VARCHAR(50),
-  createdat TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-  updateduser VARCHAR(50),
-  updatedat TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-  deleteduser VARCHAR(50),
-  deletedat TIMESTAMPTZ,
-  deleted BOOLEAN NOT NULL DEFAULT FALSE
+drop table if exists eadm_userrole cascade;
+create table eadm_userrole (
+  id serial,
+  userid char(12) not null,
+  roleid char(12) not null,
+  createduser varchar(50),
+  createdat timestamptz default current_timestamp,
+  updateduser varchar(50),
+  updatedat timestamptz default current_timestamp,
+  deleteduser varchar(50),
+  deletedat timestamptz,
+  deleted boolean not null default false
 );
 
-ALTER TABLE "public"."eadm_userrole" OWNER TO "user_eadm";
-ALTER TABLE "public"."eadm_userrole" DROP CONSTRAINT IF EXISTS "pk_userrole_id" CASCADE;
-ALTER TABLE "public"."eadm_userrole" ADD CONSTRAINT "pk_userrole_id" PRIMARY KEY ("id");
+alter table eadm_userrole owner to user_eadm;
+alter table eadm_userrole drop constraint if exists pk_userrole_id cascade;
+alter table eadm_userrole add constraint pk_userrole_id primary key (id);
 
-ALTER TABLE "public"."eadm_userrole" DROP CONSTRAINT IF EXISTS "fk_userid_user_id" CASCADE;
-ALTER TABLE "public"."eadm_userrole" ADD CONSTRAINT "fk_userid_user_id" FOREIGN KEY ("userid")
-    REFERENCES "public"."eadm_user" ("id") ON DELETE RESTRICT ON UPDATE RESTRICT;
+alter table eadm_userrole drop constraint if exists fk_userid_user_id cascade;
+alter table eadm_userrole add constraint fk_userid_user_id foreign key (userid)
+    references eadm_user (id) on delete restrict on update restrict;
 
-ALTER TABLE "public"."eadm_userrole" DROP CONSTRAINT IF EXISTS "fk_roleid_role_id" CASCADE;
-ALTER TABLE "public"."eadm_userrole" ADD CONSTRAINT "fk_roleid_role_id" FOREIGN KEY ("roleid")
-    REFERENCES "public"."eadm_role" ("id") ON DELETE RESTRICT ON UPDATE RESTRICT;
+alter table eadm_userrole drop constraint if exists fk_roleid_role_id cascade;
+alter table eadm_userrole add constraint fk_roleid_role_id foreign key (roleid)
+    references eadm_role (id) on delete restrict on update restrict;
 
-COMMENT ON COLUMN "public"."eadm_userrole"."id" IS '自增主键';
-COMMENT ON COLUMN "public"."eadm_userrole"."userid" IS '用户Id(eadm_user.Id)';
-COMMENT ON COLUMN "public"."eadm_userrole"."roleid" IS '角色Id(eadm_role.Id)';
-COMMENT ON COLUMN "public"."eadm_userrole"."createduser" IS '创建人';
-COMMENT ON COLUMN "public"."eadm_userrole"."createdat" IS '创建时间';
-COMMENT ON COLUMN "public"."eadm_userrole"."updateduser" IS '更新人';
-COMMENT ON COLUMN "public"."eadm_userrole"."updatedat" IS '更新时间';
-COMMENT ON COLUMN "public"."eadm_userrole"."deleteduser" IS '删除人';
-COMMENT ON COLUMN "public"."eadm_userrole"."deletedat" IS '删除时间';
-COMMENT ON COLUMN "public"."eadm_userrole"."deleted" IS '是否删除(0否1是)';
-COMMENT ON TABLE "public"."eadm_userrole" IS '基础信息_用户角色对应关系表';
+comment on column eadm_userrole.id is '自增主键';
+comment on column eadm_userrole.userid is '用户id(eadm_user.id)';
+comment on column eadm_userrole.roleid is '角色id(eadm_role.id)';
+comment on column eadm_userrole.createduser is '创建人';
+comment on column eadm_userrole.createdat is '创建时间';
+comment on column eadm_userrole.updateduser is '更新人';
+comment on column eadm_userrole.updatedat is '更新时间';
+comment on column eadm_userrole.deleteduser is '删除人';
+comment on column eadm_userrole.deletedat is '删除时间';
+comment on column eadm_userrole.deleted is '是否删除(0否1是)';
+comment on table eadm_userrole is '基础信息_用户角色对应关系表';
 
 -- 最后一次更新时间
-DROP TRIGGER IF EXISTS "roleuser_lastupdate" ON "public"."eadm_userrole" CASCADE;
+drop trigger if exists roleuser_lastupdate on eadm_userrole cascade;
 
-CREATE OR REPLACE TRIGGER "roleuser_lastupdate"
-BEFORE UPDATE ON "public"."eadm_userrole"
-FOR EACH ROW
-EXECUTE FUNCTION "public"."lastupdate"();
+create or replace trigger roleuser_lastupdate
+before update on eadm_userrole
+for each row
+execute function lastupdate();
 
 -- 写入数据
--- SELECT * FROM "public"."eadm_user";
--- SELECT * FROM "public"."eadm_role";
+-- select * from eadm_user;
+-- select * from eadm_role;
 
-INSERT INTO "public"."eadm_userrole"(userid, roleid)
-VALUES('EU0000000001', 'ER0000000001');
+insert into eadm_userrole(userid, roleid)
+values('eu0000000001', 'er0000000001');
 
 -- 用户角色信息视图
-CREATE OR REPLACE VIEW "public"."vi_userrole"
-AS
-SELECT B.id, A.id AS userid, C.id AS roleid, C.rolename, B.updatedat
-FROM "public"."eadm_user" A
-INNER JOIN "public"."eadm_userrole" B
-  ON B.userid=A.id
-  AND B.deleted IS FALSE
-INNER JOIN "public"."eadm_role" C
-  ON C.id=B.roleid
-  AND C.rolestatus=0
-  AND C.deleted IS FALSE
-WHERE A.deleted IS FALSE;
+create or replace view vi_userrole
+as
+select b.id, a.id as userid, c.id as roleid, c.rolename, b.updatedat
+from eadm_user a
+inner join eadm_userrole b
+  on b.userid=a.id
+  and b.deleted is false
+inner join eadm_role c
+  on c.id=b.roleid
+  and c.rolestatus=0
+  and c.deleted is false
+where a.deleted is false;
 
 -- 用户权限信息视图
-CREATE OR REPLACE VIEW "public"."vi_userpermission"
-AS
-SELECT B.id, A.loginname, C.rolepermission
-FROM "public"."eadm_user" A
-INNER JOIN "public"."eadm_userrole" B
-  ON B.userid=A.id
-  AND B.deleted IS FALSE
-INNER JOIN "public"."eadm_role" C
-  ON C.id=B.roleid
-  AND C.rolestatus=0
-  AND C.deleted IS FALSE
-WHERE A.deleted IS FALSE;
+create or replace view vi_userpermission
+as
+select b.id, a.loginname, c.rolepermission
+from eadm_user a
+inner join eadm_userrole b
+  on b.userid=a.id
+  and b.deleted is false
+inner join eadm_role c
+  on c.id=b.roleid
+  and c.rolestatus=0
+  and c.deleted is false
+where a.deleted is false;
 
 -- 定时任务信息
-DROP SEQUENCE IF EXISTS CR CASCADE;
-CREATE SEQUENCE CR
-START 1
-INCREMENT BY 1
-MAXVALUE 9999999999
-CACHE 10;
+drop sequence if exists cr cascade;
+create sequence cr
+start 1
+increment by 1
+maxvalue 9999999999
+cache 10;
 
-DROP TABLE IF EXISTS "public"."eadm_crontab" CASCADE;
-CREATE TABLE "public"."eadm_crontab" (
-  id CHAR(12) NOT NULL DEFAULT ('CR' || LPAD((nextval('CR')::VARCHAR), 10, '0')),
-  cronname VARCHAR(50) NOT NULL,
-  cronexp VARCHAR(50),
-  cronmfa VARCHAR(50),
-  starttime TIMESTAMPTZ,
-  endtime TIMESTAMPTZ,
-  cronstatus SMALLINT NOT NULL DEFAULT 0,
-  createduser VARCHAR(50),
-  createdat TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-  updateduser VARCHAR(50),
-  updatedat TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-  deleteduser VARCHAR(50),
-  deletedat TIMESTAMPTZ,
-  deleted BOOLEAN NOT NULL DEFAULT FALSE
+drop table if exists eadm_crontab cascade;
+create table eadm_crontab (
+  id char(12) not null default ('cr' || lpad((nextval('cr')::varchar), 10, '0')),
+  cronname varchar(50) not null,
+  cronexp varchar(50),
+  cronmfa varchar(50),
+  starttime timestamptz,
+  endtime timestamptz,
+  cronstatus smallint not null default 0,
+  createduser varchar(50),
+  createdat timestamptz default current_timestamp,
+  updateduser varchar(50),
+  updatedat timestamptz default current_timestamp,
+  deleteduser varchar(50),
+  deletedat timestamptz,
+  deleted boolean not null default false
 );
 
-ALTER TABLE "public"."eadm_crontab" OWNER TO "user_eadm";
-ALTER TABLE "public"."eadm_crontab" DROP CONSTRAINT IF EXISTS "pk_crontab_id" CASCADE;
-ALTER TABLE "public"."eadm_crontab" ADD CONSTRAINT "pk_crontab_id" PRIMARY KEY ("id");
+alter table eadm_crontab owner to user_eadm;
+alter table eadm_crontab drop constraint if exists pk_crontab_id cascade;
+alter table eadm_crontab add constraint pk_crontab_id primary key (id);
 
-DROP INDEX IF EXISTS "non_crontab_cronname";
-CREATE INDEX "non_crontab_cronname" ON "public"."eadm_crontab" USING BTREE ("cronname" ASC NULLS LAST);
+drop index if exists non_crontab_cronname;
+create index non_crontab_cronname on eadm_crontab using btree (cronname asc nulls last);
 
-COMMENT ON COLUMN "public"."eadm_crontab"."id" IS '自定义主键(CR)';
-COMMENT ON COLUMN "public"."eadm_crontab"."cronname" IS '任务名称';
-COMMENT ON COLUMN "public"."eadm_crontab"."cronexp" IS '定时表达式';
-COMMENT ON COLUMN "public"."eadm_crontab"."cronmfa" IS '任务备注';
-COMMENT ON COLUMN "public"."eadm_crontab"."starttime" IS '任务开始时间';
-COMMENT ON COLUMN "public"."eadm_crontab"."endtime" IS '任务结束时间';
-COMMENT ON COLUMN "public"."eadm_crontab"."cronstatus" IS '任务状态(0启用1禁用)';
-COMMENT ON COLUMN "public"."eadm_crontab"."createduser" IS '创建人';
-COMMENT ON COLUMN "public"."eadm_crontab"."createdat" IS '创建时间';
-COMMENT ON COLUMN "public"."eadm_crontab"."updateduser" IS '更新人';
-COMMENT ON COLUMN "public"."eadm_crontab"."updatedat" IS '更新时间';
-COMMENT ON COLUMN "public"."eadm_crontab"."deleteduser" IS '删除人';
-COMMENT ON COLUMN "public"."eadm_crontab"."deletedat" IS '删除时间';
-COMMENT ON COLUMN "public"."eadm_crontab"."deleted" IS '是否删除(0否1是)';
-COMMENT ON TABLE "public"."eadm_crontab" IS '基础信息_定时任务信息表';
+comment on column eadm_crontab.id is '自定义主键(cr)';
+comment on column eadm_crontab.cronname is '任务名称';
+comment on column eadm_crontab.cronexp is '定时表达式';
+comment on column eadm_crontab.cronmfa is '任务备注';
+comment on column eadm_crontab.starttime is '任务开始时间';
+comment on column eadm_crontab.endtime is '任务结束时间';
+comment on column eadm_crontab.cronstatus is '任务状态(0启用1禁用)';
+comment on column eadm_crontab.createduser is '创建人';
+comment on column eadm_crontab.createdat is '创建时间';
+comment on column eadm_crontab.updateduser is '更新人';
+comment on column eadm_crontab.updatedat is '更新时间';
+comment on column eadm_crontab.deleteduser is '删除人';
+comment on column eadm_crontab.deletedat is '删除时间';
+comment on column eadm_crontab.deleted is '是否删除(0否1是)';
+comment on table eadm_crontab is '基础信息_定时任务信息表';
 
 -- 最后一次更新时间
-DROP TRIGGER IF EXISTS "crontab_lastupdate" ON "public"."eadm_crontab" CASCADE;
+drop trigger if exists crontab_lastupdate on eadm_crontab cascade;
 
-CREATE OR REPLACE TRIGGER "crontab_lastupdate"
-BEFORE UPDATE ON "public"."eadm_crontab"
-FOR EACH ROW
-EXECUTE FUNCTION "public"."lastupdate"();
+create or replace trigger crontab_lastupdate
+before update on eadm_crontab
+for each row
+execute function lastupdate();
 
 -- 首页报表
-DROP TABLE IF EXISTS "public"."eadm_dashboard" CASCADE;
-CREATE TABLE "public"."eadm_dashboard"(
-    id SERIAL,
-    datatype SMALLINT NOT NULL,
-    datetype SMALLINT NOT NULL,
-    loginname VARCHAR(50),
-    datavalue VARCHAR(500),
-    datajson JSON,
-    checkdate VARCHAR(20) NOT NULL,
-    updatedat TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    instertime TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+drop table if exists eadm_dashboard cascade;
+create table eadm_dashboard(
+    id serial,
+    datatype smallint not null,
+    datetype smallint not null,
+    loginname varchar(50),
+    datavalue varchar(500),
+    datajson json,
+    checkdate varchar(20) not null,
+    updatedat timestamptz default current_timestamp,
+    instertime timestamptz default current_timestamp
 );
 
-ALTER TABLE "public"."eadm_dashboard" OWNER TO "user_eadm";
-ALTER TABLE "public"."eadm_dashboard" DROP CONSTRAINT IF EXISTS "pk_dashboard_id" CASCADE;
-ALTER TABLE "public"."eadm_dashboard" ADD CONSTRAINT "pk_dashboard_id" PRIMARY KEY ("id");
+alter table eadm_dashboard owner to user_eadm;
+alter table eadm_dashboard drop constraint if exists pk_dashboard_id cascade;
+alter table eadm_dashboard add constraint pk_dashboard_id primary key (id);
 
-ALTER TABLE "public"."eadm_dashboard" DROP CONSTRAINT IF EXISTS "uni_dashboard_ddlc" CASCADE;
-ALTER TABLE "public"."eadm_dashboard" ADD CONSTRAINT "uni_dashboard_ddlc"
-    UNIQUE ("datatype", "datetype", "loginname", "checkdate");
+alter table eadm_dashboard drop constraint if exists uni_dashboard_ddlc cascade;
+alter table eadm_dashboard add constraint uni_dashboard_ddlc
+    unique (datatype, datetype, loginname, checkdate);
 
-DROP INDEX IF EXISTS "non_dashboard_datatype";
-CREATE INDEX "non_dashboard_datatype" ON "public"."eadm_dashboard" USING BTREE ("datatype" ASC NULLS LAST);
-DROP INDEX IF EXISTS "non_dashboard_datetype";
-CREATE INDEX "non_dashboard_datetype" ON "public"."eadm_dashboard" USING BTREE ("datetype" ASC NULLS LAST);
-DROP INDEX IF EXISTS "non_dashboard_loginname";
-CREATE INDEX "non_dashboard_loginname" ON "public"."eadm_dashboard" USING BTREE ("loginname" ASC NULLS LAST);
-DROP INDEX IF EXISTS "non_dashboard_checkdate";
-CREATE INDEX "non_dashboard_checkdate" ON "public"."eadm_dashboard" USING BTREE ("checkdate" ASC NULLS LAST);
+drop index if exists non_dashboard_datatype;
+create index non_dashboard_datatype on eadm_dashboard using btree (datatype asc nulls last);
+drop index if exists non_dashboard_datetype;
+create index non_dashboard_datetype on eadm_dashboard using btree (datetype asc nulls last);
+drop index if exists non_dashboard_loginname;
+create index non_dashboard_loginname on eadm_dashboard using btree (loginname asc nulls last);
+drop index if exists non_dashboard_checkdate;
+create index non_dashboard_checkdate on eadm_dashboard using btree (checkdate asc nulls last);
 
-COMMENT ON COLUMN "public"."eadm_dashboard"."id" IS '自增主键';
-COMMENT ON COLUMN "public"."eadm_dashboard"."datatype" IS '数据类型(1心率2步数3睡眠4里程5每月里程6每月收入7每月支出)';
-COMMENT ON COLUMN "public"."eadm_dashboard"."datetype" IS '统计周期类型(1日2周3月4年)';
-COMMENT ON COLUMN "public"."eadm_dashboard"."loginname" IS '登录名';
-COMMENT ON COLUMN "public"."eadm_dashboard"."datavalue" IS '数据值';
-COMMENT ON COLUMN "public"."eadm_dashboard"."datajson" IS '数据JSON';
-COMMENT ON COLUMN "public"."eadm_dashboard"."checkdate" IS '数据日期';
-COMMENT ON COLUMN "public"."eadm_dashboard"."updatedat" IS '更新时间';
-COMMENT ON COLUMN "public"."eadm_dashboard"."instertime" IS '插入时间';
-COMMENT ON TABLE "public"."eadm_dashboard" IS '首页_看板报表';
+comment on column eadm_dashboard.id is '自增主键';
+comment on column eadm_dashboard.datatype is '数据类型(1心率2步数3睡眠4里程5每月里程6每月收入7每月支出)';
+comment on column eadm_dashboard.datetype is '统计周期类型(1日2周3月4年)';
+comment on column eadm_dashboard.loginname is '登录名';
+comment on column eadm_dashboard.datavalue is '数据值';
+comment on column eadm_dashboard.datajson is '数据json';
+comment on column eadm_dashboard.checkdate is '数据日期';
+comment on column eadm_dashboard.updatedat is '更新时间';
+comment on column eadm_dashboard.instertime is '插入时间';
+comment on table eadm_dashboard is '首页_看板报表';
 
 -- 最后一次更新时间
-DROP TRIGGER IF EXISTS "dashboard_lastupdate" ON "public"."eadm_dashboard" CASCADE;
+drop trigger if exists dashboard_lastupdate on eadm_dashboard cascade;
 
-CREATE OR REPLACE TRIGGER "dashboard_lastupdate"
-BEFORE UPDATE ON "public"."eadm_dashboard"
-FOR EACH ROW
-EXECUTE FUNCTION "public"."lastupdate"();
+create or replace trigger dashboard_lastupdate
+before update on eadm_dashboard
+for each row
+execute function lastupdate();
 
 -- 过程运行日志
-DROP TABLE IF EXISTS "public"."sys_proclog" CASCADE;
-CREATE TABLE "public"."sys_proclog" (
-  id SERIAL,
-  procname VARCHAR(50),
-  timespan INT,
-  result BOOLEAN NOT NULL DEFAULT TRUE,
-  errcode VARCHAR(5),
-  errmessage VARCHAR(5000),
-  inserttime TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+drop table if exists sys_proclog cascade;
+create table sys_proclog (
+  id serial,
+  procname varchar(50),
+  timespan int,
+  result boolean not null default true,
+  errcode varchar(5),
+  errmessage varchar(5000),
+  inserttime timestamptz default current_timestamp
 );
 
-ALTER TABLE "public"."sys_proclog" OWNER TO "user_eadm";
-ALTER TABLE "public"."sys_proclog" DROP CONSTRAINT IF EXISTS "pk_proclog_id" CASCADE;
-ALTER TABLE "public"."sys_proclog" ADD CONSTRAINT "pk_proclog_id" PRIMARY KEY ("id");
+alter table sys_proclog owner to user_eadm;
+alter table sys_proclog drop constraint if exists pk_proclog_id cascade;
+alter table sys_proclog add constraint pk_proclog_id primary key (id);
 
-DROP INDEX IF EXISTS "non_proclog_procname";
-CREATE INDEX "non_proclog_procname" ON "public"."sys_proclog" USING BTREE ("procname" ASC NULLS LAST);
-DROP INDEX IF EXISTS "non_proclog_inserttime";
-CREATE INDEX "non_proclog_inserttime" ON "public"."sys_proclog" USING BTREE ("inserttime" ASC NULLS LAST);
+drop index if exists non_proclog_procname;
+create index non_proclog_procname on sys_proclog using btree (procname asc nulls last);
+drop index if exists non_proclog_inserttime;
+create index non_proclog_inserttime on sys_proclog using btree (inserttime asc nulls last);
 
-COMMENT ON COLUMN "public"."sys_proclog"."id" IS '自增主键';
-COMMENT ON COLUMN "public"."sys_proclog"."procname" IS '过程名';
-COMMENT ON COLUMN "public"."sys_proclog"."timespan" IS '耗时时长(秒)';
-COMMENT ON COLUMN "public"."sys_proclog"."result" IS '是否成功(0否1是)';
-COMMENT ON COLUMN "public"."sys_proclog"."errcode" IS '错误代码';
-COMMENT ON COLUMN "public"."sys_proclog"."errmessage" IS '错误详细信息';
-COMMENT ON COLUMN "public"."sys_proclog"."inserttime" IS '日志记录时间';
-COMMENT ON TABLE "public"."sys_proclog" IS '系统域_过程执行日志';
+comment on column sys_proclog.id is '自增主键';
+comment on column sys_proclog.procname is '过程名';
+comment on column sys_proclog.timespan is '耗时时长(秒)';
+comment on column sys_proclog.result is '是否成功(0否1是)';
+comment on column sys_proclog.errcode is '错误代码';
+comment on column sys_proclog.errmessage is '错误详细信息';
+comment on column sys_proclog.inserttime is '日志记录时间';
+comment on table sys_proclog is '系统域_过程执行日志';
 
 -- 设备信息
-DROP TABLE IF EXISTS "public"."eadm_device" CASCADE;
-CREATE TABLE "public"."eadm_device" (
-  deviceno VARCHAR(50),
-  imei VARCHAR(50),
-  simno VARCHAR(50),
-  enable BOOLEAN NOT NULL DEFAULT TRUE,
-  remark VARCHAR(200),
-  createduser VARCHAR(50),
-  createdat TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-  updateduser VARCHAR(50),
-  updatedat TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-  deleteduser VARCHAR(50),
-  deletedat TIMESTAMPTZ,
-  deleted BOOLEAN NOT NULL DEFAULT FALSE
+drop table if exists eadm_device cascade;
+create table eadm_device (
+  deviceno varchar(50),
+  imei varchar(50),
+  simno varchar(50),
+  enable boolean not null default true,
+  remark varchar(200),
+  createduser varchar(50),
+  createdat timestamptz default current_timestamp,
+  updateduser varchar(50),
+  updatedat timestamptz default current_timestamp,
+  deleteduser varchar(50),
+  deletedat timestamptz,
+  deleted boolean not null default false
 );
 
-ALTER TABLE "public"."eadm_device" OWNER TO "user_eadm";
-ALTER TABLE "public"."eadm_device" DROP CONSTRAINT IF EXISTS "pk_device_deviceno" CASCADE;
-ALTER TABLE "public"."eadm_device" ADD CONSTRAINT "pk_device_deviceno" PRIMARY KEY ("deviceno");
+alter table eadm_device owner to user_eadm;
+alter table eadm_device drop constraint if exists pk_device_deviceno cascade;
+alter table eadm_device add constraint pk_device_deviceno primary key (deviceno);
 
-DROP INDEX IF EXISTS "non_device_simno";
-CREATE INDEX "non_device_simno" ON "public"."eadm_device" USING BTREE ("simno" ASC NULLS LAST);
+drop index if exists non_device_simno;
+create index non_device_simno on eadm_device using btree (simno asc nulls last);
 
-COMMENT ON COLUMN "public"."eadm_device"."deviceno" IS '设备号(主键)';
-COMMENT ON COLUMN "public"."eadm_device"."imei" IS '设备IMEI';
-COMMENT ON COLUMN "public"."eadm_device"."simno" IS 'SIM卡号';
-COMMENT ON COLUMN "public"."eadm_device"."enable" IS '设备状态(1启用0禁用)';
-COMMENT ON COLUMN "public"."eadm_device"."remark" IS '设备描述';
-COMMENT ON COLUMN "public"."eadm_device"."createduser" IS '创建人';
-COMMENT ON COLUMN "public"."eadm_device"."createdat" IS '创建时间';
-COMMENT ON COLUMN "public"."eadm_device"."updateduser" IS '更新人';
-COMMENT ON COLUMN "public"."eadm_device"."updatedat" IS '更新时间';
-COMMENT ON COLUMN "public"."eadm_device"."deleteduser" IS '删除人';
-COMMENT ON COLUMN "public"."eadm_device"."deletedat" IS '删除时间';
-COMMENT ON COLUMN "public"."eadm_device"."deleted" IS '是否删除(0否1是)';
-COMMENT ON TABLE "public"."eadm_device" IS '业务域_设备信息';
+comment on column eadm_device.deviceno is '设备号(主键)';
+comment on column eadm_device.imei is '设备imei';
+comment on column eadm_device.simno is 'sim卡号';
+comment on column eadm_device.enable is '设备状态(1启用0禁用)';
+comment on column eadm_device.remark is '设备描述';
+comment on column eadm_device.createduser is '创建人';
+comment on column eadm_device.createdat is '创建时间';
+comment on column eadm_device.updateduser is '更新人';
+comment on column eadm_device.updatedat is '更新时间';
+comment on column eadm_device.deleteduser is '删除人';
+comment on column eadm_device.deletedat is '删除时间';
+comment on column eadm_device.deleted is '是否删除(0否1是)';
+comment on table eadm_device is '业务域_设备信息';
 
 -- 最后一次更新时间
-DROP TRIGGER IF EXISTS "device_lastupdate" ON "public"."eadm_device" CASCADE;
+drop trigger if exists device_lastupdate on eadm_device cascade;
 
-CREATE OR REPLACE TRIGGER "device_lastupdate"
-BEFORE UPDATE ON "public"."eadm_device"
-FOR EACH ROW
-EXECUTE FUNCTION "public"."lastupdate"();
+create or replace trigger device_lastupdate
+before update on eadm_device
+for each row
+execute function lastupdate();
 
 -- 写入数据
-INSERT INTO "public"."eadm_device"(deviceno, remark, createduser)
-VALUES('16053489111', '充电宝', 'wangcw'),
+insert into eadm_device(deviceno, remark, createduser)
+values('16053489111', '充电宝', 'wangcw'),
       ('868977061978771', '手表', 'wangcw');
 
 -- 人员设备对应关系
-DROP TABLE IF EXISTS "public"."eadm_userdevice" CASCADE;
-CREATE TABLE "public"."eadm_userdevice" (
-  id SERIAL,
-  userid CHAR(12),
-  loginname VARCHAR(50),
-  deviceno VARCHAR(50) NOT NULL,
-  createduser VARCHAR(50),
-  createdat TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-  updateduser VARCHAR(50),
-  updatedat TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-  deleteduser VARCHAR(50),
-  deletedat TIMESTAMPTZ,
-  deleted BOOLEAN NOT NULL DEFAULT FALSE
+drop table if exists eadm_userdevice cascade;
+create table eadm_userdevice (
+  id serial,
+  userid char(12),
+  loginname varchar(50),
+  deviceno varchar(50) not null,
+  createduser varchar(50),
+  createdat timestamptz default current_timestamp,
+  updateduser varchar(50),
+  updatedat timestamptz default current_timestamp,
+  deleteduser varchar(50),
+  deletedat timestamptz,
+  deleted boolean not null default false
 );
 
-ALTER TABLE "public"."eadm_userdevice" OWNER TO "user_eadm";
-ALTER TABLE "public"."eadm_userdevice" DROP CONSTRAINT IF EXISTS "pk_userdevice_id" CASCADE;
-ALTER TABLE "public"."eadm_userdevice" ADD CONSTRAINT "pk_userdevice_id" PRIMARY KEY ("id");
+alter table eadm_userdevice owner to user_eadm;
+alter table eadm_userdevice drop constraint if exists pk_userdevice_id cascade;
+alter table eadm_userdevice add constraint pk_userdevice_id primary key (id);
 
-ALTER TABLE "public"."eadm_userdevice" DROP CONSTRAINT IF EXISTS "fk_userid_user_id" CASCADE;
-ALTER TABLE "public"."eadm_userdevice" ADD CONSTRAINT "fk_userid_user_id" FOREIGN KEY ("userid")
-    REFERENCES "public"."eadm_user" ("id") ON DELETE RESTRICT ON UPDATE RESTRICT;
-ALTER TABLE "public"."eadm_userdevice" DROP CONSTRAINT IF EXISTS "fk_loginname_user_loginname" CASCADE;
-ALTER TABLE "public"."eadm_userdevice" ADD CONSTRAINT "fk_loginname_user_loginname" FOREIGN KEY ("loginname")
-    REFERENCES "public"."eadm_user" ("loginname") ON DELETE RESTRICT ON UPDATE RESTRICT;
-ALTER TABLE "public"."eadm_userdevice" DROP CONSTRAINT IF EXISTS "fk_deviceno_device_deviceno" CASCADE;
-ALTER TABLE "public"."eadm_userdevice" ADD CONSTRAINT "fk_deviceno_device_deviceno" FOREIGN KEY ("deviceno")
-    REFERENCES "public"."eadm_device" ("deviceno") ON DELETE RESTRICT ON UPDATE RESTRICT;
+alter table eadm_userdevice drop constraint if exists fk_userid_user_id cascade;
+alter table eadm_userdevice add constraint fk_userid_user_id foreign key (userid)
+    references eadm_user (id) on delete restrict on update restrict;
+alter table eadm_userdevice drop constraint if exists fk_loginname_user_loginname cascade;
+alter table eadm_userdevice add constraint fk_loginname_user_loginname foreign key (loginname)
+    references eadm_user (loginname) on delete restrict on update restrict;
+alter table eadm_userdevice drop constraint if exists fk_deviceno_device_deviceno cascade;
+alter table eadm_userdevice add constraint fk_deviceno_device_deviceno foreign key (deviceno)
+    references eadm_device (deviceno) on delete restrict on update restrict;
 
-COMMENT ON COLUMN "public"."eadm_userdevice"."id" IS '自增主键';
-COMMENT ON COLUMN "public"."eadm_userdevice"."userid" IS '用户Id(eadm_user.Id)';
-COMMENT ON COLUMN "public"."eadm_userdevice"."loginname" IS '用户登录名(eadm_user.LoginName)';
-COMMENT ON COLUMN "public"."eadm_userdevice"."deviceno" IS '设备Id(eadm_device.DeviceNo)';
-COMMENT ON COLUMN "public"."eadm_userdevice"."createduser" IS '创建人';
-COMMENT ON COLUMN "public"."eadm_userdevice"."createdat" IS '创建时间';
-COMMENT ON COLUMN "public"."eadm_userdevice"."updateduser" IS '更新人';
-COMMENT ON COLUMN "public"."eadm_userdevice"."updatedat" IS '更新时间';
-COMMENT ON COLUMN "public"."eadm_userdevice"."deleteduser" IS '删除人';
-COMMENT ON COLUMN "public"."eadm_userdevice"."deletedat" IS '删除时间';
-COMMENT ON COLUMN "public"."eadm_userdevice"."deleted" IS '是否删除(0否1是)';
-COMMENT ON TABLE "public"."eadm_userdevice" IS '业务域_人员设备对应关系';
+comment on column eadm_userdevice.id is '自增主键';
+comment on column eadm_userdevice.userid is '用户id(eadm_user.id)';
+comment on column eadm_userdevice.loginname is '用户登录名(eadm_user.loginname)';
+comment on column eadm_userdevice.deviceno is '设备id(eadm_device.deviceno)';
+comment on column eadm_userdevice.createduser is '创建人';
+comment on column eadm_userdevice.createdat is '创建时间';
+comment on column eadm_userdevice.updateduser is '更新人';
+comment on column eadm_userdevice.updatedat is '更新时间';
+comment on column eadm_userdevice.deleteduser is '删除人';
+comment on column eadm_userdevice.deletedat is '删除时间';
+comment on column eadm_userdevice.deleted is '是否删除(0否1是)';
+comment on table eadm_userdevice is '业务域_人员设备对应关系';
 
 -- 最后一次更新时间
-DROP TRIGGER IF EXISTS "userdevice_lastupdate" ON "public"."eadm_userdevice" CASCADE;
+drop trigger if exists userdevice_lastupdate on eadm_userdevice cascade;
 
-CREATE OR REPLACE TRIGGER "userdevice_lastupdate"
-BEFORE UPDATE ON "public"."eadm_userdevice"
-FOR EACH ROW
-EXECUTE FUNCTION "public"."lastupdate"();
+create or replace trigger userdevice_lastupdate
+before update on eadm_userdevice
+for each row
+execute function lastupdate();
 
 -- 写入数据
-INSERT INTO "public"."eadm_userdevice"(userid, loginname, deviceno, createduser)
-SELECT 'EU0000000001', 'wangcw', DeviceNo, 'wangcw'
-FROM "public"."eadm_device";
+insert into eadm_userdevice(userid, loginname, deviceno, createduser)
+select 'eu0000000001', 'wangcw', deviceno, 'wangcw'
+from eadm_device;
 
--- SELECT * FROM "public"."eadm_userdevice";
+-- select * from eadm_userdevice;
 
 -- 业务数据_车辆定位信息
-DROP TABLE IF EXISTS "public"."lc_carlocdaily";
-CREATE TABLE "public"."lc_carlocdaily" (
-  "ptime" TIMESTAMPTZ,
-  "deviceno" VARCHAR(20),
-  "lat" NUMERIC(9,6),
-  "lng" NUMERIC(9,6),
-  "dirct" INT,
-  "speed" INT,
-  "mileage" NUMERIC(18,2),
-  "hight" INT,
-  "gnssnum" INT,
-  "rssi" INT,
-  "receivetime" TIMESTAMPTZ,
-  "inserttime" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+drop table if exists lc_carlocdaily;
+create table lc_carlocdaily (
+  ptime timestamptz,
+  deviceno varchar(20),
+  lat numeric(9,6),
+  lng numeric(9,6),
+  dirct int,
+  speed int,
+  mileage numeric(18,2),
+  hight int,
+  gnssnum int,
+  rssi int,
+  receivetime timestamptz,
+  inserttime timestamptz not null default current_timestamp
 );
 
-ALTER TABLE "public"."lc_carlocdaily" OWNER TO "user_eadm";
-ALTER TABLE "public"."lc_carlocdaily" DROP CONSTRAINT IF EXISTS "pk_carlocdaily_ptime" CASCADE;
-ALTER TABLE "public"."lc_carlocdaily" ADD CONSTRAINT "pk_carlocdaily_ptime" PRIMARY KEY ("ptime");
+alter table lc_carlocdaily owner to user_eadm;
+alter table lc_carlocdaily drop constraint if exists pk_carlocdaily_ptime cascade;
+alter table lc_carlocdaily add constraint pk_carlocdaily_ptime primary key (ptime);
 
-DROP INDEX IF EXISTS "non_carlocdaily_deviceno";
-CREATE INDEX "non_carlocdaily_deviceno" ON "public"."lc_carlocdaily" USING BTREE ("deviceno" ASC NULLS LAST);
+drop index if exists non_carlocdaily_deviceno;
+create index non_carlocdaily_deviceno on lc_carlocdaily using btree (deviceno asc nulls last);
 
-COMMENT ON COLUMN "public"."lc_carlocdaily"."ptime" IS '设备上传时间(主键)';
-COMMENT ON COLUMN "public"."lc_carlocdaily"."deviceno" IS '设备编码(ICCID)';
-COMMENT ON COLUMN "public"."lc_carlocdaily"."lat" IS '经度';
-COMMENT ON COLUMN "public"."lc_carlocdaily"."lng" IS '纬度';
-COMMENT ON COLUMN "public"."lc_carlocdaily"."dirct" IS '方向角';
-COMMENT ON COLUMN "public"."lc_carlocdaily"."speed" IS '速度';
-COMMENT ON COLUMN "public"."lc_carlocdaily"."mileage" IS '里程';
-COMMENT ON COLUMN "public"."lc_carlocdaily"."hight" IS '海拔';
-COMMENT ON COLUMN "public"."lc_carlocdaily"."gnssnum" IS 'GPS卫星数量';
-COMMENT ON COLUMN "public"."lc_carlocdaily"."rssi" IS '4G信号值';
-COMMENT ON COLUMN "public"."lc_carlocdaily"."receivetime" IS 'GateWay处理时间';
-COMMENT ON COLUMN "public"."lc_carlocdaily"."inserttime" IS '数据写入时间';
-COMMENT ON TABLE "public"."lc_carlocdaily" IS '车辆日常定位信息';
+comment on column lc_carlocdaily.ptime is '设备上传时间(主键)';
+comment on column lc_carlocdaily.deviceno is '设备编码(iccid)';
+comment on column lc_carlocdaily.lat is '经度';
+comment on column lc_carlocdaily.lng is '纬度';
+comment on column lc_carlocdaily.dirct is '方向角';
+comment on column lc_carlocdaily.speed is '速度';
+comment on column lc_carlocdaily.mileage is '里程';
+comment on column lc_carlocdaily.hight is '海拔';
+comment on column lc_carlocdaily.gnssnum is 'gps卫星数量';
+comment on column lc_carlocdaily.rssi is '4g信号值';
+comment on column lc_carlocdaily.receivetime is 'gateway处理时间';
+comment on column lc_carlocdaily.inserttime is '数据写入时间';
+comment on table lc_carlocdaily is '车辆日常定位信息';
 
 -- 业务数据_手表信息
-DROP TABLE IF EXISTS "public"."lc_watchdaily";
-CREATE TABLE "public"."lc_watchdaily" (
-  "ptime" TIMESTAMPTZ NOT NULL,
-  "steps" VARCHAR(50),
-  "heartbeat" VARCHAR(50),
-  "roll" VARCHAR(50),
-  "bodytemperature" VARCHAR(50),
-  "wristtemperature" VARCHAR(50),
-  "bloodsugar" VARCHAR(50),
-  "diastolic" VARCHAR(50),
-  "shrink" VARCHAR(50),
-  "bloodoxygen" VARCHAR(50),
-  "sleeptype" VARCHAR(50),
-  "sleepstartTime" VARCHAR(50),
-  "sleependtime" VARCHAR(50),
-  "sleepminute" VARCHAR(50),
-  "signal" VARCHAR(50),
-  "battery" VARCHAR(50),
-  "lat" VARCHAR(50),
-  "lng" VARCHAR(50),
-  "speed" VARCHAR(50),
-  "inserttime" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+drop table if exists lc_watchdaily;
+create table lc_watchdaily (
+  ptime timestamptz not null,
+  steps varchar(50),
+  heartbeat varchar(50),
+  roll varchar(50),
+  bodytemperature varchar(50),
+  wristtemperature varchar(50),
+  bloodsugar varchar(50),
+  diastolic varchar(50),
+  shrink varchar(50),
+  bloodoxygen varchar(50),
+  sleeptype varchar(50),
+  sleepstarttime varchar(50),
+  sleependtime varchar(50),
+  sleepminute varchar(50),
+  signal varchar(50),
+  battery varchar(50),
+  lat varchar(50),
+  lng varchar(50),
+  speed varchar(50),
+  inserttime timestamptz not null default current_timestamp
 );
 
-ALTER TABLE "public"."lc_watchdaily" OWNER TO "user_eadm";
-ALTER TABLE "public"."lc_watchdaily" DROP CONSTRAINT IF EXISTS "pk_watchdaily_ptime" CASCADE;
-ALTER TABLE "public"."lc_watchdaily" ADD CONSTRAINT "pk_watchdaily_ptime" PRIMARY KEY ("ptime");
+alter table lc_watchdaily owner to user_eadm;
+alter table lc_watchdaily drop constraint if exists pk_watchdaily_ptime cascade;
+alter table lc_watchdaily add constraint pk_watchdaily_ptime primary key (ptime);
 
-COMMENT ON COLUMN "public"."lc_watchdaily"."ptime" IS '数据获取时间';
-COMMENT ON COLUMN "public"."lc_watchdaily"."steps" IS '步数';
-COMMENT ON COLUMN "public"."lc_watchdaily"."heartbeat" IS '心率';
-COMMENT ON COLUMN "public"."lc_watchdaily"."roll" IS '翻转数';
-COMMENT ON COLUMN "public"."lc_watchdaily"."bodytemperature" IS '体温';
-COMMENT ON COLUMN "public"."lc_watchdaily"."wristtemperature" IS '腕温';
-COMMENT ON COLUMN "public"."lc_watchdaily"."bloodsugar" IS '血糖';
-COMMENT ON COLUMN "public"."lc_watchdaily"."diastolic" IS '舒张压';
-COMMENT ON COLUMN "public"."lc_watchdaily"."shrink" IS '收缩压';
-COMMENT ON COLUMN "public"."lc_watchdaily"."bloodoxygen" IS '血氧';
-COMMENT ON COLUMN "public"."lc_watchdaily"."sleeptype" IS '睡眠类型(1深度睡眠2浅度睡眠3醒来时长)';
-COMMENT ON COLUMN "public"."lc_watchdaily"."sleepstartTime" IS '睡眠开始时间';
-COMMENT ON COLUMN "public"."lc_watchdaily"."sleependtime" IS '睡眠结束时间';
-COMMENT ON COLUMN "public"."lc_watchdaily"."sleepminute" IS '睡眠时长(分钟)';
-COMMENT ON COLUMN "public"."lc_watchdaily"."signal" IS '信号值';
-COMMENT ON COLUMN "public"."lc_watchdaily"."battery" IS '电池电量';
-COMMENT ON COLUMN "public"."lc_watchdaily"."lat" IS '定位纬度(GPS)';
-COMMENT ON COLUMN "public"."lc_watchdaily"."lng" IS '定位经度(GPS)';
-COMMENT ON COLUMN "public"."lc_watchdaily"."speed" IS '速度';
-COMMENT ON COLUMN "public"."lc_watchdaily"."inserttime" IS '数据写入时间';
-COMMENT ON TABLE "public"."lc_watchdaily" IS '手表日常数据';
+comment on column lc_watchdaily.ptime is '数据获取时间';
+comment on column lc_watchdaily.steps is '步数';
+comment on column lc_watchdaily.heartbeat is '心率';
+comment on column lc_watchdaily.roll is '翻转数';
+comment on column lc_watchdaily.bodytemperature is '体温';
+comment on column lc_watchdaily.wristtemperature is '腕温';
+comment on column lc_watchdaily.bloodsugar is '血糖';
+comment on column lc_watchdaily.diastolic is '舒张压';
+comment on column lc_watchdaily.shrink is '收缩压';
+comment on column lc_watchdaily.bloodoxygen is '血氧';
+comment on column lc_watchdaily.sleeptype is '睡眠类型(1深度睡眠2浅度睡眠3醒来时长)';
+comment on column lc_watchdaily.sleepstarttime is '睡眠开始时间';
+comment on column lc_watchdaily.sleependtime is '睡眠结束时间';
+comment on column lc_watchdaily.sleepminute is '睡眠时长(分钟)';
+comment on column lc_watchdaily.signal is '信号值';
+comment on column lc_watchdaily.battery is '电池电量';
+comment on column lc_watchdaily.lat is '定位纬度(gps)';
+comment on column lc_watchdaily.lng is '定位经度(gps)';
+comment on column lc_watchdaily.speed is '速度';
+comment on column lc_watchdaily.inserttime is '数据写入时间';
+comment on table lc_watchdaily is '手表日常数据';
 
-DROP TABLE IF EXISTS "public"."lc_watchalarm";
-CREATE TABLE "public"."lc_watchalarm" (
-  "id" SERIAL,
-  "alerttype" VARCHAR(10),
-  "alertinfo" VARCHAR(1000),
-  "heartnum" VARCHAR(50),
-  "lasttemper" VARCHAR(50),
-  "inserttime" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+drop table if exists lc_watchalarm;
+create table lc_watchalarm (
+  id serial,
+  alerttype varchar(10),
+  alertinfo varchar(1000),
+  heartnum varchar(50),
+  lasttemper varchar(50),
+  inserttime timestamptz not null default current_timestamp
 );
 
-ALTER TABLE "public"."lc_watchalarm" OWNER TO "user_eadm";
-ALTER TABLE "public"."lc_watchalarm" DROP CONSTRAINT IF EXISTS "pk_watchalarm_id" CASCADE;
-ALTER TABLE "public"."lc_watchalarm" ADD CONSTRAINT "pk_watchalarm_id" PRIMARY KEY ("id");
+alter table lc_watchalarm owner to user_eadm;
+alter table lc_watchalarm drop constraint if exists pk_watchalarm_id cascade;
+alter table lc_watchalarm add constraint pk_watchalarm_id primary key (id);
 
-DROP INDEX IF EXISTS "non_watchalarm_alerttype";
-CREATE INDEX "non_watchalarm_alerttype" ON "public"."lc_watchalarm" USING BTREE ("alerttype" ASC NULLS LAST);
+drop index if exists non_watchalarm_alerttype;
+create index non_watchalarm_alerttype on lc_watchalarm using btree (alerttype asc nulls last);
 
-COMMENT ON COLUMN "public"."lc_watchalarm"."id" IS '自增主键';
-COMMENT ON COLUMN "public"."lc_watchalarm"."alerttype" IS '预警类型';
-COMMENT ON COLUMN "public"."lc_watchalarm"."alertinfo" IS '报警信息内容';
-COMMENT ON COLUMN "public"."lc_watchalarm"."heartnum" IS '当前心率';
-COMMENT ON COLUMN "public"."lc_watchalarm"."lasttemper" IS '当前体温';
-COMMENT ON TABLE "public"."lc_watchalarm" IS '手表日常报警信息';
+comment on column lc_watchalarm.id is '自增主键';
+comment on column lc_watchalarm.alerttype is '预警类型';
+comment on column lc_watchalarm.alertinfo is '报警信息内容';
+comment on column lc_watchalarm.heartnum is '当前心率';
+comment on column lc_watchalarm.lasttemper is '当前体温';
+comment on table lc_watchalarm is '手表日常报警信息';
 
 -- 财务数据
-DROP TABLE IF EXISTS "public"."fn_paybilldetail";
-CREATE TABLE "public"."fn_paybilldetail" (
-  id SERIAL,
-  owner VARCHAR(50),
-  source int2,
-  inorout VARCHAR(10),
-  counterparty VARCHAR(100),
-  counterbank VARCHAR(100),
-  counteraccount VARCHAR(50),
-  goodscomment VARCHAR(200),
-  paymethod VARCHAR(50),
-  amount NUMERIC(18,2),
-  balance NUMERIC(18,2),
-  currency VARCHAR(50),
-  paystatus VARCHAR(50),
-  tradetype VARCHAR(50),
-  tradeorderno VARCHAR(100),
-  counterorderno VARCHAR(100),
-  tradetime TIMESTAMPTZ,
-  billcomment VARCHAR(500),
-  inserttime TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  deleteduser VARCHAR(50),
-  deletedat TIMESTAMPTZ,
-  deleted BOOLEAN NOT NULL DEFAULT FALSE
+drop table if exists fn_paybilldetail;
+create table fn_paybilldetail (
+  id serial,
+  owner varchar(50),
+  sourcetype int2,
+  inorout varchar(10),
+  counterparty varchar(100),
+  counterbank varchar(100),
+  counteraccount varchar(50),
+  goodscomment varchar(200),
+  paymethod varchar(50),
+  amount numeric(18,2),
+  balance numeric(18,2),
+  currency varchar(50),
+  paystatus varchar(50),
+  tradetype varchar(50),
+  tradeorderno varchar(100),
+  counterorderno varchar(100),
+  tradetime timestamptz,
+  billcomment varchar(500),
+  inserttime timestamptz not null default current_timestamp,
+  deleteduser varchar(50),
+  deletedat timestamptz,
+  deleted boolean not null default false
 );
 
-ALTER TABLE "public"."fn_paybilldetail" OWNER TO "user_eadm";
+alter table fn_paybilldetail owner to user_eadm;
 
-ALTER TABLE "public"."fn_paybilldetail" DROP CONSTRAINT IF EXISTS "pk_paybilldetail_id" CASCADE;
-ALTER TABLE "public"."fn_paybilldetail" ADD CONSTRAINT "pk_paybilldetail_id" PRIMARY KEY ("id");
+alter table fn_paybilldetail drop constraint if exists pk_paybilldetail_id cascade;
+alter table fn_paybilldetail add constraint pk_paybilldetail_id primary key (id);
 
-DROP INDEX IF EXISTS "non_paybilldetail_source";
-CREATE INDEX "non_paybilldetail_source" ON "public"."fn_paybilldetail" USING BTREE ("source" ASC NULLS LAST);
-DROP INDEX IF EXISTS "non_paybilldetail_inorout";
-CREATE INDEX "non_paybilldetail_inorout" ON "public"."fn_paybilldetail" USING BTREE ("inorout" ASC NULLS LAST);
-DROP INDEX IF EXISTS "non_paybilldetail_paymethod";
-CREATE INDEX "non_paybilldetail_paymethod" ON "public"."fn_paybilldetail" USING BTREE ("paymethod" ASC NULLS LAST);
-DROP INDEX IF EXISTS "non_paybilldetail_paystatus";
-CREATE INDEX "non_paybilldetail_paystatus" ON "public"."fn_paybilldetail" USING BTREE ("paystatus" ASC NULLS LAST);
-DROP INDEX IF EXISTS "non_paybilldetail_tradetype";
-CREATE INDEX "non_paybilldetail_tradetype" ON "public"."fn_paybilldetail" USING BTREE ("tradetype" ASC NULLS LAST);
-DROP INDEX IF EXISTS "non_paybilldetail_tradetime";
-CREATE INDEX "non_paybilldetail_tradetime" ON "public"."fn_paybilldetail" USING BTREE ("tradetime" ASC NULLS LAST);
+drop index if exists non_paybilldetail_sourcetype;
+create index non_paybilldetail_sourcetype on fn_paybilldetail using btree (sourcetype asc nulls last);
+drop index if exists non_paybilldetail_inorout;
+create index non_paybilldetail_inorout on fn_paybilldetail using btree (inorout asc nulls last);
+drop index if exists non_paybilldetail_paymethod;
+create index non_paybilldetail_paymethod on fn_paybilldetail using btree (paymethod asc nulls last);
+drop index if exists non_paybilldetail_paystatus;
+create index non_paybilldetail_paystatus on fn_paybilldetail using btree (paystatus asc nulls last);
+drop index if exists non_paybilldetail_tradetype;
+create index non_paybilldetail_tradetype on fn_paybilldetail using btree (tradetype asc nulls last);
+drop index if exists non_paybilldetail_tradetime;
+create index non_paybilldetail_tradetime on fn_paybilldetail using btree (tradetime asc nulls last);
 
-COMMENT ON COLUMN "public"."fn_paybilldetail"."id" IS '自增主键';
-COMMENT ON COLUMN "public"."fn_paybilldetail"."owner" IS '来源人(姓名)';
-COMMENT ON COLUMN "public"."fn_paybilldetail"."source" IS '来源:1支付宝2微信3青岛银行4中国银行';
-COMMENT ON COLUMN "public"."fn_paybilldetail"."inorout" IS '收/支';
-COMMENT ON COLUMN "public"."fn_paybilldetail"."counterparty" IS '交易对方';
-COMMENT ON COLUMN "public"."fn_paybilldetail"."counterbank" IS '对方开户行';
-COMMENT ON COLUMN "public"."fn_paybilldetail"."counteraccount" IS '对方账号';
-COMMENT ON COLUMN "public"."fn_paybilldetail"."goodscomment" IS '商品说明';
-COMMENT ON COLUMN "public"."fn_paybilldetail"."paymethod" IS '收/付款方式';
-COMMENT ON COLUMN "public"."fn_paybilldetail"."amount" IS '金额';
-COMMENT ON COLUMN "public"."fn_paybilldetail"."balance" IS '余额';
-COMMENT ON COLUMN "public"."fn_paybilldetail"."currency" IS '币种';
-COMMENT ON COLUMN "public"."fn_paybilldetail"."paystatus" IS '交易状态';
-COMMENT ON COLUMN "public"."fn_paybilldetail"."tradetype" IS '交易分类';
-COMMENT ON COLUMN "public"."fn_paybilldetail"."tradeorderno" IS '交易订单号';
-COMMENT ON COLUMN "public"."fn_paybilldetail"."counterorderno" IS '商家订单号';
-COMMENT ON COLUMN "public"."fn_paybilldetail"."tradetime" IS '交易时间';
-COMMENT ON COLUMN "public"."fn_paybilldetail"."billcomment" IS '交易备注';
-COMMENT ON COLUMN "public"."fn_paybilldetail"."inserttime" IS '数据写入时间';
-COMMENT ON COLUMN "public"."fn_paybilldetail"."deleteduser" IS '删除人账号';
-COMMENT ON COLUMN "public"."fn_paybilldetail"."deletedat" IS '删除时间';
-COMMENT ON COLUMN "public"."fn_paybilldetail"."deleted" IS '是否删除(0否1是)';
-COMMENT ON TABLE "public"."fn_paybilldetail" IS '账单明细';
+comment on column fn_paybilldetail.id is '自增主键';
+comment on column fn_paybilldetail.owner is '来源人(姓名)';
+comment on column fn_paybilldetail.sourcetype is '来源:1支付宝2微信3青岛银行4中国银行';
+comment on column fn_paybilldetail.inorout is '收/支';
+comment on column fn_paybilldetail.counterparty is '交易对方';
+comment on column fn_paybilldetail.counterbank is '对方开户行';
+comment on column fn_paybilldetail.counteraccount is '对方账号';
+comment on column fn_paybilldetail.goodscomment is '商品说明';
+comment on column fn_paybilldetail.paymethod is '收/付款方式';
+comment on column fn_paybilldetail.amount is '金额';
+comment on column fn_paybilldetail.balance is '余额';
+comment on column fn_paybilldetail.currency is '币种';
+comment on column fn_paybilldetail.paystatus is '交易状态';
+comment on column fn_paybilldetail.tradetype is '交易分类';
+comment on column fn_paybilldetail.tradeorderno is '交易订单号';
+comment on column fn_paybilldetail.counterorderno is '商家订单号';
+comment on column fn_paybilldetail.tradetime is '交易时间';
+comment on column fn_paybilldetail.billcomment is '交易备注';
+comment on column fn_paybilldetail.inserttime is '数据写入时间';
+comment on column fn_paybilldetail.deleteduser is '删除人账号';
+comment on column fn_paybilldetail.deletedat is '删除时间';
+comment on column fn_paybilldetail.deleted is '是否删除(0否1是)';
+comment on table fn_paybilldetail is '账单明细';

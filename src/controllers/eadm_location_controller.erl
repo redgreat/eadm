@@ -53,11 +53,11 @@ search(#{auth_data := #{<<"authed">> := true,
             _ ->
                 try
                     {ok, _, ResData} = mysql_pool:query(pool_db,
-                        "SELECT lng, lat
-                        FROM carlocdaily
-                        WHERE dev_upload >= ?
-                          AND dev_upload < ?
-                        ORDER BY dev_upload DESC;",
+                        "select lng, lat
+                        from lc_carlocdaily
+                        where ptime >= ?
+                          and ptime < ?
+                        order by ptime desc;",
                         [CtsStartTime, CtsEndTime]),
                     {json, ResData}
                 catch

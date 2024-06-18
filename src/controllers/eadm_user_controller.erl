@@ -41,9 +41,9 @@ index(#{auth_data := #{<<"authed">> := false}}) ->
 search(#{auth_data := #{<<"authed">> := true, <<"permission">> := #{<<"usermanage">> := true}}}) ->
     try
         {ok, Res_Col, Res_Data} = mysql_pool:query(pool_db,
-            "SELECT Id, TenantName, LoginName, UserName, Email, UserStatus, CreatedAt
-            FROM vi_user
-            ORDER BY CreatedAt;", []),
+            "select id, tenantname, loginname, username, email, userstatus, createdat
+            from vi_user
+            order by createdat;", []),
         Response = eadm_utils:return_as_json(Res_Col, Res_Data),
         {json, Response}
     catch
@@ -66,12 +66,12 @@ searchself(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
       <<"permission">> := #{<<"usermanage">> := true}}}) ->
     try
         {ok, _, ResData} = mysql_pool:query(pool_db,
-            "SELECT LoginName, UserName, Email
-            FROM eadm_user
-            WHERE LoginName=?
-              AND UserStatus=0
-              AND Deleted=0
-            LIMIT 1", [LoginName]),
+            "select loginname, username, email
+            from eadm_user
+            where loginname=?
+              and userstatus=0
+              and deleted is false
+            limit 1", [LoginName]),
         {json, hd(ResData)}
     catch
         _:Error ->
@@ -101,8 +101,8 @@ add(#{auth_data := #{<<"authed">> := true, <<"loginname">> := CreatedUser,
                         {match, _} ->
                             try
                                 CryptoGram = eadm_utils:pass_encrypt(PassWord),
-                                mysql_pool:query(pool_db, "INSERT INTO eadm_user(Id, TenantId, LoginName, UserName, Email, CryptoGram, CreatedUser)
-                                                          VALUES(fn_nextval('EU'), 'ET9999999997', ?, ?, ?, ?, ?);",
+                                mysql_pool:query(pool_db, "insert into eadm_user(tenantid, loginname, username, email, cryptogram, createduser)
+                                                          values('ET9999999997', ?, ?, ?, ?, ?);",
                                                           [LoginName, UserName, Email, CryptoGram, CreatedUser]),
                                 A = unicode:characters_to_binary("用户【"),
                                 B = unicode:characters_to_binary("】新增成功! "),
@@ -171,12 +171,12 @@ edit(#{auth_data := #{<<"authed">> := true, <<"loginname">> := CreatedUser,
                   {match, _} ->
                       try
                           mysql_pool:query(pool_db,
-                                "UPDATE eadm_user
-                                SET LoginName=?,
-                                UserName=?,
-                                Email=?,
-                                UpdatedUser=?
-                                WHERE Id=?;",
+                                "update eadm_user
+                                set loginname=?,
+                                username=?,
+                                email=?,
+                                updateduser=?
+                                where id=?;",
                               [LoginName, UserName, Email, CreatedUser, UserId]),
                           A = unicode:characters_to_binary("用户【"),
                           B = unicode:characters_to_binary("】编辑成功! "),
@@ -235,12 +235,12 @@ editself(#{auth_data := #{<<"authed">> := true, <<"loginname">> := CreatedUser,
         {match, _} ->
             try
                 mysql_pool:query(pool_db,
-                      "UPDATE eadm_user
-                      SET LoginName=?,
-                      UserName=?,
-                      Email=?,
-                      UpdatedUser=?
-                      WHERE LoginName=?;",
+                      "update eadm_user
+                      set loginname=?,
+                      username=?,
+                      email=?,
+                      updateduser=?
+                      where loginname=?;",
                     [LoginName, NewUserName, Email, CreatedUser, CreatedUser]),
                 A = unicode:characters_to_binary("用户【"),
                 B = unicode:characters_to_binary("】编辑成功! "),
@@ -278,13 +278,13 @@ password(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
                     CryptoGram = eadm_utils:pass_encrypt(PasswordNew),
                     try
                         mysql_pool:query(pool_db,
-                            "UPDATE eadm_user
-                            SET UpdatedUser=?,
-                            UpdatedAt=NOW(),
-                            CryptoGram=?
-                            WHERE LoginName=?
-                              AND UserStatus=0
-                              AND Deleted=0;",
+                            "update eadm_user
+                            set updateduser=?,
+                            updatedat=current_timestamp,
+                            cryptogram=?
+                            where loginname=?
+                              and userstatus=0
+                              and deleted is false;",
                             [LoginName, CryptoGram, LoginName]),
                         Info = #{<<"Alert">> => unicode:characters_to_binary("密码修改成功! ")},
                         {json, [Info]}
@@ -333,11 +333,11 @@ reset(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
     % 重置密码123456
     CryptoGram = <<"4WpJ2hODluWuRFXsypv38CLIolSjGbe999q6gmCOa+0=">>,
     try
-        mysql_pool:query(pool_db, "UPDATE eadm_user
-                                  SET UpdatedUser = ?,
-                                  UpdatedAt = NOW(),
-                                  CryptoGram = ?
-                                  WHERE Id = ?;",
+        mysql_pool:query(pool_db, "update eadm_user
+                                  set updateduser = ?,
+                                  updatedat = current_timestamp,
+                                  cryptogram = ?
+                                  where id = ?;",
                                   [LoginName, CryptoGram, UserId]),
         Info = #{<<"Alert">> => unicode:characters_to_binary("用户密码重置成功! ")},
         {json, [Info]}
@@ -361,12 +361,12 @@ disable(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
       <<"permission">> := #{<<"usermanage">> := true}},
      bindings := #{<<"userId">> := UserId}}) ->
     try
-        mysql_pool:query(pool_db, "UPDATE eadm_user
-                                  SET UserStatus = 1 - UserStatus,
-                                      UpdatedUser = ?,
-                                      UpdatedAt = CURRENT_TIMESTAMP()
-                                  WHERE Id = ?
-                                    AND Deleted = 0;",
+        mysql_pool:query(pool_db, "update eadm_user
+                                  set userstatus = 1 - userstatus,
+                                      updateduser = ?,
+                                      updatedat = current_timestamp
+                                  where id = ?
+                                    and deleted is false;",
                                   [LoginName, UserId]),
         Info = #{<<"Alert">> => unicode:characters_to_binary("用户启禁用成功! ")},
         {json, [Info]}
@@ -390,11 +390,11 @@ delete(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
       <<"permission">> := #{<<"usermanage">> := true}},
     bindings := #{<<"userId">> := UserId}}) ->
     try
-        mysql_pool:query(pool_db, "UPDATE eadm_user
-                                  SET DeletedUser = ?,
-                                  DeletedAt = NOW(),
-                                  Deleted = 1
-                                  WHERE Id = ?;",
+        mysql_pool:query(pool_db, "update eadm_user
+                                  set deleteduser = ?,
+                                  deletedat = current_timestamp,
+                                  deleted = true
+                                  where id = ?;",
                                   [LoginName, UserId]),
         Info = #{<<"Alert">> => unicode:characters_to_binary("用户删除成功! ")},
         {json, [Info]}
@@ -419,9 +419,9 @@ userrole(#{auth_data := #{<<"authed">> := true,
       bindings := #{<<"userId">> := UserId}}) ->
     try
         {ok, Res_Col, Res_Data} = mysql_pool:query(pool_db,
-            "SELECT Id, RoleName, UpdatedAt
-            FROM vi_userrole
-            WHERE UserId=?;",
+            "select id, rolename, updatedat
+            from vi_userrole
+            where userid=?;",
             [UserId]),
         Response = eadm_utils:return_as_json(Res_Col, Res_Data),
         {json, Response}
@@ -445,7 +445,7 @@ userroleadd(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
       <<"permission">> := #{<<"usermanage">> := true}}, params := RoleIdMap}) ->
     [{RoleIds, _Value}] = maps:to_list(RoleIdMap),
     {ok, RoleIdList} = thoas:decode(RoleIds),
-    InsertQuery = "INSERT INTO eadm_userrole(UserId, RoleId, CreatedUser) VALUES(?, ?, ?);",
+    InsertQuery = "insert into eadm_userrole(userid, roleid, createduser) values(?, ?, ?);",
     try
         lists:foreach(fun (Map) ->
             mysql_pool:query(pool_db, InsertQuery,
@@ -474,11 +474,11 @@ userroledel(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
       <<"permission">> := #{<<"usermanage">> := true}},
       bindings := #{<<"userRoleId">> := UserRoleId}}) ->
     try
-        mysql_pool:query(pool_db, "UPDATE eadm_userrole
-                                  SET DeletedUser = ?,
-                                  DeletedAt = NOW(),
-                                  Deleted = 1
-                                  WHERE Id = ?;",
+        mysql_pool:query(pool_db, "update eadm_userrole
+                                  set deleteduser = ?,
+                                  deletedat = current_timestamp,
+                                  deleted = true
+                                  where id = ?;",
                                   [LoginName, UserRoleId]),
         Info = #{<<"Alert">> => unicode:characters_to_binary("用户角色删除成功! ")},
         {json, [Info]}
@@ -547,7 +547,7 @@ validate_addloginname(LoginName) ->
                     {error, 2};
                 _ ->
                     try
-                        case mysql_pool:query(pool_db, "SELECT 1 FROM eadm_user WHERE LoginName = ?;", [LoginName]) of
+                        case mysql_pool:query(pool_db, "select 1 from eadm_user where loginname = ?;", [LoginName]) of
                             {ok, _, []} ->
                                 {ok};
                             {ok, _, _} ->
@@ -581,7 +581,7 @@ validate_editloginname(UserId, LoginName) ->
                 _ ->
                     try
                         case mysql_pool:query(pool_db,
-                            "SELECT 1 FROM eadm_user WHERE Id<>? AND LoginName=? AND Deleted=1;",
+                            "select 1 from eadm_user where id<>? and loginname=? and deleted is false;",
                             [UserId, LoginName]) of
                             {ok, _, []} ->
                                 {ok};
@@ -604,9 +604,9 @@ validate_editloginname(UserId, LoginName) ->
 %% @end
 get_permission(LoginName) ->
     {ok, _, ResData} = mysql_pool:query(pool_db,
-        "SELECT RolePermission
-        FROM vi_userpermission
-        WHERE LoginName=?
-        LIMIT 1;", [LoginName]),
+        "select rolepermission
+        from vi_userpermission
+        where loginname=?
+        limit 1;", [LoginName]),
     {ok, ResMap} = thoas:decode(list_to_binary(ResData)),
     #{<<"data">> => ResMap}.
