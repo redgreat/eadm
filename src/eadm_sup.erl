@@ -57,9 +57,9 @@ start_link() ->
 init([]) ->
     {ok, Pools} = application:get_env(pgpool, pools),
     PoolSpec = lists:map(fun ({PoolName, SizeArgs, WorkerArgs}) ->
-                             PoolArgs = [{name, {local, PoolName}},
-                                         {worker_module, eadm_pgpool_worker}] ++ SizeArgs,
-                             poolboy:child_spec(PoolName, PoolArgs, WorkerArgs)
+        PoolArgs = [{name, {local, PoolName}},
+            {worker_module, eadm_pgpool_worker}] ++ SizeArgs,
+        poolboy:child_spec(PoolName, PoolArgs, WorkerArgs)
                          end, Pools),
     {ok, { {one_for_one, 10, 10}, PoolSpec} }.
 

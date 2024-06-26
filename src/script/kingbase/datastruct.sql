@@ -1,7 +1,7 @@
 -- @author wangcw
 -- @copyright (c) 2024, redgreat
--- created : 2024-05-17 10:00:44
--- postgres表结构设计
+-- created : 2024-6-26 14:44:57
+-- kingbaseES V9 表结构设计
 
 -- 设置查询路径
 alter role user_eadm set search_path to eadm, public;
@@ -12,7 +12,7 @@ set time zone 'asia/shanghai';
 -- 表最后一次更新时间函数
 drop function if exists lastupdate cascade;
 create or replace function lastupdate()
-returns trigger as $$
+    returns trigger as $$
 begin
     new.updatedat := current_timestamp;
     return new;
@@ -22,25 +22,25 @@ $$ language plpgsql;
 -- 创建序列
 drop sequence if exists sd cascade;
 create sequence sd
-start 1
-increment by 1
-maxvalue 9999999999
-cache 10;
+    start 1
+    increment by 1
+    maxvalue 9999999999
+    cache 10;
 
 -- 系统_字典信息表
 drop table if exists sys_dict cascade;
 create table sys_dict (
-  id char(12) default ('sd' || lpad((nextval('sd')::varchar), 10, '0')),
-  dictno varchar(50) not null,
-  dictname varchar(100) not null,
-  parentid char(12),
-  createduser varchar(50),
-  createdat timestamptz default current_timestamp,
-  updateduser varchar(50),
-  updatedat timestamptz default current_timestamp,
-  deleteduser varchar(50),
-  deletedat timestamptz,
-  deleted boolean not null default false
+                          id char(12) default ('sd' || lpad((nextval('sd')::varchar), 10, '0')),
+                          dictno varchar(50) not null,
+                          dictname varchar(100) not null,
+                          parentid char(12),
+                          createduser varchar(50),
+                          createdat timestamptz default current_timestamp,
+                          updateduser varchar(50),
+                          updatedat timestamptz default current_timestamp,
+                          deleteduser varchar(50),
+                          deletedat timestamptz,
+                          deleted boolean not null default false
 );
 
 alter table sys_dict owner to user_eadm;
@@ -71,32 +71,32 @@ comment on table sys_dict is '系统_字典信息表';
 -- 表最后一次更新时间触发器
 drop trigger if exists dict_lastupdate on sys_dict cascade;
 
-create or replace trigger dict_lastupdate
-before update on sys_dict
-for each row
+create trigger dict_lastupdate
+    before update on sys_dict
+    for each row
 execute function lastupdate();
 
 -- 基础信息_租户信息表
 drop sequence if exists et cascade;
 create sequence et
-start 1
-increment by 1
-maxvalue 9999999999
-cache 10;
+    start 1
+    increment by 1
+    maxvalue 9999999999
+    cache 10;
 
 drop table if exists eadm_tenant cascade;
 create table eadm_tenant (
-  id char(12) not null default ('et' || lpad((nextval('et')::varchar), 10, '0')),
-  tenantname varchar(20) not null,
-  remark varchar(100),
-  enable boolean not null default true,
-  createduser varchar(50),
-  createdat timestamptz default current_timestamp,
-  updateduser varchar(50),
-  updatedat timestamptz default current_timestamp,
-  deleteduser varchar(50),
-  deletedat timestamptz,
-  deleted boolean not null default false
+                             id char(12) not null default ('et' || lpad((nextval('et')::varchar), 10, '0')),
+                             tenantname varchar(20) not null,
+                             remark varchar(100),
+                             enable boolean not null default true,
+                             createduser varchar(50),
+                             createdat timestamptz default current_timestamp,
+                             updateduser varchar(50),
+                             updatedat timestamptz default current_timestamp,
+                             deleteduser varchar(50),
+                             deletedat timestamptz,
+                             deleted boolean not null default false
 );
 
 alter table eadm_tenant owner to user_eadm;
@@ -125,8 +125,8 @@ comment on table eadm_tenant is '基础信息_租户信息表';
 drop trigger if exists tenant_lastupdate on eadm_tenant cascade;
 
 create or replace trigger tenant_lastupdate
-before update on eadm_tenant
-for each row
+    before update on eadm_tenant
+    for each row
 execute function lastupdate();
 
 --写入数据
@@ -146,7 +146,7 @@ values('注册客户', '界面注册客户');
 -- 获取商户名称
 drop function if exists gettenantname cascade;
 create or replace function gettenantname(in inid char(12))
-returns varchar(100) as $$
+    returns varchar(100) as $$
 begin
     return (select tenantname from eadm_tenant where id=inid and enable is true and deleted is false limit 1);
 end
@@ -157,27 +157,27 @@ $$ language plpgsql;
 -- 用户表
 drop sequence if exists eu cascade;
 create sequence eu
-start 1
-increment by 1
-maxvalue 9999999999
-cache 10;
+    start 1
+    increment by 1
+    maxvalue 9999999999
+    cache 10;
 
 drop table if exists eadm_user cascade;
 create table eadm_user (
-  id char(12) not null default ('eu' || lpad((nextval('eu')::varchar), 10, '0')),
-  tenantid char(12) not null,
-  loginname varchar(50) not null,
-  username varchar(50) not null,
-  email varchar(20),
-  passwd varchar(50) not null,
-  userstatus smallint not null default 0,
-  createduser varchar(50),
-  createdat timestamptz default current_timestamp,
-  updateduser varchar(50),
-  updatedat timestamptz default current_timestamp,
-  deleteduser varchar(50),
-  deletedat timestamptz,
-  deleted boolean not null default false
+                           id char(12) not null default ('eu' || lpad((nextval('eu')::varchar), 10, '0')),
+                           tenantid char(12) not null,
+                           loginname varchar(50) not null,
+                           username varchar(50) not null,
+                           email varchar(20),
+                           passwd varchar(50) not null,
+                           userstatus smallint not null default 0,
+                           createduser varchar(50),
+                           createdat timestamptz default current_timestamp,
+                           updateduser varchar(50),
+                           updatedat timestamptz default current_timestamp,
+                           deleteduser varchar(50),
+                           deletedat timestamptz,
+                           deleted boolean not null default false
 );
 
 alter table eadm_user owner to user_eadm;
@@ -216,8 +216,8 @@ comment on table eadm_user is '基础信息_用户信息表';
 drop trigger if exists user_lastupdate on eadm_user cascade;
 
 create or replace trigger user_lastupdate
-before update on eadm_user
-for each row
+    before update on eadm_user
+    for each row
 execute function lastupdate();
 
 -- 写入用户数据
@@ -242,31 +242,31 @@ as
 select id, gettenantname(tenantid) as tenantname, loginname, username, email,
        case userstatus when 1 then '禁用' when 0 then '启用' end as userstatus, createdat
 from eadm_user
-  where deleted is false;
+where deleted is false;
 
 -- select * from vi_user;
 
 -- 用户角色
 drop sequence if exists er cascade;
 create sequence er
-start 1
-increment by 1
-maxvalue 9999999999
-cache 10;
+    start 1
+    increment by 1
+    maxvalue 9999999999
+    cache 10;
 
 drop table if exists eadm_role cascade;
 create table eadm_role (
-  id char(12) not null default ('er' || lpad((nextval('er')::varchar), 10, '0')),
-  rolename varchar(50) not null,
-  rolepermission json,
-  rolestatus smallint not null default 0,
-  createduser varchar(50),
-  createdat timestamptz default current_timestamp,
-  updateduser varchar(50),
-  updatedat timestamptz default current_timestamp,
-  deleteduser varchar(50),
-  deletedat timestamptz,
-  deleted boolean not null default false
+                           id char(12) not null default ('er' || lpad((nextval('er')::varchar), 10, '0')),
+                           rolename varchar(50) not null,
+                           rolepermission json,
+                           rolestatus smallint not null default 0,
+                           createduser varchar(50),
+                           createdat timestamptz default current_timestamp,
+                           updateduser varchar(50),
+                           updatedat timestamptz default current_timestamp,
+                           deleteduser varchar(50),
+                           deletedat timestamptz,
+                           deleted boolean not null default false
 );
 
 alter table eadm_role owner to user_eadm;
@@ -295,8 +295,8 @@ comment on table eadm_role is '基础信息_角色信息表';
 drop trigger if exists role_lastupdate on eadm_role cascade;
 
 create or replace trigger role_lastupdate
-before update on eadm_role
-for each row
+    before update on eadm_role
+    for each row
 execute function lastupdate();
 
 -- 写入数据
@@ -316,23 +316,23 @@ create or replace view vi_role
 as
 select id, rolename, rolepermission, case rolestatus when 1 then '禁用' when 0 then '启用' end as rolestatus, createdat
 from eadm_role
-  where deleted is false;
+where deleted is false;
 
 -- select * from eadm_role;
 
 -- 用户角色对应关系
 drop table if exists eadm_userrole cascade;
 create table eadm_userrole (
-  id serial,
-  userid char(12) not null,
-  roleid char(12) not null,
-  createduser varchar(50),
-  createdat timestamptz default current_timestamp,
-  updateduser varchar(50),
-  updatedat timestamptz default current_timestamp,
-  deleteduser varchar(50),
-  deletedat timestamptz,
-  deleted boolean not null default false
+                               id serial,
+                               userid char(12) not null,
+                               roleid char(12) not null,
+                               createduser varchar(50),
+                               createdat timestamptz default current_timestamp,
+                               updateduser varchar(50),
+                               updatedat timestamptz default current_timestamp,
+                               deleteduser varchar(50),
+                               deletedat timestamptz,
+                               deleted boolean not null default false
 );
 
 alter table eadm_userrole owner to user_eadm;
@@ -363,8 +363,8 @@ comment on table eadm_userrole is '基础信息_用户角色对应关系表';
 drop trigger if exists roleuser_lastupdate on eadm_userrole cascade;
 
 create or replace trigger roleuser_lastupdate
-before update on eadm_userrole
-for each row
+    before update on eadm_userrole
+    for each row
 execute function lastupdate();
 
 -- 写入数据
@@ -379,13 +379,13 @@ create or replace view vi_userrole
 as
 select b.id, a.id as userid, c.id as roleid, c.rolename, b.updatedat
 from eadm_user a
-inner join eadm_userrole b
-  on b.userid=a.id
-  and b.deleted is false
-inner join eadm_role c
-  on c.id=b.roleid
-  and c.rolestatus=0
-  and c.deleted is false
+         inner join eadm_userrole b
+                    on b.userid=a.id
+                        and b.deleted is false
+         inner join eadm_role c
+                    on c.id=b.roleid
+                        and c.rolestatus=0
+                        and c.deleted is false
 where a.deleted is false;
 
 -- 用户权限信息视图
@@ -393,39 +393,39 @@ create or replace view vi_userpermission
 as
 select b.id, a.loginname, c.rolepermission
 from eadm_user a
-inner join eadm_userrole b
-  on b.userid=a.id
-  and b.deleted is false
-inner join eadm_role c
-  on c.id=b.roleid
-  and c.rolestatus=0
-  and c.deleted is false
+         inner join eadm_userrole b
+                    on b.userid=a.id
+                        and b.deleted is false
+         inner join eadm_role c
+                    on c.id=b.roleid
+                        and c.rolestatus=0
+                        and c.deleted is false
 where a.deleted is false;
 
 -- 定时任务信息
 drop sequence if exists cr cascade;
 create sequence cr
-start 1
-increment by 1
-maxvalue 9999999999
-cache 10;
+    start 1
+    increment by 1
+    maxvalue 9999999999
+    cache 10;
 
 drop table if exists eadm_crontab cascade;
 create table eadm_crontab (
-  id char(12) not null default ('cr' || lpad((nextval('cr')::varchar), 10, '0')),
-  cronname varchar(50) not null,
-  cronexp varchar(50),
-  cronmfa varchar(50),
-  starttime timestamptz,
-  endtime timestamptz,
-  cronstatus smallint not null default 0,
-  createduser varchar(50),
-  createdat timestamptz default current_timestamp,
-  updateduser varchar(50),
-  updatedat timestamptz default current_timestamp,
-  deleteduser varchar(50),
-  deletedat timestamptz,
-  deleted boolean not null default false
+                              id char(12) not null default ('cr' || lpad((nextval('cr')::varchar), 10, '0')),
+                              cronname varchar(50) not null,
+                              cronexp varchar(50),
+                              cronmfa varchar(50),
+                              starttime timestamptz,
+                              endtime timestamptz,
+                              cronstatus smallint not null default 0,
+                              createduser varchar(50),
+                              createdat timestamptz default current_timestamp,
+                              updateduser varchar(50),
+                              updatedat timestamptz default current_timestamp,
+                              deleteduser varchar(50),
+                              deletedat timestamptz,
+                              deleted boolean not null default false
 );
 
 alter table eadm_crontab owner to user_eadm;
@@ -455,22 +455,22 @@ comment on table eadm_crontab is '基础信息_定时任务信息表';
 drop trigger if exists crontab_lastupdate on eadm_crontab cascade;
 
 create or replace trigger crontab_lastupdate
-before update on eadm_crontab
-for each row
+    before update on eadm_crontab
+    for each row
 execute function lastupdate();
 
 -- 首页报表
 drop table if exists eadm_dashboard cascade;
 create table eadm_dashboard(
-    id serial,
-    datatype smallint not null,
-    datetype smallint not null,
-    loginname varchar(50),
-    datavalue varchar(500),
-    datajson json,
-    checkdate varchar(20) not null,
-    updatedat timestamptz default current_timestamp,
-    instertime timestamptz default current_timestamp
+                               id serial,
+                               datatype smallint not null,
+                               datetype smallint not null,
+                               loginname varchar(50),
+                               datavalue varchar(500),
+                               datajson json,
+                               checkdate varchar(20) not null,
+                               updatedat timestamptz default current_timestamp,
+                               instertime timestamptz default current_timestamp
 );
 
 alter table eadm_dashboard owner to user_eadm;
@@ -505,20 +505,20 @@ comment on table eadm_dashboard is '首页_看板报表';
 drop trigger if exists dashboard_lastupdate on eadm_dashboard cascade;
 
 create or replace trigger dashboard_lastupdate
-before update on eadm_dashboard
-for each row
+    before update on eadm_dashboard
+    for each row
 execute function lastupdate();
 
 -- 过程运行日志
 drop table if exists sys_proclog cascade;
 create table sys_proclog (
-  id serial,
-  procname varchar(50),
-  timespan int,
-  result boolean not null default true,
-  errcode varchar(5),
-  errmessage varchar(5000),
-  inserttime timestamptz default current_timestamp
+                             id serial,
+                             procname varchar(50),
+                             timespan int,
+                             result boolean not null default true,
+                             errcode varchar(5),
+                             errmessage varchar(5000),
+                             inserttime timestamptz default current_timestamp
 );
 
 alter table sys_proclog owner to user_eadm;
@@ -542,18 +542,18 @@ comment on table sys_proclog is '系统域_过程执行日志';
 -- 设备信息
 drop table if exists eadm_device cascade;
 create table eadm_device (
-  deviceno varchar(50),
-  imei varchar(50),
-  simno varchar(50),
-  enable boolean not null default true,
-  remark varchar(200),
-  createduser varchar(50),
-  createdat timestamptz default current_timestamp,
-  updateduser varchar(50),
-  updatedat timestamptz default current_timestamp,
-  deleteduser varchar(50),
-  deletedat timestamptz,
-  deleted boolean not null default false
+                             deviceno varchar(50),
+                             imei varchar(50),
+                             simno varchar(50),
+                             enable boolean not null default true,
+                             remark varchar(200),
+                             createduser varchar(50),
+                             createdat timestamptz default current_timestamp,
+                             updateduser varchar(50),
+                             updatedat timestamptz default current_timestamp,
+                             deleteduser varchar(50),
+                             deletedat timestamptz,
+                             deleted boolean not null default false
 );
 
 alter table eadm_device owner to user_eadm;
@@ -581,8 +581,8 @@ comment on table eadm_device is '业务域_设备信息';
 drop trigger if exists device_lastupdate on eadm_device cascade;
 
 create or replace trigger device_lastupdate
-before update on eadm_device
-for each row
+    before update on eadm_device
+    for each row
 execute function lastupdate();
 
 -- 写入数据
@@ -593,17 +593,17 @@ values('16053489111', '充电宝', 'wangcw'),
 -- 人员设备对应关系
 drop table if exists eadm_userdevice cascade;
 create table eadm_userdevice (
-  id serial,
-  userid char(12),
-  loginname varchar(50),
-  deviceno varchar(50) not null,
-  createduser varchar(50),
-  createdat timestamptz default current_timestamp,
-  updateduser varchar(50),
-  updatedat timestamptz default current_timestamp,
-  deleteduser varchar(50),
-  deletedat timestamptz,
-  deleted boolean not null default false
+                                 id serial,
+                                 userid char(12),
+                                 loginname varchar(50),
+                                 deviceno varchar(50) not null,
+                                 createduser varchar(50),
+                                 createdat timestamptz default current_timestamp,
+                                 updateduser varchar(50),
+                                 updatedat timestamptz default current_timestamp,
+                                 deleteduser varchar(50),
+                                 deletedat timestamptz,
+                                 deleted boolean not null default false
 );
 
 alter table eadm_userdevice owner to user_eadm;
@@ -637,8 +637,8 @@ comment on table eadm_userdevice is '业务域_人员设备对应关系';
 drop trigger if exists userdevice_lastupdate on eadm_userdevice cascade;
 
 create or replace trigger userdevice_lastupdate
-before update on eadm_userdevice
-for each row
+    before update on eadm_userdevice
+    for each row
 execute function lastupdate();
 
 -- 写入数据
@@ -651,18 +651,18 @@ from eadm_device;
 -- 业务数据_车辆定位信息
 drop table if exists lc_carlocdaily;
 create table lc_carlocdaily (
-  ptime timestamptz,
-  deviceno varchar(20),
-  lat numeric(9,6),
-  lng numeric(9,6),
-  dirct int,
-  speed int,
-  mileage numeric(18,2),
-  hight int,
-  gnssnum int,
-  rssi int,
-  receivetime timestamptz,
-  inserttime timestamptz not null default current_timestamp
+                                ptime timestamptz,
+                                deviceno varchar(20),
+                                lat numeric(9,6),
+                                lng numeric(9,6),
+                                dirct int,
+                                speed int,
+                                mileage numeric(18,2),
+                                hight int,
+                                gnssnum int,
+                                rssi int,
+                                receivetime timestamptz,
+                                inserttime timestamptz not null default current_timestamp
 );
 
 alter table lc_carlocdaily owner to user_eadm;
@@ -689,26 +689,26 @@ comment on table lc_carlocdaily is '车辆日常定位信息';
 -- 业务数据_手表信息
 drop table if exists lc_watchdaily;
 create table lc_watchdaily (
-  ptime timestamptz not null,
-  steps varchar(50),
-  heartbeat varchar(50),
-  roll varchar(50),
-  bodytemperature varchar(50),
-  wristtemperature varchar(50),
-  bloodsugar varchar(50),
-  diastolic varchar(50),
-  shrink varchar(50),
-  bloodoxygen varchar(50),
-  sleeptype varchar(50),
-  sleepstarttime varchar(50),
-  sleependtime varchar(50),
-  sleepminute varchar(50),
-  signal varchar(50),
-  battery varchar(50),
-  lat varchar(50),
-  lng varchar(50),
-  speed varchar(50),
-  inserttime timestamptz not null default current_timestamp
+                               ptime timestamptz not null,
+                               steps varchar(50),
+                               heartbeat varchar(50),
+                               roll varchar(50),
+                               bodytemperature varchar(50),
+                               wristtemperature varchar(50),
+                               bloodsugar varchar(50),
+                               diastolic varchar(50),
+                               shrink varchar(50),
+                               bloodoxygen varchar(50),
+                               sleeptype varchar(50),
+                               sleepstarttime varchar(50),
+                               sleependtime varchar(50),
+                               sleepminute varchar(50),
+                               signal varchar(50),
+                               battery varchar(50),
+                               lat varchar(50),
+                               lng varchar(50),
+                               speed varchar(50),
+                               inserttime timestamptz not null default current_timestamp
 );
 
 alter table lc_watchdaily owner to user_eadm;
@@ -739,12 +739,12 @@ comment on table lc_watchdaily is '手表日常数据';
 
 drop table if exists lc_watchalarm;
 create table lc_watchalarm (
-  id serial,
-  alerttype varchar(10),
-  alertinfo varchar(1000),
-  heartnum varchar(50),
-  lasttemper varchar(50),
-  inserttime timestamptz not null default current_timestamp
+                               id serial,
+                               alerttype varchar(10),
+                               alertinfo varchar(1000),
+                               heartnum varchar(50),
+                               lasttemper varchar(50),
+                               inserttime timestamptz not null default current_timestamp
 );
 
 alter table lc_watchalarm owner to user_eadm;
@@ -764,28 +764,28 @@ comment on table lc_watchalarm is '手表日常报警信息';
 -- 财务数据
 drop table if exists fn_paybilldetail;
 create table fn_paybilldetail (
-  id serial,
-  owner varchar(50),
-  sourcetype int2,
-  inorout varchar(10),
-  counterparty varchar(100),
-  counterbank varchar(100),
-  counteraccount varchar(50),
-  goodscomment varchar(200),
-  paymethod varchar(50),
-  amount numeric(18,2),
-  balance numeric(18,2),
-  currency varchar(50),
-  paystatus varchar(50),
-  tradetype varchar(50),
-  tradeorderno varchar(100),
-  counterorderno varchar(100),
-  tradetime timestamptz,
-  billcomment varchar(500),
-  inserttime timestamptz not null default current_timestamp,
-  deleteduser varchar(50),
-  deletedat timestamptz,
-  deleted boolean not null default false
+                                  id serial,
+                                  owner varchar(50),
+                                  sourcetype int2,
+                                  inorout varchar(10),
+                                  counterparty varchar(100),
+                                  counterbank varchar(100),
+                                  counteraccount varchar(50),
+                                  goodscomment varchar(200),
+                                  paymethod varchar(50),
+                                  amount numeric(18,2),
+                                  balance numeric(18,2),
+                                  currency varchar(50),
+                                  paystatus varchar(50),
+                                  tradetype varchar(50),
+                                  tradeorderno varchar(100),
+                                  counterorderno varchar(100),
+                                  tradetime timestamptz,
+                                  billcomment varchar(500),
+                                  inserttime timestamptz not null default current_timestamp,
+                                  deleteduser varchar(50),
+                                  deletedat timestamptz,
+                                  deleted boolean not null default false
 );
 
 alter table fn_paybilldetail owner to user_eadm;

@@ -38,7 +38,7 @@
 squery(Sql) ->
     case get(?STATE_VAR) of
         undefined ->
-            squery(epgsql_pool, Sql);
+            squery(pool_pg, Sql);
         Conn ->
             epgsql:squery(Conn, Sql)
     end.

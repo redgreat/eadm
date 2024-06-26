@@ -16,6 +16,7 @@
 %%% default check auth Callback
 %%%===================================================================
 auth(Req) ->
+    io:format('Req: ~p~n', [Req]),
     case nova_session:get(Req ,<<"exp">>) of
         {ok, Exp} ->
             lager:info("Auth Exp:~p~n", [Exp]),

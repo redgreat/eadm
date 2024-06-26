@@ -241,14 +241,18 @@ pass_encrypt(PassBin) ->
 %% 验证密码
 %% @end
 validate_login(LoginName, Password) ->
-    {ok, _, DbPassword} = mysql_pool:query(pool_db,
-        "SELECT CryptoGram, UserStatus
-        FROM eadm_user
-        WHERE LoginName = ?
-          AND Deleted = 0
-        ORDER BY UpdatedAt DESC
-        LIMIT 1;",
+    lager:info("validateLoginName:~p~n", [LoginName]),
+    lager:info("validatePassword:~p~n", [Password]),
+    % {ok, _, DbPassword} = eadm_pgpool:equery(pool_db,
+    DbPassword = eadm_pgpool:equery(pool_db,
+        "select passwd, userstatus
+        from eadm_user
+        where loginname = ?
+          and deleted is false
+        order by updatedat desc
+        limit 1;",
         [LoginName]),
+        lager:info("validateDbPassworda:~p~n", [DbPassword]),
         case DbPassword of
             [] ->
                 2;
