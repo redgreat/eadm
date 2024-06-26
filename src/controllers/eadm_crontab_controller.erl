@@ -39,7 +39,7 @@ index(#{auth_data := #{<<"authed">> := false}}) ->
 search(#{auth_data := #{<<"authed">> := true, <<"permission">> := #{<<"crontab">> := true}},
       bindings := #{<<"cronName">> := CronName}}) ->
     CronNamePattern = <<"%", CronName/binary, "%">>,
-    {ok, Res_Col, Res_Data} = mysql_pool:query(pool_db,
+    {ok, Res_Col, Res_Data} = eadm_pgpool:equery(pool_pg,
         "select cronname, cronexp, cronmda, startdatetime, enddatetime, cronstatus, createdat
         from eadm_crontab
         where cronname like ?

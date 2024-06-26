@@ -40,7 +40,7 @@ index(#{auth_data := #{<<"authed">> := false}}) ->
 %% @end
 search(#{auth_data := #{<<"authed">> := true, <<"permission">> := #{<<"usermanage">> := true}}}) ->
     try
-        {ok, Res_Col, Res_Data} = mysql_pool:query(pool_db,
+        {ok, Res_Col, Res_Data} = eadm_pgpool:equery(pool_pg,
             "select id, tenantname, loginname, username, email, userstatus, createdat
             from vi_user
             order by createdat;", []),
@@ -65,7 +65,7 @@ search(#{auth_data := #{<<"authed">> := false}}) ->
 searchself(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
       <<"permission">> := #{<<"usermanage">> := true}}}) ->
     try
-        {ok, _, ResData} = mysql_pool:query(pool_db,
+        {ok, _, ResData} = eadm_pgpool:equery(pool_pg,
             "select loginname, username, email
             from eadm_user
             where loginname=?
@@ -101,7 +101,7 @@ add(#{auth_data := #{<<"authed">> := true, <<"loginname">> := CreatedUser,
                         {match, _} ->
                             try
                                 CryptoGram = eadm_utils:pass_encrypt(PassWord),
-                                mysql_pool:query(pool_db, "insert into eadm_user(tenantid, loginname, username, email, cryptogram, createduser)
+                                eadm_pgpool:equery(pool_pg, "insert into eadm_user(tenantid, loginname, username, email, cryptogram, createduser)
                                                           values('ET9999999997', ?, ?, ?, ?, ?);",
                                                           [LoginName, UserName, Email, CryptoGram, CreatedUser]),
                                 A = unicode:characters_to_binary("用户【"),
@@ -170,7 +170,7 @@ edit(#{auth_data := #{<<"authed">> := true, <<"loginname">> := CreatedUser,
               case re:run(Email, "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$") of
                   {match, _} ->
                       try
-                          mysql_pool:query(pool_db,
+                          eadm_pgpool:equery(pool_pg,
                                 "update eadm_user
                                 set loginname=?,
                                 username=?,
@@ -234,7 +234,7 @@ editself(#{auth_data := #{<<"authed">> := true, <<"loginname">> := CreatedUser,
     case re:run(Email, "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$") of
         {match, _} ->
             try
-                mysql_pool:query(pool_db,
+                eadm_pgpool:equery(pool_pg,
                       "update eadm_user
                       set loginname=?,
                       username=?,
@@ -277,7 +277,7 @@ password(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
                 true ->
                     CryptoGram = eadm_utils:pass_encrypt(PasswordNew),
                     try
-                        mysql_pool:query(pool_db,
+                        eadm_pgpool:equery(pool_pg,
                             "update eadm_user
                             set updateduser=?,
                             updatedat=current_timestamp,
@@ -333,7 +333,7 @@ reset(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
     % 重置密码123456
     CryptoGram = <<"4WpJ2hODluWuRFXsypv38CLIolSjGbe999q6gmCOa+0=">>,
     try
-        mysql_pool:query(pool_db, "update eadm_user
+        eadm_pgpool:equery(pool_pg, "update eadm_user
                                   set updateduser = ?,
                                   updatedat = current_timestamp,
                                   cryptogram = ?
@@ -361,7 +361,7 @@ disable(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
       <<"permission">> := #{<<"usermanage">> := true}},
      bindings := #{<<"userId">> := UserId}}) ->
     try
-        mysql_pool:query(pool_db, "update eadm_user
+        eadm_pgpool:equery(pool_pg, "update eadm_user
                                   set userstatus = 1 - userstatus,
                                       updateduser = ?,
                                       updatedat = current_timestamp
@@ -390,7 +390,7 @@ delete(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
       <<"permission">> := #{<<"usermanage">> := true}},
     bindings := #{<<"userId">> := UserId}}) ->
     try
-        mysql_pool:query(pool_db, "update eadm_user
+        eadm_pgpool:equery(pool_pg, "update eadm_user
                                   set deleteduser = ?,
                                   deletedat = current_timestamp,
                                   deleted = true
@@ -418,7 +418,7 @@ userrole(#{auth_data := #{<<"authed">> := true,
       <<"permission">> := #{<<"usermanage">> := true}},
       bindings := #{<<"userId">> := UserId}}) ->
     try
-        {ok, Res_Col, Res_Data} = mysql_pool:query(pool_db,
+        {ok, Res_Col, Res_Data} = eadm_pgpool:equery(pool_pg,
             "select id, rolename, updatedat
             from vi_userrole
             where userid=?;",
@@ -448,7 +448,7 @@ userroleadd(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
     InsertQuery = "insert into eadm_userrole(userid, roleid, createduser) values(?, ?, ?);",
     try
         lists:foreach(fun (Map) ->
-            mysql_pool:query(pool_db, InsertQuery,
+            eadm_pgpool:equery(pool_pg, InsertQuery,
                 [maps:get(<<"userId">>, Map), maps:get(<<"roleId">>, Map), LoginName])
             end,
             RoleIdList),
@@ -474,7 +474,7 @@ userroledel(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
       <<"permission">> := #{<<"usermanage">> := true}},
       bindings := #{<<"userRoleId">> := UserRoleId}}) ->
     try
-        mysql_pool:query(pool_db, "update eadm_userrole
+        eadm_pgpool:equery(pool_pg, "update eadm_userrole
                                   set deleteduser = ?,
                                   deletedat = current_timestamp,
                                   deleted = true
@@ -547,7 +547,7 @@ validate_addloginname(LoginName) ->
                     {error, 2};
                 _ ->
                     try
-                        case mysql_pool:query(pool_db, "select 1 from eadm_user where loginname = ?;", [LoginName]) of
+                        case eadm_pgpool:equery(pool_pg, "select 1 from eadm_user where loginname = ?;", [LoginName]) of
                             {ok, _, []} ->
                                 {ok};
                             {ok, _, _} ->
@@ -580,7 +580,7 @@ validate_editloginname(UserId, LoginName) ->
                     {error, 2};
                 _ ->
                     try
-                        case mysql_pool:query(pool_db,
+                        case eadm_pgpool:equery(pool_pg,
                             "select 1 from eadm_user where id<>? and loginname=? and deleted is false;",
                             [UserId, LoginName]) of
                             {ok, _, []} ->
@@ -603,7 +603,7 @@ validate_editloginname(UserId, LoginName) ->
 %% 获取用户权限
 %% @end
 get_permission(LoginName) ->
-    {ok, _, ResData} = mysql_pool:query(pool_db,
+    {ok, _, ResData} = eadm_pgpool:equery(pool_pg,
         "select rolepermission
         from vi_userpermission
         where loginname=?

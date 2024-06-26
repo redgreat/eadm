@@ -40,7 +40,7 @@ index(#{auth_data := #{<<"authed">> := false}}) ->
 search(#{auth_data := #{<<"authed">> := true,
       <<"permission">> := #{<<"usermanage">> := true}}}) ->
     try
-        {ok, Res_Col, Res_Data} = mysql_pool:query(pool_db,
+        {ok, Res_Col, Res_Data} = eadm_pgpool:equery(pool_pg,
             "select id, rolename, rolestatus, createdat
             from vi_role
             order by createdat;", []),
@@ -66,7 +66,7 @@ loadpermission(#{auth_data := #{<<"authed">> := true,
       <<"permission">> := #{<<"usermanage">> := true}},
       bindings := #{<<"roleId">> := RoleId}}) ->
     try
-        {ok, _, ResData} = mysql_pool:query(pool_db,
+        {ok, _, ResData} = eadm_pgpool:equery(pool_pg,
             "select rolepermission
             from eadm_role
             where id = ?
@@ -109,7 +109,7 @@ updatepermission(#{auth_data := #{<<"authed">> := true, <<"loginname">> := Login
     },
     RolePermissionJson = thoas:encode(RolePermissionMap),
     try
-        mysql_pool:query(pool_db,
+        eadm_pgpool:equery(pool_pg,
             "update eadm_role
             set rolepermission = ?,
                 updateduser = ?,
@@ -137,7 +137,7 @@ disable(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
       <<"permission">> := #{<<"usermanage">> := true}},
       bindings := #{<<"roleId">> := RoleId}}) ->
     try
-        mysql_pool:query(pool_db,
+        eadm_pgpool:equery(pool_pg,
             "update eadm_role
             set rolestatus = 1 - rolestatus,
                 updateduser = ?,
@@ -167,7 +167,7 @@ delete(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
       <<"permission">> := #{<<"usermanage">> := true}},
       bindings := #{<<"roleId">> := RoleId}}) ->
     try
-        mysql_pool:query(pool_db,
+        eadm_pgpool:equery(pool_pg,
             "update eadm_role
             set deleteduser = ?,
               deletedat = now(),
@@ -196,7 +196,7 @@ getrolelist(#{auth_data := #{<<"authed">> := true,
       <<"permission">> := #{<<"usermanage">> := true}},
       bindings := #{<<"userId">> := UserId}}) ->
     try
-        {ok, Res_Col, Res_Data} = mysql_pool:query(pool_db,
+        {ok, Res_Col, Res_Data} = eadm_pgpool:equery(pool_pg,
             "select a.id, a.rolename, a.createdat
             from vi_role a
             where not exists(select 1

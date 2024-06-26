@@ -76,7 +76,7 @@ logout(Req) ->
 %% 获取用户权限
 %% @end
 get_permission(LoginName) ->
-    {ok, _, Res_Data} = mysql_pool:query(pool_db,
+    {ok, _, Res_Data} = eadm_pgpool:equery(pool_pg,
         "select rolepermission
         from vi_userpermission
         where loginname=?
@@ -88,9 +88,12 @@ get_permission(LoginName) ->
 %% 根据登陆名获取显示
 %% @end
 get_username(LoginName) ->
-    {ok, _, Res_Data} = mysql_pool:query(pool_db,
+    io:format("LoginName: ~p~n", LoginName),
+    {ok, _, Res_Data} = eadm_pgpool:equery(pool_pg,
         "select username
         from eadm_user
         where loginname=?
         limit 1;", [LoginName]),
-    hd(hd(Res_Data)).
+    {Return_Data} = hd(Res_Data),
+    Return_Data.
+

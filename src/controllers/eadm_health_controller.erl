@@ -68,7 +68,7 @@ search(#{auth_data := #{<<"authed">> := true,
                         _ ->
                             case DataType of
                                 <<"1">> ->
-                                    {ok, ResCol, ResData} = mysql_pool:query(pool_db,
+                                    {ok, ResCol, ResData} = eadm_pgpool:equery(pool_pg,
                                         "select to_char(ptime, 'yyyy-mm-dd hh24:mi:ss') as utctime, steps
                                         from lc_watchdaily
                                         where ptime >= ?
@@ -77,7 +77,7 @@ search(#{auth_data := #{<<"authed">> := true,
                                         order by ptime desc;",
                                         [StartTime, EndTime]);
                                 <<"2">> ->
-                                    {ok, ResCol, ResData} = mysql_pool:query(pool_db,
+                                    {ok, ResCol, ResData} = eadm_pgpool:equery(pool_pg,
                                         "select to_char(ptime, 'yyyy-mm-dd hh24:mi:ss') as utctime, heartbeat
                                         from lc_watchdaily
                                         where ptime >= ?
@@ -86,7 +86,7 @@ search(#{auth_data := #{<<"authed">> := true,
                                         order by ptime desc;",
                                         [StartTime, EndTime]);
                                 <<"3">> ->
-                                    {ok, ResCol, ResData} = mysql_pool:query(pool_db,
+                                    {ok, ResCol, ResData} = eadm_pgpool:equery(pool_pg,
                                         "select to_char(ptime, 'yyyy-mm-dd hh24:mi:ss') as utctime,
                                         bodytemperature, wristtemperature
                                         from lc_watchdaily
@@ -96,7 +96,7 @@ search(#{auth_data := #{<<"authed">> := true,
                                         order by ptime desc;",
                                         [StartTime, EndTime]);
                                 <<"4">> ->
-                                    {ok, ResCol, ResData} = mysql_pool:query(pool_db,
+                                    {ok, ResCol, ResData} = eadm_pgpool:equery(pool_pg,
                                         "select to_char(ptime, 'yyyy-mm-dd hh24:mi:ss') as utctime,
                                         diastolic, shrink
                                         from lc_watchdaily
@@ -106,7 +106,7 @@ search(#{auth_data := #{<<"authed">> := true,
                                         order by ptime desc;",
                                         [StartTime, EndTime]);
                                 <<"5">> ->
-                                    {ok, ResCol, ResData} = mysql_pool:query(pool_db,
+                                    {ok, ResCol, ResData} = eadm_pgpool:equery(pool_pg,
                                         "select to_char(ptime, 'yyyy-mm-dd hh24:mi:ss') as utctime,
                                         sleeptype, sleepstarttime, sleependtime, sleepminute
                                         from lc_watchdaily
@@ -116,7 +116,7 @@ search(#{auth_data := #{<<"authed">> := true,
                                         order by ptime desc;",
                                         [StartTime, EndTime]);
                                 <<"6">> ->
-                                    {ok, ResCol, ResData} = mysql_pool:query(pool_db,
+                                    {ok, ResCol, ResData} = eadm_pgpool:equery(pool_pg,
                                         "select to_char(ptime, 'yyyy-mm-dd hh24:mi:ss') as utctime, battery
                                         from lc_watchdaily
                                         where ptime >= ?

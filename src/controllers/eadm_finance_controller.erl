@@ -53,7 +53,7 @@ search(#{auth_data := #{<<"authed">> := true,
             try
                 case {SourceType, InOrOut} of
                     {<<"0">>, <<"0">>} ->
-                        {ok, ResCol, ResData} = mysql_pool:query(pool_db,
+                        {ok, ResCol, ResData} = eadm_pgpool:equery(pool_pg,
                             "select id, sourcetype, inorout, tradetype, amount, tradetime
                             from fn_paybilldetail
                             where tradetime>=?
@@ -64,7 +64,7 @@ search(#{auth_data := #{<<"authed">> := true,
                         Response = eadm_utils:return_as_json(ResCol, ResData),
                         {json, Response};
                     {<<"0">>, _} ->
-                        {ok, ResCol, ResData} = mysql_pool:query(pool_db,
+                        {ok, ResCol, ResData} = eadm_pgpool:equery(pool_pg,
                             "select id, sourcetype, inorout, tradetype, amount, tradetime
                             from fn_paybilldetail
                             where tradetime>=?
@@ -76,7 +76,7 @@ search(#{auth_data := #{<<"authed">> := true,
                         Response = eadm_utils:return_as_json(ResCol, ResData),
                         {json, Response};
                     {_, <<"0">>} ->
-                        {ok, ResCol, ResData} = mysql_pool:query(pool_db,
+                        {ok, ResCol, ResData} = eadm_pgpool:equery(pool_pg,
                             "select id, sourcetype, inorout, tradetype, amount, tradetime
                             from paybilldetail
                             where tradetime>=?
@@ -88,7 +88,7 @@ search(#{auth_data := #{<<"authed">> := true,
                         Response = eadm_utils:return_as_json(ResCol, ResData),
                         {json, Response};
                     {_, _} ->
-                        {ok, ResCol, ResData} = mysql_pool:query(pool_db,
+                        {ok, ResCol, ResData} = eadm_pgpool:equery(pool_pg,
                             "select id, sourcetype, inorout, tradetype, amount, tradetime
                             from paybilldetail
                             where tradetime>=?
@@ -122,7 +122,7 @@ delete(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
       <<"permission">> := #{<<"finance">> := #{<<"findel">> := true}}},
     bindings := #{<<"detailId">> := DetailId}}) ->
         try
-            mysql_pool:query(pool_db, "update paybilldetail
+            eadm_pgpool:equery(pool_pg, "update paybilldetail
                                       set deleteduser = ?,
                                       deletedat = current_timestamp,
                                       deleted = 1
@@ -150,7 +150,7 @@ searchdetail(#{auth_data := #{<<"authed">> := true,
       <<"permission">> := #{<<"finance">> := #{<<"finlist">> := true}}},
     bindings := #{<<"detailId">> := DetailId}}) ->
     try
-        ResData = mysql_pool:query(pool_db,
+        ResData = eadm_pgpool:equery(pool_pg,
             "select owner, sourcetype, inorout, counterparty, counterbank, counteraccount,
                goodscomment, paymethod, amount, balance, currency, paystatus,
                tradetype, tradeorderno, counterorderno, tradetime, billcomment
@@ -184,7 +184,7 @@ upload(#{auth_data := #{<<"authed">> := true,
             lists:foreach(
                 fun(Map) ->
                     try
-                        mysql_pool:query(pool_db,
+                        eadm_pgpool:equery(pool_pg,
                             "insert into fn_paybilldetail(owner, sourcetype, inorout, counterparty, counterbank,
                              counteraccount, goodscomment, paymethod, amount, balance, currency, paystatus,
                              tradetype, tradeorderno, counterorderno, tradetime, billcomment)
@@ -220,7 +220,7 @@ upload(#{auth_data := #{<<"authed">> := true,
             lists:foreach(
                 fun(Map) ->
                     try
-                        mysql_pool:query(pool_db,
+                        eadm_pgpool:equery(pool_pg,
                             "insert into fn_paybilldetail(owner, sourcetype, tradetime, tradetype, counterparty, goodscomment,
                             inorout, amount, paymethod, paystatus, tradeorderno, counterorderno, billcomment)
                             values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
@@ -251,7 +251,7 @@ upload(#{auth_data := #{<<"authed">> := true,
             lists:foreach(
                 fun(Map) ->
                     try
-                        mysql_pool:query(pool_db,
+                        eadm_pgpool:equery(pool_pg,
                             "insert into fn_paybilldetail(owner, sourcetype, tradeorderno, counterorderno, tradetime,
                             paymethod, counterparty, goodscomment, amount, inorout, paystatus, billcomment)
                             values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
@@ -288,7 +288,7 @@ upload(#{auth_data := #{<<"authed">> := true,
                         InOrOut = unicode:characters_to_binary("支出")
                     end,
                     try
-                        mysql_pool:query(pool_db,
+                        eadm_pgpool:equery(pool_pg,
                             "insert into fn_paybilldetail(owner, sourcetype, tradetime, counterparty,
                             counterbank, counteraccount, goodscomment, amount, balance, inorout)
                             values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",

@@ -35,28 +35,28 @@ index(#{auth_data := #{<<"authed">> := false}}) ->
 %% @end
 search(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName}}) ->
 
-    {ok, _, ResData} = mysql_pool:query(pool_db,
+    {ok, _, ResData} = eadm_pgpool:equery(pool_pg,
         "select datavalue
         from eadm_dashboard
         where loginname=?
           and datatype in (1, 2, 3, 4)
         order by datetype, datatype;",[LoginName]),
 
-    {ok, _, ResLocation} = mysql_pool:query(pool_db,
+    {ok, _, ResLocation} = eadm_pgpool:equery(pool_pg,
         "select cast(right(checkdate, 2) as int) as month, datavalue
         from eadm_dashboard
         where loginname=?
           and datatype=5
         order by checkdate;",[LoginName]),
 
-    {ok, _, ResFinanceIn} = mysql_pool:query(pool_db,
+    {ok, _, ResFinanceIn} = eadm_pgpool:equery(pool_pg,
         "select cast(right(checkdate, 2) as int) as month, datavalue
         from eadm_dashboard
         where loginname=?
           and datatype=6
         order by checkdate;",[LoginName]),
 
-    {ok, _, ResFinanceOut} = mysql_pool:query(pool_db,
+    {ok, _, ResFinanceOut} = eadm_pgpool:equery(pool_pg,
         "select cast(right(checkdate, 2) as int) as month, datavalue
         from eadm_dashboard
         where loginname=?

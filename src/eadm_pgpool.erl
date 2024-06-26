@@ -26,7 +26,7 @@ connect(PoolName, Settings) ->
     PoolSize    = proplists:get_value(size, Settings, 5),
     MaxOverflow = proplists:get_value(max_overflow, Settings, 5),
     eadm_sup:add_pool(PoolName, [{name, {local, PoolName}},
-                                  {worker_module, eadm_pgpool_workker},
+                                  {worker_module, eadm_pgpool_worker},
                                   {size, PoolSize},
                                   {max_overflow, MaxOverflow}], Settings).
 
@@ -34,7 +34,7 @@ connect(PoolName, Settings) ->
              Params :: list(epgsql:bind_param()))
             -> epgsql:reply(epgsql:equery_row()) | {error, Reason :: any()}.
 equery(Sql, Params) ->
-    eadm_pgpool_workker:equery(Sql, Params).
+    eadm_pgpool_worker:equery(Sql, Params).
 
 -spec equery(Sql     :: epgsql:sql_query(),
              Params  :: list(epgsql:bind_param()),
@@ -45,7 +45,7 @@ equery(Sql, Params) ->
              Params   :: list(epgsql:bind_param()))
             -> epgsql:reply(epgsql:equery_row()) | {error, Reason :: any()}.
 equery(P1, P2, P3) ->
-    eadm_pgpool_workker:equery(P1, P2, P3).
+    eadm_pgpool_worker:equery(P1, P2, P3).
 
 -spec equery(PoolName :: atom(),
              Sql::epgsql:sql_query(),
@@ -53,13 +53,13 @@ equery(P1, P2, P3) ->
              Timeout  :: atom() | integer())
             -> epgsql:reply(epgsql:equery_row()) | {error, Reason :: any()}.
 equery(PoolName, Sql, Params, Timeout) ->
-    eadm_pgpool_workker:equery(PoolName, Sql, Params, Timeout).
+    eadm_pgpool_worker:equery(PoolName, Sql, Params, Timeout).
 
 -spec squery(Sql :: epgsql:sql_query())
             -> epgsql:reply(epgsql:squery_row()) |
                [epgsql:reply(epgsql:squery_row())] | {error, Reason :: any()}.
 squery(Sql) ->
-    eadm_pgpool_workker:squery(Sql).
+    eadm_pgpool_worker:squery(Sql).
 
 -spec squery(Sql::epgsql:sql_query(),
              Timeout :: atom() | integer())
@@ -70,9 +70,9 @@ squery(Sql) ->
             -> epgsql:reply(epgsql:squery_row()) |
                [epgsql:reply(epgsql:squery_row())] | {error, Reason :: any()}.
 squery(PoolName, Sql) when is_atom(PoolName) ->
-    eadm_pgpool_workker:squery(PoolName, Sql);
+    eadm_pgpool_worker:squery(PoolName, Sql);
 squery(Sql, Timeout) ->
-    eadm_pgpool_workker:squery(Sql, Timeout).
+    eadm_pgpool_worker:squery(Sql, Timeout).
 
 -spec squery(PoolName :: atom(),
              Sql      :: epgsql:sql_query(),
@@ -80,7 +80,7 @@ squery(Sql, Timeout) ->
             -> epgsql:reply(epgsql:squery_row()) |
                [epgsql:reply(epgsql:squery_row())] | {error, Reason :: any()}.
 squery(PoolName, Sql, Timeout) ->
-    eadm_pgpool_workker:squery(PoolName, Sql, Timeout).
+    eadm_pgpool_worker:squery(PoolName, Sql, Timeout).
 
 -spec with_transaction(Function :: fun(() -> Reply))
                       -> Reply | {rollback | error, any()} when Reply :: any().
@@ -95,16 +95,16 @@ with_transaction(Fun) when is_function(Fun, 0) ->
                       -> Reply | {rollback | error, any()} when Reply :: any().
 with_transaction(PoolName, Fun) when is_function(Fun, 0);
                                      is_atom(PoolName) ->
-    eadm_pgpool_workker:with_transaction(PoolName, Fun);
+    eadm_pgpool_worker:with_transaction(PoolName, Fun);
 with_transaction(Fun, Timeout) when is_function(Fun, 0) ->
-    eadm_pgpool_workker:with_transaction(epgsql_pool, Fun, Timeout).
+    eadm_pgpool_worker:with_transaction(epgsql_pool, Fun, Timeout).
 
 -spec with_transaction(PoolName :: atom(),
                        Function :: fun(() -> Reply),
                        Timeout  :: atom() | non_neg_integer())
                       -> Reply | {rollback | error, any()} when Reply :: any().
 with_transaction(PoolName, Fun, Timeout) when is_function(Fun, 0) ->
-    eadm_pgpool_workker:with_transaction(PoolName, Fun, Timeout).
+    eadm_pgpool_worker:with_transaction(PoolName, Fun, Timeout).
 
 %%--------------------------------------------------------------------
 %% @doc

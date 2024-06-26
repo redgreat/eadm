@@ -52,7 +52,7 @@ search(#{auth_data := #{<<"authed">> := true,
                 {json, [Alert]};
             _ ->
                 try
-                    {ok, _, ResData} = mysql_pool:query(pool_db,
+                    {ok, _, ResData} = eadm_pgpool:equery(pool_pg,
                         "select lng, lat
                         from lc_carlocdaily
                         where ptime >= ?
