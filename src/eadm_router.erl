@@ -110,4 +110,10 @@ routes(_Environment) ->
           {"/ports", { eadm_sys_ports_controller, index }, #{methods => [get]}},
           {"/tables", { eadm_sys_tv_controller, index }, #{methods => [get]}}
         ]
+      },
+      #{prefix => "api",
+      security => false,
+      routes => [
+          {"/watch", { api_watch, index }, #{methods => [post]}}
+        ]
       }].
