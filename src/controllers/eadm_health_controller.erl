@@ -12,17 +12,17 @@
 -author("wangcw").
 
 %%%===================================================================
-%%% Application callbacks
+%%% 函数导出
 %%%===================================================================
 -export([index/1, search/1]).
 
 
 %%====================================================================
-%% API functions
+%% API 函数
 %%====================================================================
 
 %% @doc
-%% index
+%% 主函数
 %% @end
 index(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName,
       <<"permission">> := #{<<"health">> := true}}}) ->
@@ -71,18 +71,18 @@ search(#{auth_data := #{<<"authed">> := true,
                                     {ok, ResCol, ResData} = eadm_pgpool:equery(pool_pg,
                                         "select to_char(ptime, 'yyyy-mm-dd hh24:mi:ss') as utctime, steps
                                         from lc_watchdaily
-                                        where ptime >= ?
-                                        and ptime < ?
-                                        and steps is not null
+                                        where ptime >= $1
+                                          and ptime < $2
+                                          and steps is not null
                                         order by ptime desc;",
                                         [StartTime, EndTime]);
                                 <<"2">> ->
                                     {ok, ResCol, ResData} = eadm_pgpool:equery(pool_pg,
                                         "select to_char(ptime, 'yyyy-mm-dd hh24:mi:ss') as utctime, heartbeat
                                         from lc_watchdaily
-                                        where ptime >= ?
-                                        and ptime < ?
-                                        and heartbeat is not null
+                                        where ptime >= $1
+                                          and ptime < $2
+                                          and heartbeat is not null
                                         order by ptime desc;",
                                         [StartTime, EndTime]);
                                 <<"3">> ->
@@ -90,9 +90,9 @@ search(#{auth_data := #{<<"authed">> := true,
                                         "select to_char(ptime, 'yyyy-mm-dd hh24:mi:ss') as utctime,
                                         bodytemperature, wristtemperature
                                         from lc_watchdaily
-                                        where ptime >= ?
-                                        and ptime < ?
-                                        and bodytemperature is not null
+                                        where ptime >= $1
+                                          and ptime < $2
+                                          and bodytemperature is not null
                                         order by ptime desc;",
                                         [StartTime, EndTime]);
                                 <<"4">> ->
@@ -100,8 +100,8 @@ search(#{auth_data := #{<<"authed">> := true,
                                         "select to_char(ptime, 'yyyy-mm-dd hh24:mi:ss') as utctime,
                                         diastolic, shrink
                                         from lc_watchdaily
-                                        where ptime >= ?
-                                        and ptime < ?
+                                        where ptime >= $1
+                                        and ptime < $2
                                         and diastolic is not null
                                         order by ptime desc;",
                                         [StartTime, EndTime]);
@@ -110,8 +110,8 @@ search(#{auth_data := #{<<"authed">> := true,
                                         "select to_char(ptime, 'yyyy-mm-dd hh24:mi:ss') as utctime,
                                         sleeptype, sleepstarttime, sleependtime, sleepminute
                                         from lc_watchdaily
-                                        where ptime >= ?
-                                        and ptime < ?
+                                        where ptime >= $1
+                                        and ptime < $2
                                         and sleeptype is not null
                                         order by ptime desc;",
                                         [StartTime, EndTime]);
@@ -119,8 +119,8 @@ search(#{auth_data := #{<<"authed">> := true,
                                     {ok, ResCol, ResData} = eadm_pgpool:equery(pool_pg,
                                         "select to_char(ptime, 'yyyy-mm-dd hh24:mi:ss') as utctime, battery
                                         from lc_watchdaily
-                                        where ptime >= ?
-                                        and ptime < ?
+                                        where ptime >= $1
+                                        and ptime < $2
                                         and battery is not null
                                         order by ptime desc;",
                                         [StartTime, EndTime]);
@@ -141,5 +141,5 @@ search(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 
 %%====================================================================
-%% Internal functions
+%% 内部函数
 %%====================================================================

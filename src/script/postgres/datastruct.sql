@@ -227,14 +227,13 @@ execute function lastupdate();
 truncate table eadm_user;
 
 insert into eadm_user(tenantid, loginname, username, email, passwd)
-values('et0000000001','wangcw', '王存伟', 'rubygreat@msn.com', 'q122/4gbpicnq83abpqn/+kyq0kwczlxiwflalkk4ny=');
+values('et0000000001','wangcw', '王存伟', 'rubygreat@msn.com', 'q122/4GBpiCNq83AbPQN/+kYq0KwczLxiWfLaLKk4NY=');
 
 insert into eadm_user(tenantid, loginname, username, email, passwd)
-values('et0000000001','wongcw', '王存偉', 'rubygreat@msn.com', 'q122/4gbpicnq83abpqn/+kyq0kwczlxiwflalkk4ny=');
+values('et0000000001','wongcw', '王存偉', 'rubygreat@msn.com', 'q122/4GBpiCNq83AbPQN/+kYq0KwczLxiWfLaLKk4NY=');
 
 insert into eadm_user(tenantid, loginname, username, email, passwd)
-values('et0000000001','jiangyf', '姜玉凤', '1234567@qq.com', 'q122/4gbpicnq83abpqn/+kyq0kwczlxiwflalkk4ny=');
-
+values('et0000000001','jiangyf', '姜玉凤', '1234567@qq.com', 'q122/4GBpiCNq83AbPQN/+kYq0KwczLxiWfLaLKk4NY=');
 
 -- 用户视图
 create or replace view vi_user
@@ -302,14 +301,14 @@ execute function lastupdate();
 -- 写入数据
 truncate table eadm_role;
 
-insert into eadm_role(rolename, rolepermission)
-values('超级管理员', '{}');
+insert into eadm_role(rolename, rolepermission, createduser)
+values('超级管理员', '{"health": true, "locate": true, "crontab": true, "finance": {"findel": true, "finimp": true, "finlist": true}, "dashboard": true, "usermanage": true}', 'wangcw');
 
-insert into eadm_role(rolename, rolepermission)
-values('注册租户', '{}');
+insert into eadm_role(rolename, rolepermission, createduser)
+values('注册租户', '{"health": false, "locate": true, "crontab": false, "finance": {"findel": false, "finimp": false, "finlist": false}, "dashboard": true, "usermanage": false}', 'wangcw');
 
-insert into eadm_role(rolename, rolepermission)
-values('分配租户', '{}');
+insert into eadm_role(rolename, rolepermission, createduser)
+values('分配租户', '{"health": true, "locate": true, "crontab": false, "finance": {"findel": false, "finimp": false, "finlist": false}, "dashboard": true, "usermanage": false}', 'wangcw');
 
 -- 角色视图
 create or replace view vi_role

@@ -12,17 +12,17 @@
 -author("wangcw").
 
 %%%===================================================================
-%%% Application callbacks
+%%% 函数导出
 %%%===================================================================
 -export([index/1, search/1, searchself/1, add/1, edit/1, editself/1, reset/1, password/1,
     delete/1, disable/1, userrole/1, userroleadd/1, userroledel/1, userpermission/1]).
 
 %%====================================================================
-%% API functions
+%% API 函数
 %%====================================================================
 
 %% @doc
-%% index
+%% 主函数
 %% @end
 index(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName,
       <<"permission">> := #{<<"usermanage">> := true}}}) ->
@@ -68,8 +68,8 @@ searchself(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
         {ok, _, ResData} = eadm_pgpool:equery(pool_pg,
             "select loginname, username, email
             from eadm_user
-            where loginname=?
-              and userstatus=0
+            where loginname = $1
+              and userstatus = 0
               and deleted is false
             limit 1", [LoginName]),
         {json, hd(ResData)}
@@ -102,7 +102,7 @@ add(#{auth_data := #{<<"authed">> := true, <<"loginname">> := CreatedUser,
                             try
                                 CryptoGram = eadm_utils:pass_encrypt(PassWord),
                                 eadm_pgpool:equery(pool_pg, "insert into eadm_user(tenantid, loginname, username, email, cryptogram, createduser)
-                                                          values('ET9999999997', ?, ?, ?, ?, ?);",
+                                                          values('et9999999997', $1, $2, $3, $4, $5);",
                                                           [LoginName, UserName, Email, CryptoGram, CreatedUser]),
                                 A = unicode:characters_to_binary("用户【"),
                                 B = unicode:characters_to_binary("】新增成功! "),
@@ -172,11 +172,11 @@ edit(#{auth_data := #{<<"authed">> := true, <<"loginname">> := CreatedUser,
                       try
                           eadm_pgpool:equery(pool_pg,
                                 "update eadm_user
-                                set loginname=?,
-                                username=?,
-                                email=?,
-                                updateduser=?
-                                where id=?;",
+                                set loginname = $1,
+                                username = $2,
+                                email = $3,
+                                updateduser = $4
+                                where id = $5;",
                               [LoginName, UserName, Email, CreatedUser, UserId]),
                           A = unicode:characters_to_binary("用户【"),
                           B = unicode:characters_to_binary("】编辑成功! "),
@@ -236,11 +236,11 @@ editself(#{auth_data := #{<<"authed">> := true, <<"loginname">> := CreatedUser,
             try
                 eadm_pgpool:equery(pool_pg,
                       "update eadm_user
-                      set loginname=?,
-                      username=?,
-                      email=?,
-                      updateduser=?
-                      where loginname=?;",
+                      set loginname = $1,
+                      username = $2,
+                      email = $3,
+                      updateduser = $4
+                      where loginname = $5;",
                     [LoginName, NewUserName, Email, CreatedUser, CreatedUser]),
                 A = unicode:characters_to_binary("用户【"),
                 B = unicode:characters_to_binary("】编辑成功! "),
@@ -279,11 +279,11 @@ password(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
                     try
                         eadm_pgpool:equery(pool_pg,
                             "update eadm_user
-                            set updateduser=?,
-                            updatedat=current_timestamp,
-                            cryptogram=?
-                            where loginname=?
-                              and userstatus=0
+                            set updateduser = $1,
+                            updatedat = current_timestamp,
+                            passwd = $2
+                            where loginname = $3
+                              and userstatus = 0
                               and deleted is false;",
                             [LoginName, CryptoGram, LoginName]),
                         Info = #{<<"Alert">> => unicode:characters_to_binary("密码修改成功! ")},
@@ -334,10 +334,10 @@ reset(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
     CryptoGram = <<"4WpJ2hODluWuRFXsypv38CLIolSjGbe999q6gmCOa+0=">>,
     try
         eadm_pgpool:equery(pool_pg, "update eadm_user
-                                  set updateduser = ?,
+                                  set updateduser = $1,
                                   updatedat = current_timestamp,
-                                  cryptogram = ?
-                                  where id = ?;",
+                                  cryptogram = $2
+                                  where id = $3;",
                                   [LoginName, CryptoGram, UserId]),
         Info = #{<<"Alert">> => unicode:characters_to_binary("用户密码重置成功! ")},
         {json, [Info]}
@@ -362,10 +362,10 @@ disable(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
      bindings := #{<<"userId">> := UserId}}) ->
     try
         eadm_pgpool:equery(pool_pg, "update eadm_user
-                                  set userstatus = 1 - userstatus,
-                                      updateduser = ?,
+                                  set userstatus= 1 - userstatus,
+                                      updateduser = $1,
                                       updatedat = current_timestamp
-                                  where id = ?
+                                  where id = $2
                                     and deleted is false;",
                                   [LoginName, UserId]),
         Info = #{<<"Alert">> => unicode:characters_to_binary("用户启禁用成功! ")},
@@ -391,10 +391,10 @@ delete(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
     bindings := #{<<"userId">> := UserId}}) ->
     try
         eadm_pgpool:equery(pool_pg, "update eadm_user
-                                  set deleteduser = ?,
+                                  set deleteduser = $1,
                                   deletedat = current_timestamp,
                                   deleted = true
-                                  where id = ?;",
+                                  where id = $2;",
                                   [LoginName, UserId]),
         Info = #{<<"Alert">> => unicode:characters_to_binary("用户删除成功! ")},
         {json, [Info]}
@@ -421,7 +421,7 @@ userrole(#{auth_data := #{<<"authed">> := true,
         {ok, Res_Col, Res_Data} = eadm_pgpool:equery(pool_pg,
             "select id, rolename, updatedat
             from vi_userrole
-            where userid=?;",
+            where userid = $1;",
             [UserId]),
         Response = eadm_utils:return_as_json(Res_Col, Res_Data),
         {json, Response}
@@ -445,7 +445,7 @@ userroleadd(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
       <<"permission">> := #{<<"usermanage">> := true}}, params := RoleIdMap}) ->
     [{RoleIds, _Value}] = maps:to_list(RoleIdMap),
     {ok, RoleIdList} = thoas:decode(RoleIds),
-    InsertQuery = "insert into eadm_userrole(userid, roleid, createduser) values(?, ?, ?);",
+    InsertQuery = "insert into eadm_userrole(userid, roleid, createduser) values($1, $2, $3);",
     try
         lists:foreach(fun (Map) ->
             eadm_pgpool:equery(pool_pg, InsertQuery,
@@ -475,10 +475,10 @@ userroledel(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
       bindings := #{<<"userRoleId">> := UserRoleId}}) ->
     try
         eadm_pgpool:equery(pool_pg, "update eadm_userrole
-                                  set deleteduser = ?,
+                                  set deleteduser = $1,
                                   deletedat = current_timestamp,
                                   deleted = true
-                                  where id = ?;",
+                                  where id = $2;",
                                   [LoginName, UserRoleId]),
         Info = #{<<"Alert">> => unicode:characters_to_binary("用户角色删除成功! ")},
         {json, [Info]}
@@ -507,7 +507,7 @@ userpermission(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 
 %%====================================================================
-%% Internal functions
+%% 内部函数
 %%====================================================================
 %% @doc
 %% 验证二进制密码数据
@@ -547,7 +547,7 @@ validate_addloginname(LoginName) ->
                     {error, 2};
                 _ ->
                     try
-                        case eadm_pgpool:equery(pool_pg, "select 1 from eadm_user where loginname = ?;", [LoginName]) of
+                        case eadm_pgpool:equery(pool_pg, "select 1 from eadm_user where loginname = $1;", [LoginName]) of
                             {ok, _, []} ->
                                 {ok};
                             {ok, _, _} ->
@@ -581,7 +581,7 @@ validate_editloginname(UserId, LoginName) ->
                 _ ->
                     try
                         case eadm_pgpool:equery(pool_pg,
-                            "select 1 from eadm_user where id<>? and loginname=? and deleted is false;",
+                            "select 1 from eadm_user where id != $1 and loginname = $2 and deleted is false;",
                             [UserId, LoginName]) of
                             {ok, _, []} ->
                                 {ok};
@@ -606,7 +606,8 @@ get_permission(LoginName) ->
     {ok, _, ResData} = eadm_pgpool:equery(pool_pg,
         "select rolepermission
         from vi_userpermission
-        where loginname=?
+        where loginname = $1
         limit 1;", [LoginName]),
-    {ok, ResMap} = thoas:decode(list_to_binary(ResData)),
-    #{<<"data">> => ResMap}.
+    {ResBin} = hd(ResData),
+    {ok, ResJson} = thoas:decode(ResBin),
+    #{<<"data">> => ResJson}.

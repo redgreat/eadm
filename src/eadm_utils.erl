@@ -40,7 +40,7 @@ to_json(Tuple) when is_tuple(Tuple) ->
 to_json(Map) when is_map(Map) ->
     %% What should we do here? Nothing?
     maps:map(fun(_, Value) ->
-                     to_json(Value)
+        to_json(Value)
              end, Map);
 to_json(Pid) when is_pid(Pid) ->
     erlang:list_to_binary(erlang:pid_to_list(Pid));
@@ -146,12 +146,12 @@ cts_to_utc(DateTimeBin) ->
 %% @end
 transform_value(_, {{Year, Month, Day}, {Hour, Minute, Second}}) when
     is_integer(Year), is_integer(Month), is_integer(Day), is_integer(Hour), is_integer(Minute), is_integer(Second)
-->
+    ->
     TimeStr =
         % 带时区格式 2024-02-13T13:32:12Z
-        % io_lib:fwrite("~4.10.0B-~2.10.0B-~2.10.0BT~2.10.0B:~2.10.0B:~2.10.0BZ", [Year, Month, Day, Hour, Minute, Second]),
-        % 不带时区格式 2024-02-13 13:32:20
-        io_lib:format("~4..0w-~2..0w-~2..0w ~2..0w:~2..0w:~2..0w", [Year, Month, Day, Hour, Minute, Second]),
+    % io_lib:fwrite("~4.10.0B-~2.10.0B-~2.10.0BT~2.10.0B:~2.10.0B:~2.10.0BZ", [Year, Month, Day, Hour, Minute, Second]),
+    % 不带时区格式 2024-02-13 13:32:20
+    io_lib:format("~4..0w-~2..0w-~2..0w ~2..0w:~2..0w:~2..0w", [Year, Month, Day, Hour, Minute, Second]),
     {list_to_binary(TimeStr), true};
 transform_value(_, Value) ->
     {Value, false}.
@@ -189,7 +189,7 @@ time_from_binary(TimeBin) ->
 str_from_datetime(DateTime) ->
     {{Year, Month, Day}, {Hour, Minute, Second}} = DateTime,
     iolist_to_binary(io_lib:format("~4..0w-~2..0w-~2..0w ~2..0w:~2..0w:~2..0w",
-    [Year, Month, Day, Hour, Minute, Second])).
+        [Year, Month, Day, Hour, Minute, Second])).
 
 %% @private
 %% @doc
@@ -220,9 +220,9 @@ lastyear_date_binary() ->
     {{Year, Month, Day}, _} = calendar:universal_time(),
     TodayDays = calendar:date_to_gregorian_days({Year, Month, Day}),
     DaysInAYear = case calendar:is_leap_year(Year) of
-        true -> 366;
-        false -> 365
-    end,
+                      true -> 366;
+                      false -> 365
+                  end,
     LastYearDays = TodayDays - DaysInAYear,
     {LastYear, LastYearMonth, LastYearDay} = calendar:gregorian_days_to_date(LastYearDays),
     LastYearBin = list_to_binary(io_lib:format("~4..0B-~2..0B-~2..0B", [LastYear, LastYearMonth, LastYearDay])),
@@ -241,38 +241,35 @@ pass_encrypt(PassBin) ->
 %% 验证密码
 %% @end
 validate_login(LoginName, Password) ->
-    lager:info("validateLoginName:~p~n", [LoginName]),
-    lager:info("validatePassword:~p~n", [Password]),
-    % {ok, _, DbPassword} = eadm_pgpool:equery(pool_db,
-    DbPassword = eadm_pgpool:equery(pool_db,
+    {ok, _, Res_DbPassword} = eadm_pgpool:equery(pool_pg,
         "select passwd, userstatus
         from eadm_user
-        where loginname = ?
+        where loginname = $1
           and deleted is false
         order by updatedat desc
         limit 1;",
         [LoginName]),
-        lager:info("validateDbPassworda:~p~n", [DbPassword]),
-        case DbPassword of
-            [] ->
-                2;
-            _ ->
-                case tl(hd(DbPassword)) of
-                    [0] ->
-                      verify_password(Password, hd(hd(DbPassword)));
-                    [1] ->
-                      3;
-                    _ ->
-                      4
-                end
-        end.
+    case Res_DbPassword of
+        [] ->
+            2;
+        _ ->
+            {DbPassword, DbUserStatus} = hd(Res_DbPassword),
+            case DbUserStatus of
+                0 ->
+                    verify_password(Password, DbPassword);
+                1 ->
+                    3;
+                _ ->
+                    4
+            end
+    end.
 
 %% @doc
 %% 密码加密解密-验证密码
 %% @end
 verify_password(Pwd, DbPwd) ->
-    Secret_Key = application:get_env(nova, secret_key, <<>>),
-    HPwd = crypto:hash(sha256, <<Secret_Key/binary, Pwd/binary>>),
+    SecretKey = application:get_env(nova, secret_key, <<>>),
+    HPwd = crypto:hash(sha256, <<SecretKey/binary, Pwd/binary>>),
     DbPwdBin = base64:decode(DbPwd),
     HPwd =:= DbPwdBin.
 

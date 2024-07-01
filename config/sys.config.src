@@ -9,6 +9,7 @@
     {secret_key, <<"PfE4U42K6ApFYTgWjWRCvaD7wenPL26xcc7T">>},
     {max_search_span, 3},
     {max_fin_search_span, 366},
+    {wx_key, "ea50a2d0-2d51-4ba3-a90c-66919a51ca01"},
     %% Plugins is written on form {RequestType, Module, Options, Priority}
     %% Priority is that the lowest number is executed first
     {plugins, [

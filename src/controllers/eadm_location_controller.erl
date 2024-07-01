@@ -12,17 +12,17 @@
 -author("wangcw").
 
 %%%===================================================================
-%%% Application callbacks
+%%% 函数导出
 %%%===================================================================
 -export([index/1, search/1]).
 
 
 %%====================================================================
-%% API functions
+%% API 函数
 %%====================================================================
 
 %% @doc
-%% index
+%% 主函数
 %% @end
 index(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName,
       <<"permission">> := #{<<"locate">> := true}}}) ->
@@ -55,8 +55,8 @@ search(#{auth_data := #{<<"authed">> := true,
                     {ok, _, ResData} = eadm_pgpool:equery(pool_pg,
                         "select lng, lat
                         from lc_carlocdaily
-                        where ptime >= ?
-                          and ptime < ?
+                        where ptime >= $1
+                          and ptime < $2
                         order by ptime desc;",
                         [CtsStartTime, CtsEndTime]),
                     {json, ResData}
@@ -75,5 +75,5 @@ search(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 
 %%====================================================================
-%% Internal functions
+%% 内部函数
 %%====================================================================

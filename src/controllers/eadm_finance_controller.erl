@@ -12,13 +12,13 @@
 -author("wangcw").
 
 %%%===================================================================
-%%% Application callbacks
+%%% 函数导出
 %%%===================================================================
 -export([index/1, search/1, delete/1, searchdetail/1, upload/1]).
 
 
 %%====================================================================
-%% API functions
+%% API 函数
 %%====================================================================
 
 %% @doc
@@ -56,9 +56,9 @@ search(#{auth_data := #{<<"authed">> := true,
                         {ok, ResCol, ResData} = eadm_pgpool:equery(pool_pg,
                             "select id, sourcetype, inorout, tradetype, amount, tradetime
                             from fn_paybilldetail
-                            where tradetime>=?
-                              and tradetime<?
-                              and deleted=0
+                            where tradetime >= $1
+                              and tradetime < $2
+                              and deleted is false
                             order by tradetime;",
                             [StartTime, EndTime]),
                         Response = eadm_utils:return_as_json(ResCol, ResData),
@@ -67,10 +67,10 @@ search(#{auth_data := #{<<"authed">> := true,
                         {ok, ResCol, ResData} = eadm_pgpool:equery(pool_pg,
                             "select id, sourcetype, inorout, tradetype, amount, tradetime
                             from fn_paybilldetail
-                            where tradetime>=?
-                              and tradetime<?
-                              and inorout=?
-                              and deleted=0
+                            where tradetime >= $1
+                              and tradetime < $2
+                              and inorout = $3
+                              and deleted is false
                             order by tradetime;",
                             [StartTime, EndTime, InOrOut]),
                         Response = eadm_utils:return_as_json(ResCol, ResData),
@@ -78,11 +78,11 @@ search(#{auth_data := #{<<"authed">> := true,
                     {_, <<"0">>} ->
                         {ok, ResCol, ResData} = eadm_pgpool:equery(pool_pg,
                             "select id, sourcetype, inorout, tradetype, amount, tradetime
-                            from paybilldetail
-                            where tradetime>=?
-                              and tradetime<?
-                              and sourcetype=?
-                              and deleted=0
+                            from fn_paybilldetail
+                            where tradetime >= $1
+                              and tradetime < $2
+                              and sourcetype = $3
+                              and deleted is false
                             order by tradetime;",
                             [StartTime, EndTime, SourceType]),
                         Response = eadm_utils:return_as_json(ResCol, ResData),
@@ -90,12 +90,12 @@ search(#{auth_data := #{<<"authed">> := true,
                     {_, _} ->
                         {ok, ResCol, ResData} = eadm_pgpool:equery(pool_pg,
                             "select id, sourcetype, inorout, tradetype, amount, tradetime
-                            from paybilldetail
-                            where tradetime>=?
-                              and tradetime<?
-                              and sourcetype=?
-                              and inorout=?
-                              and deleted=0
+                            from fn_paybilldetail
+                            where tradetime >= $1
+                              and tradetime < $2
+                              and sourcetype = $3
+                              and inorout = $4
+                              and deleted is false
                             order by tradetime;",
                             [StartTime, EndTime, SourceType, InOrOut]),
                         Response = eadm_utils:return_as_json(ResCol, ResData),
@@ -122,11 +122,11 @@ delete(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
       <<"permission">> := #{<<"finance">> := #{<<"findel">> := true}}},
     bindings := #{<<"detailId">> := DetailId}}) ->
         try
-            eadm_pgpool:equery(pool_pg, "update paybilldetail
-                                      set deleteduser = ?,
+            eadm_pgpool:equery(pool_pg, "update fn_paybilldetail
+                                      set deleteduser = $1,
                                       deletedat = current_timestamp,
-                                      deleted = 1
-                                      where id = ?;",
+                                      deleted = true
+                                      where id = $2;",
                                       [LoginName, DetailId]),
             Info = #{<<"Alert">> => unicode:characters_to_binary("数据删成功! ")},
             {json, [Info]}
@@ -156,7 +156,7 @@ searchdetail(#{auth_data := #{<<"authed">> := true,
                tradetype, tradeorderno, counterorderno, tradetime, billcomment
              from fn_paybilldetail
              where deleted is false
-               and id = ?;",
+               and id = $1;",
             [DetailId]),
         Response = eadm_utils:as_map(ResData),
         {json, Response}
@@ -188,7 +188,7 @@ upload(#{auth_data := #{<<"authed">> := true,
                             "insert into fn_paybilldetail(owner, sourcetype, inorout, counterparty, counterbank,
                              counteraccount, goodscomment, paymethod, amount, balance, currency, paystatus,
                              tradetype, tradeorderno, counterorderno, tradetime, billcomment)
-                            values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
+                            values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17);",
                             [maps:get(<<"Owner">>, Map, null),
                              maps:get(<<"Source">>, Map, null),
                              maps:get(<<"InOrOut">>, Map, null),
@@ -223,7 +223,7 @@ upload(#{auth_data := #{<<"authed">> := true,
                         eadm_pgpool:equery(pool_pg,
                             "insert into fn_paybilldetail(owner, sourcetype, tradetime, tradetype, counterparty, goodscomment,
                             inorout, amount, paymethod, paystatus, tradeorderno, counterorderno, billcomment)
-                            values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
+                            values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13);",
                             [maps:get(<<"Owner">>, Map, null),
                              maps:get(<<"Source">>, Map, null),
                              maps:get(<<"TradeTime">>, Map, null),
@@ -254,7 +254,7 @@ upload(#{auth_data := #{<<"authed">> := true,
                         eadm_pgpool:equery(pool_pg,
                             "insert into fn_paybilldetail(owner, sourcetype, tradeorderno, counterorderno, tradetime,
                             paymethod, counterparty, goodscomment, amount, inorout, paystatus, billcomment)
-                            values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
+                            values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12);",
                             [maps:get(<<"Owner">>, Map, null),
                              maps:get(<<"Source">>, Map, null),
                              maps:get(<<"TradeOrderNo">>, Map, null),
@@ -291,7 +291,7 @@ upload(#{auth_data := #{<<"authed">> := true,
                         eadm_pgpool:equery(pool_pg,
                             "insert into fn_paybilldetail(owner, sourcetype, tradetime, counterparty,
                             counterbank, counteraccount, goodscomment, amount, balance, inorout)
-                            values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
+                            values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10);",
                             [maps:get(<<"Owner">>, Map, null),
                              maps:get(<<"Source">>, Map, null),
                              maps:get(<<"TradeTime">>, Map, null),
@@ -327,7 +327,7 @@ upload(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 
 %%====================================================================
-%% Internal functions
+%% 内部函数
 %%====================================================================
 count_maps(List) ->
     lists:foldl(fun(Elem, Acc) ->

@@ -66,5 +66,3 @@ init([]) ->
 add_pool(Name, PoolArgs, WorkerArgs) ->
     ChildSpec = poolboy:child_spec(Name, PoolArgs, WorkerArgs),
     supervisor:start_child(?MODULE, ChildSpec).
-
-%%    {ok, { {one_for_all, 0, 1}, []} }.

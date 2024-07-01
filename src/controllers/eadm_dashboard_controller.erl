@@ -12,17 +12,17 @@
 -author("wangcw").
 
 %%%===================================================================
-%%% Application callbacks
+%%% 函数导出
 %%%===================================================================
 -export([index/1, search/1]).
 
 
 %%====================================================================
-%% API functions
+%% API 函数
 %%====================================================================
 
 %% @doc
-%% index
+%% 主函数
 %% @end
 index(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName}}) ->
     {ok, [{username, UserName}]};
@@ -34,44 +34,40 @@ index(#{auth_data := #{<<"authed">> := false}}) ->
 %% 查询返回数据结果
 %% @end
 search(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName}}) ->
-
     {ok, _, ResData} = eadm_pgpool:equery(pool_pg,
         "select datavalue
         from eadm_dashboard
-        where loginname=?
+        where loginname = $1
           and datatype in (1, 2, 3, 4)
         order by datetype, datatype;",[LoginName]),
-
     {ok, _, ResLocation} = eadm_pgpool:equery(pool_pg,
         "select cast(right(checkdate, 2) as int) as month, datavalue
         from eadm_dashboard
-        where loginname=?
-          and datatype=5
+        where loginname = $1
+          and datatype = 5
         order by checkdate;",[LoginName]),
-
     {ok, _, ResFinanceIn} = eadm_pgpool:equery(pool_pg,
         "select cast(right(checkdate, 2) as int) as month, datavalue
         from eadm_dashboard
-        where loginname=?
-          and datatype=6
+        where loginname = $1
+          and datatype = 6
         order by checkdate;",[LoginName]),
-
     {ok, _, ResFinanceOut} = eadm_pgpool:equery(pool_pg,
         "select cast(right(checkdate, 2) as int) as month, datavalue
         from eadm_dashboard
-        where loginname=?
-          and datatype=7
+        where loginname = $1
+          and datatype = 7
         order by checkdate;",[LoginName]),
-
     ResList = ResData ++ [get_hd(ResLocation)] ++ [get_tl(ResLocation)]
         ++ [get_hd(ResFinanceIn)] ++ [get_tl(ResFinanceIn)] ++ [get_tl(ResFinanceOut)],
+    % lager:info("ResList: ~p", [ResList]),
     {json, ResList};
 
 search(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 
 %%====================================================================
-%% Internal functions
+%% 内部函数
 %%====================================================================
 get_hd(List) ->
     Mon = unicode:characters_to_binary("月"),

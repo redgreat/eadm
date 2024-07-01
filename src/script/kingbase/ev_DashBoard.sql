@@ -9,5 +9,5 @@ CREATE EVENT ev_DashBoard
   ENABLE
   COMMENT '定时任务_每日首页报表统计'
   DO BEGIN
-CALL proc_DashBoard(CURDATE());
+CALL proc_DashBoard(CURRENT_DATE);
 END;

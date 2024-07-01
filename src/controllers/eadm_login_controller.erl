@@ -9,15 +9,17 @@
 -module(eadm_login_controller).
 -author("wangcw").
 
-%% Application callbacks
+%%%===================================================================
+%%% 函数导出
+%%%===================================================================
 -export([login/1, logout/1]).
 
 %%%===================================================================
-%%% Application callbacks
+%%% API 函数
 %%%===================================================================
 
 %% @doc
-%%
+%% 用户登录
 %% @end
 login(Req) ->
     Method = cowboy_req:method(Req),
@@ -28,8 +30,6 @@ login(Req) ->
             {ok, _, #{params := Params}} = cowboy_req:read_body(Req),
             LoginName = maps:get(<<"loginName">>, Params),
             Password = maps:get(<<"password">>, Params),
-            lager:info("InputLoginName:~p~n", [LoginName]),
-            lager:info("InputPassword:~p~n", [Password]),
             case eadm_utils:validate_login(LoginName, Password) of
                 true ->
                     UserName = get_username(LoginName),
@@ -78,27 +78,23 @@ logout(Req) ->
 %% 获取用户权限
 %% @end
 get_permission(LoginName) ->
-    lager:info("GetPermissionLoginName:~p~n", [LoginName]),
-    {ok, _, Res_Data} = eadm_pgpool:equery(pool_pg,
+    {ok, _, ResData} = eadm_pgpool:equery(pool_pg,
         "select rolepermission
         from vi_userpermission
-        where loginname=?
+        where loginname = $1
         limit 1;", [LoginName]),
-    lager:info("GetPermissionRes_Data:~p~n", [Res_Data]),
-    {ok, Response} = thoas:decode(list_to_binary(Res_Data)),
-    Response.
+    {ResBin} = hd(ResData),
+    json:decode(ResBin).
 
 %% @doc
 %% 根据登陆名获取显示
 %% @end
 get_username(LoginName) ->
-    lager:info("GetUserNameLoginName:~p~n", [LoginName]),
-    {ok, _, Res_Data} = eadm_pgpool:equery(pool_pg,
+    {ok, _, ResData} = eadm_pgpool:equery(pool_pg,
         "select username
         from eadm_user
-        where loginname=?
+        where loginname = $1
         limit 1;", [LoginName]),
-    lager:info("GetUserNameRes_Data:~p~n", [Res_Data]),
-    {Return_Data} = hd(Res_Data),
-    Return_Data.
+    {ReturnData} = hd(ResData),
+    ReturnData.
 

@@ -12,15 +12,15 @@
 -author("wangcw").
 
 %%%===================================================================
-%%% Application callbacks
+%%% 函数导出
 %%%===================================================================
 -export([index/1, search/1]).
 
 %%====================================================================
-%% API functions
+%% API 函数
 %%====================================================================
 %% @doc
-%% index
+%% 主函数
 %% @end
 index(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName,
       <<"permission">> := #{<<"crontab">> := true}}}) ->
@@ -42,7 +42,7 @@ search(#{auth_data := #{<<"authed">> := true, <<"permission">> := #{<<"crontab">
     {ok, Res_Col, Res_Data} = eadm_pgpool:equery(pool_pg,
         "select cronname, cronexp, cronmda, startdatetime, enddatetime, cronstatus, createdat
         from eadm_crontab
-        where cronname like ?
+        where cronname like $1
           and deleted is false
         order by createdat desc;",
         [CronNamePattern]),
@@ -57,5 +57,5 @@ search(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 
 %%====================================================================
-%% Internal functions
+%% 内部函数
 %%====================================================================

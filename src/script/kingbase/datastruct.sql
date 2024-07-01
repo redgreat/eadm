@@ -1,7 +1,7 @@
 -- @author wangcw
 -- @copyright (c) 2024, redgreat
--- created : 2024-6-26 14:44:57
--- kingbaseES V9 表结构设计
+-- created : 2024-6-27 08:32:20
+-- kingbase 表结构设计
 
 -- 设置查询路径
 alter role user_eadm set search_path to eadm, public;
@@ -12,10 +12,10 @@ set time zone 'asia/shanghai';
 -- 表最后一次更新时间函数
 drop function if exists lastupdate cascade;
 create or replace function lastupdate()
-    returns trigger as $$
+returns trigger as $$
 begin
     new.updatedat := current_timestamp;
-    return new;
+return new;
 end;
 $$ language plpgsql;
 
@@ -23,9 +23,9 @@ $$ language plpgsql;
 drop sequence if exists sd cascade;
 create sequence sd
     start 1
-    increment by 1
-    maxvalue 9999999999
-    cache 10;
+increment by 1
+maxvalue 9999999999
+cache 10;
 
 -- 系统_字典信息表
 drop table if exists sys_dict cascade;
@@ -74,15 +74,15 @@ drop trigger if exists dict_lastupdate on sys_dict cascade;
 create trigger dict_lastupdate
     before update on sys_dict
     for each row
-execute function lastupdate();
+    execute function lastupdate();
 
 -- 基础信息_租户信息表
 drop sequence if exists et cascade;
 create sequence et
     start 1
-    increment by 1
-    maxvalue 9999999999
-    cache 10;
+increment by 1
+maxvalue 9999999999
+cache 10;
 
 drop table if exists eadm_tenant cascade;
 create table eadm_tenant (
@@ -124,10 +124,10 @@ comment on table eadm_tenant is '基础信息_租户信息表';
 -- 表最后一次更新时间触发器
 drop trigger if exists tenant_lastupdate on eadm_tenant cascade;
 
-create or replace trigger tenant_lastupdate
+create trigger tenant_lastupdate
     before update on eadm_tenant
     for each row
-execute function lastupdate();
+    execute function lastupdate();
 
 --写入数据
 truncate table eadm_tenant;
@@ -146,9 +146,9 @@ values('注册客户', '界面注册客户');
 -- 获取商户名称
 drop function if exists gettenantname cascade;
 create or replace function gettenantname(in inid char(12))
-    returns varchar(100) as $$
+returns varchar(100) as $$
 begin
-    return (select tenantname from eadm_tenant where id=inid and enable is true and deleted is false limit 1);
+return (select tenantname from eadm_tenant where id=inid and enable is true and deleted is false limit 1);
 end
 $$ language plpgsql;
 
@@ -158,9 +158,9 @@ $$ language plpgsql;
 drop sequence if exists eu cascade;
 create sequence eu
     start 1
-    increment by 1
-    maxvalue 9999999999
-    cache 10;
+increment by 1
+maxvalue 9999999999
+cache 10;
 
 drop table if exists eadm_user cascade;
 create table eadm_user (
@@ -215,10 +215,10 @@ comment on table eadm_user is '基础信息_用户信息表';
 -- 最后一次更新时间
 drop trigger if exists user_lastupdate on eadm_user cascade;
 
-create or replace trigger user_lastupdate
+create trigger user_lastupdate
     before update on eadm_user
     for each row
-execute function lastupdate();
+    execute function lastupdate();
 
 -- 写入用户数据
 
@@ -227,14 +227,13 @@ execute function lastupdate();
 truncate table eadm_user;
 
 insert into eadm_user(tenantid, loginname, username, email, passwd)
-values('et0000000001','wangcw', '王存伟', 'rubygreat@msn.com', 'q122/4gbpicnq83abpqn/+kyq0kwczlxiwflalkk4ny=');
+values('et0000000001','wangcw', '王存伟', 'rubygreat@msn.com', 'q122/4GBpiCNq83AbPQN/+kYq0KwczLxiWfLaLKk4NY=');
 
 insert into eadm_user(tenantid, loginname, username, email, passwd)
-values('et0000000001','wongcw', '王存偉', 'rubygreat@msn.com', 'q122/4gbpicnq83abpqn/+kyq0kwczlxiwflalkk4ny=');
+values('et0000000001','wongcw', '王存偉', 'rubygreat@msn.com', 'q122/4GBpiCNq83AbPQN/+kYq0KwczLxiWfLaLKk4NY=');
 
 insert into eadm_user(tenantid, loginname, username, email, passwd)
-values('et0000000001','jiangyf', '姜玉凤', '1234567@qq.com', 'q122/4gbpicnq83abpqn/+kyq0kwczlxiwflalkk4ny=');
-
+values('et0000000001','jiangyf', '姜玉凤', '1234567@qq.com', 'q122/4GBpiCNq83AbPQN/+kYq0KwczLxiWfLaLKk4NY=');
 
 -- 用户视图
 create or replace view vi_user
@@ -250,9 +249,9 @@ where deleted is false;
 drop sequence if exists er cascade;
 create sequence er
     start 1
-    increment by 1
-    maxvalue 9999999999
-    cache 10;
+increment by 1
+maxvalue 9999999999
+cache 10;
 
 drop table if exists eadm_role cascade;
 create table eadm_role (
@@ -294,22 +293,22 @@ comment on table eadm_role is '基础信息_角色信息表';
 -- 最后一次更新时间
 drop trigger if exists role_lastupdate on eadm_role cascade;
 
-create or replace trigger role_lastupdate
+create trigger role_lastupdate
     before update on eadm_role
     for each row
-execute function lastupdate();
+    execute function lastupdate();
 
 -- 写入数据
 truncate table eadm_role;
 
-insert into eadm_role(rolename, rolepermission)
-values('超级管理员', '{}');
+insert into eadm_role(rolename, rolepermission, createduser)
+values('超级管理员', '{"health": true, "locate": true, "crontab": true, "finance": {"findel": true, "finimp": true, "finlist": true}, "dashboard": true, "usermanage": true}', 'wangcw');
 
-insert into eadm_role(rolename, rolepermission)
-values('注册租户', '{}');
+insert into eadm_role(rolename, rolepermission, createduser)
+values('注册租户', '{"health": false, "locate": true, "crontab": false, "finance": {"findel": false, "finimp": false, "finlist": false}, "dashboard": true, "usermanage": false}', 'wangcw');
 
-insert into eadm_role(rolename, rolepermission)
-values('分配租户', '{}');
+insert into eadm_role(rolename, rolepermission, createduser)
+values('分配租户', '{"health": true, "locate": true, "crontab": false, "finance": {"findel": false, "finimp": false, "finlist": false}, "dashboard": true, "usermanage": false}', 'wangcw');
 
 -- 角色视图
 create or replace view vi_role
@@ -362,10 +361,10 @@ comment on table eadm_userrole is '基础信息_用户角色对应关系表';
 -- 最后一次更新时间
 drop trigger if exists roleuser_lastupdate on eadm_userrole cascade;
 
-create or replace trigger roleuser_lastupdate
+create trigger roleuser_lastupdate
     before update on eadm_userrole
     for each row
-execute function lastupdate();
+    execute function lastupdate();
 
 -- 写入数据
 -- select * from eadm_user;
@@ -406,9 +405,9 @@ where a.deleted is false;
 drop sequence if exists cr cascade;
 create sequence cr
     start 1
-    increment by 1
-    maxvalue 9999999999
-    cache 10;
+increment by 1
+maxvalue 9999999999
+cache 10;
 
 drop table if exists eadm_crontab cascade;
 create table eadm_crontab (
@@ -454,10 +453,10 @@ comment on table eadm_crontab is '基础信息_定时任务信息表';
 -- 最后一次更新时间
 drop trigger if exists crontab_lastupdate on eadm_crontab cascade;
 
-create or replace trigger crontab_lastupdate
+create trigger crontab_lastupdate
     before update on eadm_crontab
     for each row
-execute function lastupdate();
+    execute function lastupdate();
 
 -- 首页报表
 drop table if exists eadm_dashboard cascade;
@@ -504,10 +503,10 @@ comment on table eadm_dashboard is '首页_看板报表';
 -- 最后一次更新时间
 drop trigger if exists dashboard_lastupdate on eadm_dashboard cascade;
 
-create or replace trigger dashboard_lastupdate
+create trigger dashboard_lastupdate
     before update on eadm_dashboard
     for each row
-execute function lastupdate();
+    execute function lastupdate();
 
 -- 过程运行日志
 drop table if exists sys_proclog cascade;
@@ -580,10 +579,10 @@ comment on table eadm_device is '业务域_设备信息';
 -- 最后一次更新时间
 drop trigger if exists device_lastupdate on eadm_device cascade;
 
-create or replace trigger device_lastupdate
+create trigger device_lastupdate
     before update on eadm_device
     for each row
-execute function lastupdate();
+    execute function lastupdate();
 
 -- 写入数据
 insert into eadm_device(deviceno, remark, createduser)
@@ -636,10 +635,10 @@ comment on table eadm_userdevice is '业务域_人员设备对应关系';
 -- 最后一次更新时间
 drop trigger if exists userdevice_lastupdate on eadm_userdevice cascade;
 
-create or replace trigger userdevice_lastupdate
+create trigger userdevice_lastupdate
     before update on eadm_userdevice
     for each row
-execute function lastupdate();
+    execute function lastupdate();
 
 -- 写入数据
 insert into eadm_userdevice(userid, loginname, deviceno, createduser)

@@ -12,16 +12,16 @@
 -author("wangcw").
 
 %%%===================================================================
-%%% Application callbacks
+%%% 函数导出
 %%%===================================================================
 -export([index/1, search/1, disable/1, delete/1, loadpermission/1, updatepermission/1, getrolelist/1]).
 
 %%====================================================================
-%% API functions
+%% API 函数
 %%====================================================================
 
 %% @doc
-%% index
+%% 主函数
 %% @end
 index(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName,
       <<"permission">> := #{<<"usermanage">> := true}}}) ->
@@ -69,11 +69,11 @@ loadpermission(#{auth_data := #{<<"authed">> := true,
         {ok, _, ResData} = eadm_pgpool:equery(pool_pg,
             "select rolepermission
             from eadm_role
-            where id = ?
+            where id = $1
               and deleted is false;",
             [RoleId]),
-        ResBin = list_to_binary(ResData),
-        {ok, ResJson} = thoas:decode(ResBin),
+        ResBin = hd(ResData),
+        {ResJson} = json:decode(ResBin),
         {json, ResJson}
     catch
         _:Error ->
@@ -111,10 +111,10 @@ updatepermission(#{auth_data := #{<<"authed">> := true, <<"loginname">> := Login
     try
         eadm_pgpool:equery(pool_pg,
             "update eadm_role
-            set rolepermission = ?,
-                updateduser = ?,
+            set rolepermission = $1,
+                updateduser = $2,
                 updatedat = current_timestamp
-            where id = ?;", [RolePermissionJson, LoginName, RoleId]),
+            where id = $3;", [RolePermissionJson, LoginName, RoleId]),
         Info = #{<<"Alert">> => unicode:characters_to_binary("权限更新成功! ")},
         {json, [Info]}
     catch
@@ -140,9 +140,9 @@ disable(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
         eadm_pgpool:equery(pool_pg,
             "update eadm_role
             set rolestatus = 1 - rolestatus,
-                updateduser = ?,
+                updateduser = $1,
                 updatedat = current_timestamp
-            where id = ?
+            where id = $2
               and deleted is false;",
             [LoginName, RoleId]),
         Info = #{<<"Alert">> => unicode:characters_to_binary("角色启禁用成功! ")},
@@ -169,10 +169,10 @@ delete(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
     try
         eadm_pgpool:equery(pool_pg,
             "update eadm_role
-            set deleteduser = ?,
+            set deleteduser = $1,
               deletedat = now(),
               deleted = true
-            where id = ?;",
+            where id = $2;",
             [LoginName, RoleId]),
         Info = #{<<"Alert">> => unicode:characters_to_binary("角色删除成功! ")},
         {json, [Info]}
@@ -202,7 +202,7 @@ getrolelist(#{auth_data := #{<<"authed">> := true,
             where not exists(select 1
                 from eadm_userrole b
                 where b.roleid=a.id
-                and b.userid=?
+                and b.userid=$1
                 and b.deleted is false)
             order by a.createdat;", [UserId]),
         Response = eadm_utils:return_as_json(Res_Col, Res_Data),
@@ -221,6 +221,6 @@ getrolelist(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 
 %%====================================================================
-%% Internal functions
+%% 内部函数
 %%====================================================================
 

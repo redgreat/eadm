@@ -9,14 +9,16 @@
 -module(eadm_pgpool).
 -author("wangcw").
 
-%% API
+%%%===================================================================
+%%% 函数导出
+%%%===================================================================
 -export([connect/1, connect/2,
          equery/2, equery/3, equery/4,
          squery/1, squery/2, squery/3,
          with_transaction/1, with_transaction/2, with_transaction/3]).
 
 %%%===================================================================
-%%% API
+%%% API 函数
 %%%===================================================================
 
 connect(Settings) ->
@@ -106,12 +108,6 @@ with_transaction(Fun, Timeout) when is_function(Fun, 0) ->
 with_transaction(PoolName, Fun, Timeout) when is_function(Fun, 0) ->
     eadm_pgpool_worker:with_transaction(PoolName, Fun, Timeout).
 
-%%--------------------------------------------------------------------
-%% @doc
-%% @spec
-%% @end
-%%--------------------------------------------------------------------
-
 %%%===================================================================
-%%% Internal functions
+%%% 内部函数
 %%%===================================================================
