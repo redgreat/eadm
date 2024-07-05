@@ -45,7 +45,8 @@ start_link() ->
 %% Child :: {Id,StartFunc,Restart,Shutdown,Type,Modules}.
 %% @end
 init([]) ->
-    {ok, Pools} = application:get_env(pgpool, pools),
+    Pools = application:get_env(pgpool, pools, []),
+    lager:info("数据库连接池：", [Pools]),
     PoolSpec = lists:map(fun ({PoolName, SizeArgs, WorkerArgs}) ->
         PoolArgs = [{name, {local, PoolName}},
             {worker_module, eadm_pgpool_worker}] ++ SizeArgs,
