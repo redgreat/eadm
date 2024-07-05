@@ -34,7 +34,7 @@
       %% What handlers to install with what arguments
       , {handlers, [
           {lager_console_backend, [{level, debug},{level, debug},{formatter, lager_default_formatter},
-              {formatter_config, [color, date," ",time, " [", severity, "] ", node,"#",pid, " ", message, "1",sev, "1","\n"]}]}
+              {formatter_config, [color, date," ",time, " [", severity, "] ", node, "#", pid, " ", message, "\n"]}]}
           , {lager_file_backend, [
               {file, "error.log"}, {level, error}, {size, 10485760}, {date, "$D0"}, {count, 5}]
           }

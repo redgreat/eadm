@@ -40,13 +40,13 @@ search(#{auth_data := #{<<"authed">> := true, <<"permission">> := #{<<"crontab">
       bindings := #{<<"cronName">> := CronName}}) ->
     CronNamePattern = <<"%", CronName/binary, "%">>,
     {ok, Res_Col, Res_Data} = eadm_pgpool:equery(pool_pg,
-        "select cronname, cronexp, cronmda, startdatetime, enddatetime, cronstatus, createdat
+        "select cronname, cronexp, cronmfa, starttime, endtime, cronstatus, createdat
         from eadm_crontab
         where cronname like $1
           and deleted is false
         order by createdat desc;",
         [CronNamePattern]),
-    Response = eadm_utils:return_as_json(Res_Col, Res_Data),
+    Response = eadm_utils:pg_as_json(Res_Col, Res_Data),
     {json, Response};
 
 search(#{auth_data := #{<<"permission">> := #{<<"crontab">> := false}}}) ->

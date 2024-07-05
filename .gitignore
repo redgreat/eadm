@@ -15,3 +15,6 @@ _build
 logs
 *db.config
 /src/test/
+config/prod_db.config.prod
+rebar.lock
+rebar3.crashdump

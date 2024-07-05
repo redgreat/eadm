@@ -12,25 +12,25 @@ window.i18nUser = window.i18nUser || {};
 
 i18nUser.columnName = {
   zh: {
-    "Id": "用户ID",
-    "TenantName": "租户名称",
-    "LoginName": "登录名",
-    "UserName": "用户姓名",
-    "Email": "邮件",
-    "UserStatus": "用户状态",
-    "CreatedAt": "创建时间",
-    "RoleName": "角色名称",
-    "UpdatedAt": "更新时间"
+    "id": "用户id",
+    "tenantname": "租户名称",
+    "loginname": "登录名",
+    "username": "用户姓名",
+    "email": "邮件",
+    "userstatus": "用户状态",
+    "createdat": "创建时间",
+    "rolename": "角色名称",
+    "updatedat": "更新时间"
   },
   en: {
-    "Id": "UserId",
-    "TenantName": "TenantName",
-    "LoginName": "LoginName",
-    "UserName": "UserName",
-    "Email": "Email",
-    "UserStatus": "UserStatus",
-    "CreatedAt": "CreatedTime",
-    "RoleName": "RoleName",
-    "UpdatedAt": "UpdatedTime"
+    "id": "UserId",
+    "tenantname": "TenantName",
+    "loginname": "LoginName",
+    "username": "UserName",
+    "email": "Email",
+    "userstatus": "UserStatus",
+    "createdat": "CreatedTime",
+    "rolename": "RoleName",
+    "updatedat": "UpdatedTime"
   }
 };

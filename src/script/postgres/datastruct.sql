@@ -230,10 +230,10 @@ insert into eadm_user(tenantid, loginname, username, email, passwd)
 values('et0000000001','wangcw', '王存伟', 'rubygreat@msn.com', 'q122/4GBpiCNq83AbPQN/+kYq0KwczLxiWfLaLKk4NY=');
 
 insert into eadm_user(tenantid, loginname, username, email, passwd)
-values('et0000000001','wongcw', '王存偉', 'rubygreat@msn.com', 'q122/4GBpiCNq83AbPQN/+kYq0KwczLxiWfLaLKk4NY=');
+values('et0000000002','wongcw', '王存偉', 'rubygreat@msn.com', 'q122/4GBpiCNq83AbPQN/+kYq0KwczLxiWfLaLKk4NY=');
 
 insert into eadm_user(tenantid, loginname, username, email, passwd)
-values('et0000000001','jiangyf', '姜玉凤', '1234567@qq.com', 'q122/4GBpiCNq83AbPQN/+kYq0KwczLxiWfLaLKk4NY=');
+values('et0000000003','jiangyf', '姜玉凤', '1234567@qq.com', 'q122/4GBpiCNq83AbPQN/+kYq0KwczLxiWfLaLKk4NY=');
 
 -- 用户视图
 create or replace view vi_user

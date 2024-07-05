@@ -20,14 +20,10 @@
 %% API 函数
 %%====================================================================
 
-%%--------------------------------------------------------------------
 %% @private
 %% @doc
 %% Fetches the regular view
-%%
 %% @end
-%%--------------------------------------------------------------------
-
 debug_toolbar({ok, Variables}, MF, Req) ->
     debug_toolbar({ok, Variables, #{}}, MF, Req);
 debug_toolbar({ok, Variables, _Options}, {Mod, Func}, Req = #{parsed_qs := #{<<"d">> := <<"1">>}}) ->
@@ -39,13 +35,10 @@ debug_toolbar({ok, Variables, Options}, {Mod, _Func}, Req) ->
     nova_basic_handler:handle_ok({ok, DebugToolbarVars#{}, #{view => eadm_debug_toolbar}},
                                  {eadm_debug_toolbar, overlay}, Req).
 
-%%--------------------------------------------------------------------
 %% @private
 %% @doc
 %% Fetches the regular view
-%%
 %% @end
-%%--------------------------------------------------------------------
 get_view_name(Mod) when is_atom(Mod) ->
     StrName = get_view_name(erlang:atom_to_list(Mod)),
     erlang:list_to_atom(StrName);
@@ -53,3 +46,7 @@ get_view_name([$_, $c, $o, $n, $t, $r, $o, $l, $l, $e, $r]) ->
     "_dtl";
 get_view_name([H|T]) ->
     [H|get_view_name(T)].
+
+%%====================================================================
+%% 内部函数
+%%====================================================================

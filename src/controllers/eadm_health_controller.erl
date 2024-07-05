@@ -24,6 +24,9 @@
 %% @doc
 %% 主函数
 %% @end
+% index(#{auth_data := #{<<"permission">> := Permission}}) ->
+%    io:format("Permission: ~p~n", [Permission]);
+
 index(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName,
       <<"permission">> := #{<<"health">> := true}}}) ->
     {ok, [{username, UserName}]};
@@ -51,6 +54,8 @@ search(#{auth_data := #{<<"authed">> := true,
         _ ->
             ValidateStartTime = eadm_utils:validate_date_time(StartTime),
             ValidateEndTime = eadm_utils:validate_date_time(EndTime),
+            ParameterStartTime = eadm_utils:parse_date_time(StartTime),
+            ParameterEndTime = eadm_utils:parse_date_time(EndTime),
             case {ValidateStartTime, ValidateEndTime} of
                 {false, _} ->
                     Alert = #{<<"Alert">> => unicode:characters_to_binary("开始时间格式错误！")},
@@ -75,7 +80,7 @@ search(#{auth_data := #{<<"authed">> := true,
                                           and ptime < $2
                                           and steps is not null
                                         order by ptime desc;",
-                                        [StartTime, EndTime]);
+                                        [ParameterStartTime, ParameterEndTime]);
                                 <<"2">> ->
                                     {ok, ResCol, ResData} = eadm_pgpool:equery(pool_pg,
                                         "select to_char(ptime, 'yyyy-mm-dd hh24:mi:ss') as utctime, heartbeat
@@ -84,7 +89,7 @@ search(#{auth_data := #{<<"authed">> := true,
                                           and ptime < $2
                                           and heartbeat is not null
                                         order by ptime desc;",
-                                        [StartTime, EndTime]);
+                                        [ParameterStartTime, ParameterEndTime]);
                                 <<"3">> ->
                                     {ok, ResCol, ResData} = eadm_pgpool:equery(pool_pg,
                                         "select to_char(ptime, 'yyyy-mm-dd hh24:mi:ss') as utctime,
@@ -94,7 +99,7 @@ search(#{auth_data := #{<<"authed">> := true,
                                           and ptime < $2
                                           and bodytemperature is not null
                                         order by ptime desc;",
-                                        [StartTime, EndTime]);
+                                        [ParameterStartTime, ParameterEndTime]);
                                 <<"4">> ->
                                     {ok, ResCol, ResData} = eadm_pgpool:equery(pool_pg,
                                         "select to_char(ptime, 'yyyy-mm-dd hh24:mi:ss') as utctime,
@@ -104,7 +109,7 @@ search(#{auth_data := #{<<"authed">> := true,
                                         and ptime < $2
                                         and diastolic is not null
                                         order by ptime desc;",
-                                        [StartTime, EndTime]);
+                                        [ParameterStartTime, ParameterEndTime]);
                                 <<"5">> ->
                                     {ok, ResCol, ResData} = eadm_pgpool:equery(pool_pg,
                                         "select to_char(ptime, 'yyyy-mm-dd hh24:mi:ss') as utctime,
@@ -114,7 +119,7 @@ search(#{auth_data := #{<<"authed">> := true,
                                         and ptime < $2
                                         and sleeptype is not null
                                         order by ptime desc;",
-                                        [StartTime, EndTime]);
+                                        [ParameterStartTime, ParameterEndTime]);
                                 <<"6">> ->
                                     {ok, ResCol, ResData} = eadm_pgpool:equery(pool_pg,
                                         "select to_char(ptime, 'yyyy-mm-dd hh24:mi:ss') as utctime, battery
@@ -123,11 +128,11 @@ search(#{auth_data := #{<<"authed">> := true,
                                         and ptime < $2
                                         and battery is not null
                                         order by ptime desc;",
-                                        [StartTime, EndTime]);
+                                        [ParameterStartTime, ParameterEndTime]);
                                 _ ->
                                     {ResCol, ResData} = {undefined, undefined}
                             end,
-                            Response = eadm_utils:return_as_json(ResCol, ResData),
+                            Response = eadm_utils:pg_as_json(ResCol, ResData),
                             {json, Response}
                     end
             end

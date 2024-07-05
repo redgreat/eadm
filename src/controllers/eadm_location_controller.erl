@@ -45,10 +45,11 @@ search(#{auth_data := #{<<"authed">> := true,
         TimeDiff = eadm_utils:time_diff(StartTime, EndTime),
         CtsStartTime = eadm_utils:cts_to_utc(StartTime),
         CtsEndTime = eadm_utils:cts_to_utc(EndTime),
+        ParameterStartTime = eadm_utils:parse_date_time(CtsStartTime),
+        ParameterEndTime = eadm_utils:parse_date_time(CtsEndTime),
         case TimeDiff > (MaxSearchSpan * 86400) of
             true ->
                 Alert = #{<<"Alert">> => unicode:characters_to_binary("查询时长超过 " ++ integer_to_list(MaxSearchSpan) ++ " 天，禁止查询!")},
-                io:format("Alert: ~p~n", [Alert]),
                 {json, [Alert]};
             _ ->
                 try
@@ -58,8 +59,9 @@ search(#{auth_data := #{<<"authed">> := true,
                         where ptime >= $1
                           and ptime < $2
                         order by ptime desc;",
-                        [CtsStartTime, CtsEndTime]),
-                    {json, ResData}
+                        [ParameterStartTime, ParameterEndTime]),
+                        Response = eadm_utils:convert_to_array(ResData),
+                    {json, Response}
                 catch
                     _:Error ->
                         Alert = #{<<"Alert">> => unicode:characters_to_binary("查询失败! " ++ Error)},

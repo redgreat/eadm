@@ -44,7 +44,7 @@ search(#{auth_data := #{<<"authed">> := true, <<"permission">> := #{<<"usermanag
             "select id, tenantname, loginname, username, email, userstatus, createdat
             from vi_user
             order by createdat;", []),
-        Response = eadm_utils:return_as_json(Res_Col, Res_Data),
+        Response = eadm_utils:pg_as_json(Res_Col, Res_Data),
         {json, Response}
     catch
         _:Error ->
@@ -101,9 +101,10 @@ add(#{auth_data := #{<<"authed">> := true, <<"loginname">> := CreatedUser,
                         {match, _} ->
                             try
                                 CryptoGram = eadm_utils:pass_encrypt(PassWord),
-                                eadm_pgpool:equery(pool_pg, "insert into eadm_user(tenantid, loginname, username, email, cryptogram, createduser)
-                                                          values('et9999999997', $1, $2, $3, $4, $5);",
+                                QResult = eadm_pgpool:equery(pool_pg, "insert into eadm_user(tenantid, loginname, username, email, passwd, createduser)
+                                                          values('et0000000002', $1, $2, $3, $4, $5);",
                                                           [LoginName, UserName, Email, CryptoGram, CreatedUser]),
+                                io:format("QResult: ~p~n", [QResult]),
                                 A = unicode:characters_to_binary("用户【"),
                                 B = unicode:characters_to_binary("】新增成功! "),
                                 Info = #{<<"Alert">> => <<A/binary, UserName/binary, B/binary>>},
@@ -423,7 +424,7 @@ userrole(#{auth_data := #{<<"authed">> := true,
             from vi_userrole
             where userid = $1;",
             [UserId]),
-        Response = eadm_utils:return_as_json(Res_Col, Res_Data),
+        Response = eadm_utils:pg_as_json(Res_Col, Res_Data),
         {json, Response}
     catch
         _:Error ->

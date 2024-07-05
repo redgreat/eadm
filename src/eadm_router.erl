@@ -100,7 +100,7 @@ routes(_Environment) ->
           {"/finance", { eadm_finance_controller, upload }, #{methods => [post]}}
         ]
       },
-      #{prefix => "/sys",
+      #{prefix => "sys",
       security => {eadm_auth, auth},
       routes => [
           {"/sysinfo", { eadm_sys_sysinfo_controller, index }, #{methods => [get]}},

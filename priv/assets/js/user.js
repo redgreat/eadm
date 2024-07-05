@@ -73,7 +73,7 @@ function loadUserData() {
                 orderable: false
             }],
             createdRow: function(row, data) {
-                let dataId = data['Id'];
+                let dataId = data['id'];
                 $(row).attr('data-id', dataId);
             },
             destroy: true, // 销毁重新渲染
@@ -229,7 +229,7 @@ function loadUserRole(userId) {
                 orderable: false
             }],
             createdRow: function(row, data) {
-                let dataId = data['Id'];
+                let dataId = data['id'];
                 $(row).attr('data-id', dataId);
             },
             destroy: true,
@@ -322,7 +322,7 @@ function loadRoleList(userId) {
                 orderable: false
             }],
             createdRow: function(row, data) {
-                let dataId = data['Id'];
+                let dataId = data['id'];
                 $(row).attr('data-id', dataId);
             },
             select: {

@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>Eadm登录</title>
+    <title>EADM-登录</title>
     <link href="/assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <link href="/assets/img/favicon.ico" rel="shortcut icon" type="image/x-icon">
     <link href="/assets/css/login.css" rel="stylesheet">
@@ -31,7 +31,7 @@
                         <div id="loginalert" class="alert alert-warning" role="alert" style="display: none;">
 				            <span class="alert-link"></span>
                         </div>
-                        <input type="submit" value="登录" class="btn btn-primary shadow-2 mb-1 mt-3">
+                        <button id="user-login-btn" class="btn btn-primary shadow-2 mb-1 mt-3">登录</button>
                     </form>
                 </div>
             </div>

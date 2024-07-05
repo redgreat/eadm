@@ -144,23 +144,23 @@ function loadFinanceDetail(detailId) {
     if (typeof detailId !== 'undefined' && detailId !== null && detailId.trim() !== '') {
         $.getJSON('/data/finance/' + detailId, function (datas) {
         let data = datas[0];
-        $('#findetail-owner').html(data.Owner);
-        $('#findetail-source').html(data.SourceType);
-        $('#findetail-inorout').html(data.InOrOut);
-        $('#findetail-counterparty').html(data.CounterParty);
-        $('#findetail-counterbank').html(data.CounterBank);
-        $('#findetail-counteraccount').html(data.CounterAccount);
-        $('#findetail-goodscomment').html(data.GoodsComment);
-        $('#findetail-paymethod').html(data.PayMethod);
-        $('#findetail-amount').html(data.Amount);
-        $('#findetail-balance').html(data.Balance);
-        $('#findetail-currency').html(data.Currency);
-        $('#findetail-paystatus').html(data.PayStatus);
-        $('#findetail-tradetype').html(data.TradeType);
-        $('#findetail-tradeorderno').html(data.TradeOrderNo);
-        $('#findetail-counterorderno').html(data.CounterOrderNo);
-        $('#findetail-tradetime').html(data.TradeTime);
-        $('#findetail-billcomment').html(data.BillComment);
+        $('#findetail-owner').html(data.owner);
+        $('#findetail-source').html(data.sourcetype);
+        $('#findetail-inorout').html(data.inorout);
+        $('#findetail-counterparty').html(data.counterparty);
+        $('#findetail-counterbank').html(data.counterbank);
+        $('#findetail-counteraccount').html(data.counteraccount);
+        $('#findetail-goodscomment').html(data.goodscomment);
+        $('#findetail-paymethod').html(data.paymethod);
+        $('#findetail-amount').html(data.amount);
+        $('#findetail-balance').html(data.balance);
+        $('#findetail-currency').html(data.currency);
+        $('#findetail-paystatus').html(data.paystatus);
+        $('#findetail-tradetype').html(data.tradetype);
+        $('#findetail-tradeorderno').html(data.tradeorderno);
+        $('#findetail-counterorderno').html(data.counterorderno);
+        $('#findetail-tradetime').html(data.tradetime);
+        $('#findetail-billcomment').html(data.billcomment);
     });
     } else {
         showWarningToast("服务器内部错误！");

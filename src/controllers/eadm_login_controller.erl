@@ -84,7 +84,8 @@ get_permission(LoginName) ->
         where loginname = $1
         limit 1;", [LoginName]),
     {ResBin} = hd(ResData),
-    json:decode(ResBin).
+    {ok, RetuenData} = thoas:decode(ResBin),
+    RetuenData.
 
 %% @doc
 %% 根据登陆名获取显示

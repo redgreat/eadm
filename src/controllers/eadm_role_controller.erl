@@ -40,11 +40,11 @@ index(#{auth_data := #{<<"authed">> := false}}) ->
 search(#{auth_data := #{<<"authed">> := true,
       <<"permission">> := #{<<"usermanage">> := true}}}) ->
     try
-        {ok, Res_Col, Res_Data} = eadm_pgpool:equery(pool_pg,
+        {ok, ResCol, ResData} = eadm_pgpool:equery(pool_pg,
             "select id, rolename, rolestatus, createdat
             from vi_role
             order by createdat;", []),
-        Response = eadm_utils:return_as_json(Res_Col, Res_Data),
+        Response = eadm_utils:pg_as_json(ResCol, ResData),
         {json, Response}
     catch
         _:Error ->
@@ -72,9 +72,9 @@ loadpermission(#{auth_data := #{<<"authed">> := true,
             where id = $1
               and deleted is false;",
             [RoleId]),
-        ResBin = hd(ResData),
-        {ResJson} = json:decode(ResBin),
-        {json, ResJson}
+        {ResBin} = hd(ResData),
+        {ok, RetuenData} = thoas:decode(ResBin),
+        {json, RetuenData}
     catch
         _:Error ->
             Alert = #{<<"Alert">> => unicode:characters_to_binary("数据查询失败! " ++ Error)},
@@ -205,7 +205,7 @@ getrolelist(#{auth_data := #{<<"authed">> := true,
                 and b.userid=$1
                 and b.deleted is false)
             order by a.createdat;", [UserId]),
-        Response = eadm_utils:return_as_json(Res_Col, Res_Data),
+        Response = eadm_utils:pg_as_json(Res_Col, Res_Data),
         {json, Response}
     catch
         _:Error ->

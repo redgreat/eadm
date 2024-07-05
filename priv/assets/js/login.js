@@ -26,6 +26,12 @@ function login() {
                         .show();
                 } else if (resdata[0].logined === 1) {
                     window.location.href = "/";
+                    // const toastEl = document.querySelector('.toast');
+                    // if (toastEl) {
+                    //     const toastBodyEl = toastEl.querySelector('.toast-body');
+                    //     toastBodyEl.textContent = resdata[0].Alert;
+                    //     const toast = new bootstrap.Toast(toastEl);
+                    //     toast.show();
                 }
             }
         },
@@ -36,12 +42,11 @@ function login() {
 }
 
 $(document).ready(function() {
-
     let currentYear = new Date().getFullYear();
     $('.footer p').text("Copyright © wangcw 2020-" + currentYear + " All Rights Reserved");
+});
 
-    $('#loginform').on('submit', function(e) {
-        e.preventDefault();
-        login();
-    });
+$('#user-login-btn').click( function(e) {
+    e.preventDefault();
+    login();
 });

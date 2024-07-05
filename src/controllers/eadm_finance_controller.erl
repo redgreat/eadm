@@ -42,6 +42,9 @@ search(#{auth_data := #{<<"authed">> := true,
       <<"permission">> := #{<<"finance">> := #{<<"finlist">> := true}}},
       parsed_qs := #{<<"sourceType">> := SourceType, <<"inorOut">> := InOrOut,
         <<"startTime">> := StartTime, <<"endTime">> := EndTime}}) ->
+    ParameterStartTime = eadm_utils:parse_date_time(StartTime),
+    ParameterEndTime = eadm_utils:parse_date_time(EndTime),
+    ParameterSourceType = binary_to_integer(SourceType),
     MaxSearchSpan = application:get_env(restwong_cfg, max_fin_search_span, 366),
     TimeDiff = eadm_utils:time_diff(StartTime, EndTime),
     case TimeDiff > (MaxSearchSpan * 86400) of
@@ -60,8 +63,8 @@ search(#{auth_data := #{<<"authed">> := true,
                               and tradetime < $2
                               and deleted is false
                             order by tradetime;",
-                            [StartTime, EndTime]),
-                        Response = eadm_utils:return_as_json(ResCol, ResData),
+                            [ParameterStartTime, ParameterEndTime]),
+                        Response = eadm_utils:pg_as_json(ResCol, ResData),
                         {json, Response};
                     {<<"0">>, _} ->
                         {ok, ResCol, ResData} = eadm_pgpool:equery(pool_pg,
@@ -72,7 +75,7 @@ search(#{auth_data := #{<<"authed">> := true,
                               and inorout = $3
                               and deleted is false
                             order by tradetime;",
-                            [StartTime, EndTime, InOrOut]),
+                            [ParameterStartTime, ParameterEndTime, InOrOut]),
                         Response = eadm_utils:return_as_json(ResCol, ResData),
                         {json, Response};
                     {_, <<"0">>} ->
@@ -84,7 +87,7 @@ search(#{auth_data := #{<<"authed">> := true,
                               and sourcetype = $3
                               and deleted is false
                             order by tradetime;",
-                            [StartTime, EndTime, SourceType]),
+                            [ParameterStartTime, ParameterEndTime, ParameterSourceType]),
                         Response = eadm_utils:return_as_json(ResCol, ResData),
                         {json, Response};
                     {_, _} ->
@@ -97,8 +100,8 @@ search(#{auth_data := #{<<"authed">> := true,
                               and inorout = $4
                               and deleted is false
                             order by tradetime;",
-                            [StartTime, EndTime, SourceType, InOrOut]),
-                        Response = eadm_utils:return_as_json(ResCol, ResData),
+                            [ParameterStartTime, ParameterEndTime, SourceType, InOrOut]),
+                        Response = eadm_utils:pg_as_json(ResCol, ResData),
                         {json, Response}
                 end
             catch
@@ -121,13 +124,14 @@ search(#{auth_data := #{<<"authed">> := false}}) ->
 delete(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
       <<"permission">> := #{<<"finance">> := #{<<"findel">> := true}}},
     bindings := #{<<"detailId">> := DetailId}}) ->
+    ParameterDetailId = binary_to_integer(DetailId),
         try
             eadm_pgpool:equery(pool_pg, "update fn_paybilldetail
                                       set deleteduser = $1,
                                       deletedat = current_timestamp,
                                       deleted = true
                                       where id = $2;",
-                                      [LoginName, DetailId]),
+                                      [LoginName, ParameterDetailId]),
             Info = #{<<"Alert">> => unicode:characters_to_binary("数据删成功! ")},
             {json, [Info]}
         catch
@@ -149,16 +153,18 @@ delete(#{auth_data := #{<<"authed">> := false}}) ->
 searchdetail(#{auth_data := #{<<"authed">> := true,
       <<"permission">> := #{<<"finance">> := #{<<"finlist">> := true}}},
     bindings := #{<<"detailId">> := DetailId}}) ->
+    ParameterDetailId = binary_to_integer(DetailId),
     try
-        ResData = eadm_pgpool:equery(pool_pg,
+        {ok, ResCol, ResData} = eadm_pgpool:equery(pool_pg,
             "select owner, sourcetype, inorout, counterparty, counterbank, counteraccount,
                goodscomment, paymethod, amount, balance, currency, paystatus,
                tradetype, tradeorderno, counterorderno, tradetime, billcomment
              from fn_paybilldetail
              where deleted is false
                and id = $1;",
-            [DetailId]),
-        Response = eadm_utils:as_map(ResData),
+            [ParameterDetailId]),
+        Response = eadm_utils:pg_as_map(ResCol, ResData),
+        io:format("Response: ~p~n", [Response]),
         {json, Response}
     catch
         _:Error ->

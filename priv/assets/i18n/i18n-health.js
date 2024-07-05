@@ -12,19 +12,19 @@ window.i18nHealth = window.i18nHealth || {};
 
 i18nHealth.columnName = {
     zh: {
-        "UtcTime": "时间",
-        "Steps": "步数",
-        "Heartbeat": "心率",
-        "BodyTemperature": "体温",
-        "WristTemperature": "腕温",
-        "Diastolic": "舒张压",
-        "Shrink": "收缩压",
-        "SleepType": "睡眠类型",
-        "SleepStartTime": "入睡时间",
-        "SleepEndTime": "醒起时间",
-        "SleepWakeTime": "醒起时间",
-        "SleepMinute": "睡眠时长(分钟)",
-        "Battery": "电池电量"
+        "utctime": "时间",
+        "steps": "步数",
+        "heartbeat": "心率",
+        "bodytemperature": "体温",
+        "wristtemperature": "腕温",
+        "diastolic": "舒张压",
+        "shrink": "收缩压",
+        "sleeptype": "睡眠类型",
+        "sleepstarttime": "入睡时间",
+        "sleependtime": "醒起时间",
+        "sleepwaketime": "醒起时间",
+        "sleepminute": "睡眠时长(分钟)",
+        "battery": "电池电量"
     }
 };
 

@@ -20,19 +20,17 @@
 -export([to_json/1, get_exp_bin/0]).
 -export([as_map/1, as_map/3, return_as_map/1, return_as_map/2, return_as_json/1, return_as_json/2,
     validate_date_time/1, time_diff/2, utc_to_cts/1, cts_to_utc/1, pass_encrypt/1, validate_login/2, verify_password/2,
-    current_date_binary/0, yesterday_date_binary/0, lastyear_date_binary/0]).
+    current_date_binary/0, yesterday_date_binary/0, lastyear_date_binary/0, parse_date_time/1, pg_as_map/2, pg_as_json/2,
+    convert_to_array/1]).
 
 %%====================================================================
-%% API functions
+%% API 函数
 %%====================================================================
 
-%%--------------------------------------------------------------------
 %% @private
 %% @doc
 %% to_json
-%%
 %% @end
-%%--------------------------------------------------------------------
 to_json([Hd|Tl]) ->
     [to_json(Hd)|to_json(Tl)];
 to_json(Tuple) when is_tuple(Tuple) ->
@@ -86,7 +84,6 @@ return_as_map({ok, Columns, Rows}) ->
 return_as_map(Columns, Rows) ->
     #{<<"data">> => as_map(Columns, Rows, [])}.
 
-
 %% @doc
 %% mysql-otp 查询结果返回nova框架所需格式数据
 %% @end
@@ -95,6 +92,19 @@ return_as_json({ok, Columns, Rows}) ->
 
 return_as_json(Columns, Rows) ->
     #{columns => Columns, data => as_map(Columns, Rows, [])}.
+
+%% @doc
+%% epgsql返回结果转换为erlang的map格式
+%% @end
+pg_as_map(ResCol, ResData) ->
+    ColumnNames = [Name || {column, Name, _, _, _, _, _, _, _} <- ResCol],
+    [maps:from_list(lists:zip(ColumnNames, tuple_to_list(Row))) || Row <- ResData].
+
+%% @doc
+%% epgsql返回结果转换为erlang的带列名的json格式
+%% @end
+pg_as_json(ResCol, ResData) ->
+    #{columns => [Name || {column, Name, _, _, _, _, _, _, _} <- ResCol], data => pg_as_map(ResCol, ResData)}.
 
 %% @doc
 %% 校验字符串是否为时间格式
@@ -136,9 +146,16 @@ cts_to_utc(DateTimeBin) ->
     NewDateTime = calendar:gregorian_seconds_to_datetime(NewSeconds),
     str_from_datetime(NewDateTime).
 
-%%%===================================================================
-%%% Internal functions
-%%%===================================================================
+%% @doc
+%% 查询pg经纬度，转换为列表
+%% @end
+convert_to_array(Coords) ->
+    Response = [[binary_to_float(Lat), binary_to_float(Lng)] || {Lat, Lng} <- Coords],
+    Response.
+
+%%====================================================================
+%% 内部函数
+%%====================================================================
 
 %% @private
 %% @doc
@@ -273,6 +290,10 @@ verify_password(Pwd, DbPwd) ->
     DbPwdBin = base64:decode(DbPwd),
     HPwd =:= DbPwdBin.
 
-%%===================================================================
-%% 内部函数
-%%===================================================================
+%% @doc
+%% 将二进制字符串转换为浮点数
+%% @end
+binary_to_float(Binary) ->
+    ResList = binary_to_list(Binary),
+    ResFloat = list_to_float(ResList),
+    ResFloat.
