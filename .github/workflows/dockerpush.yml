@@ -10,7 +10,7 @@ on:
       - 'v*'
 
 env:
-  OTP-VERSION: 26.2.4
+  OTP-VERSION: 27.0.0
   REBAR3-VERSION: 3.23.0
   DOCKER_IMAGE_NAME: redgreat/eadm
   PLATFORMS: linux/amd64,linux/386,linux/arm/v7,linux/arm64/v8,linux/ppc64le,linux/mips64le,linux/s390x
