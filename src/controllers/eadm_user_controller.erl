@@ -101,10 +101,9 @@ add(#{auth_data := #{<<"authed">> := true, <<"loginname">> := CreatedUser,
                         {match, _} ->
                             try
                                 CryptoGram = eadm_utils:pass_encrypt(PassWord),
-                                QResult = eadm_pgpool:equery(pool_pg, "insert into eadm_user(tenantid, loginname, username, email, passwd, createduser)
+                                eadm_pgpool:equery(pool_pg, "insert into eadm_user(tenantid, loginname, username, email, passwd, createduser)
                                                           values('et0000000002', $1, $2, $3, $4, $5);",
                                                           [LoginName, UserName, Email, CryptoGram, CreatedUser]),
-                                io:format("QResult: ~p~n", [QResult]),
                                 A = unicode:characters_to_binary("用户【"),
                                 B = unicode:characters_to_binary("】新增成功! "),
                                 Info = #{<<"Alert">> => <<A/binary, UserName/binary, B/binary>>},
@@ -334,10 +333,10 @@ reset(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
     % 重置密码123456
     CryptoGram = <<"4WpJ2hODluWuRFXsypv38CLIolSjGbe999q6gmCOa+0=">>,
     try
-        eadm_pgpool:equery(pool_pg, "update eadm_user
+        Result = eadm_pgpool:equery(pool_pg, "update eadm_user
                                   set updateduser = $1,
                                   updatedat = current_timestamp,
-                                  cryptogram = $2
+                                  passwd = $2
                                   where id = $3;",
                                   [LoginName, CryptoGram, UserId]),
         Info = #{<<"Alert">> => unicode:characters_to_binary("用户密码重置成功! ")},

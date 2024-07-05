@@ -90,6 +90,7 @@ routes(_Environment) ->
           {"/role/:roleId", { eadm_role_controller, delete }, #{methods => [delete]}},
           {"/role/disable/:roleId", { eadm_role_controller, disable }, #{methods => [post]}},
           {"/role", { eadm_role_controller, search }, #{methods => [get]}},
+          {"/role/add", { eadm_role_controller, add }, #{methods => [post]}},
           {"/rolelist/:userId", { eadm_role_controller, getrolelist }, #{methods => [get]}},
           {"/permission", { eadm_role_controller, updatepermission }, #{methods => [post]}},
           {"/permission/:roleId", { eadm_role_controller, loadpermission }, #{methods => [get]}}

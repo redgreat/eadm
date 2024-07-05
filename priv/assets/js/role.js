@@ -13,7 +13,6 @@ function translateColumnNames(columnName) {
   return translations[columnName] || columnName;
 }
 
-
 function loadRoleData() {
     let dynamicColumns = []
     let dynamicDatas = []
@@ -60,7 +59,7 @@ function loadRoleData() {
                 orderable: false
             }],
             createdRow: function(row, data) {
-                let dataId = data['Id'];
+                let dataId = data['id'];
                 $(row).attr('data-id', dataId);
             },
             destroy: true, // 销毁重新渲染
@@ -105,6 +104,25 @@ function loadRoleData() {
             }
         });
     })
+}
+
+function addRole() {
+    const AddParams = {
+        roleName: $('#rolename').val()
+    };
+    $.ajaxSetup({async:false});
+    $.ajax({
+        url: '/data/role/add',
+        type: 'POST',
+        data: AddParams,
+        success: function (resdata) {
+            if (resdata && resdata.length > 0 && resdata[0].Alert) {
+                showWarningToast(resdata[0].Alert);
+            } else {
+                showWarningToast("服务器运行错误，请联系管理员！");
+            }
+        }
+    });
 }
 
 function disableRole(roleId) {
@@ -171,6 +189,16 @@ $(document).ready(function() {
     loadRoleData();
 
     let currentRoleId;
+
+    $('#add-role-submit-btn').click(function () {
+        addRole();
+        loadRoleData();
+        $('#rolename').val('');
+    });
+
+    $('#add-role-cancel-btn').click(function () {
+        $('#rolename').val('');
+    });
 
     $('#refresh-role-btn').click(function () {
         loadRoleData();

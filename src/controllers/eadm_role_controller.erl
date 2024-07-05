@@ -14,7 +14,7 @@
 %%%===================================================================
 %%% 函数导出
 %%%===================================================================
--export([index/1, search/1, disable/1, delete/1, loadpermission/1, updatepermission/1, getrolelist/1]).
+-export([index/1, search/1, add/1, disable/1, delete/1, loadpermission/1, updatepermission/1, getrolelist/1]).
 
 %%====================================================================
 %% API 函数
@@ -60,6 +60,32 @@ search(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 
 %% @doc
+%% 新增角色数据
+%% @end
+add(#{auth_data := #{<<"authed">> := true, <<"loginname">> := CreatedUser,
+    <<"permission">> := #{<<"usermanage">> := true}},
+    params := #{<<"roleName">> := RoleName}}) ->
+    try
+        eadm_pgpool:equery(pool_pg, "insert into eadm_role(rolename, createduser) values($1, $2);",
+            [RoleName, CreatedUser]),
+        A = unicode:characters_to_binary("角色【"),
+        B = unicode:characters_to_binary("】新增成功! "),
+        Info = #{<<"Alert">> => <<A/binary, RoleName/binary, B/binary>>},
+        {json, [Info]}
+    catch
+        _:Error ->
+            Alert = #{<<"Alert">> => unicode:characters_to_binary("角色新增失败！") ++ binary_to_list(Error)},
+            {json, [Alert]}
+    end;
+
+add(#{auth_data := #{<<"permission">> := #{<<"usermanage">> := false}}}) ->
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败! ")},
+    {json, [Alert]};
+
+add(#{auth_data := #{<<"authed">> := false}}) ->
+    {redirect, "/login"}.
+
+%% @doc
 %% 获取角色权限数据
 %% @end
 loadpermission(#{auth_data := #{<<"authed">> := true,
@@ -72,9 +98,8 @@ loadpermission(#{auth_data := #{<<"authed">> := true,
             where id = $1
               and deleted is false;",
             [RoleId]),
-        {ResBin} = hd(ResData),
-        {ok, RetuenData} = thoas:decode(ResBin),
-        {json, RetuenData}
+        RetuenJson = eadm_utils:pg_as_jsondata(ResData),
+        {json, RetuenJson}
     catch
         _:Error ->
             Alert = #{<<"Alert">> => unicode:characters_to_binary("数据查询失败! " ++ Error)},

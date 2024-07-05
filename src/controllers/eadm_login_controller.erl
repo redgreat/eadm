@@ -32,8 +32,8 @@ login(Req) ->
             Password = maps:get(<<"password">>, Params),
             case eadm_utils:validate_login(LoginName, Password) of
                 true ->
-                    UserName = get_username(LoginName),
-                    Permission = get_permission(LoginName),
+                    UserName = getusername(LoginName),
+                    Permission = getpermission(LoginName),
                     NewExp = eadm_utils:get_exp_bin(),
                     nova_session:set(Req, <<"loginname">>, LoginName),
                     nova_session:set(Req, <<"username">>, UserName),
@@ -77,25 +77,21 @@ logout(Req) ->
 %% @doc
 %% 获取用户权限
 %% @end
-get_permission(LoginName) ->
+getpermission(LoginName) ->
     {ok, _, ResData} = eadm_pgpool:equery(pool_pg,
         "select rolepermission
         from vi_userpermission
         where loginname = $1
         limit 1;", [LoginName]),
-    {ResBin} = hd(ResData),
-    {ok, RetuenData} = thoas:decode(ResBin),
-    RetuenData.
+    eadm_utils:pg_as_jsondata(ResData).
 
 %% @doc
 %% 根据登陆名获取显示
 %% @end
-get_username(LoginName) ->
+getusername(LoginName) ->
     {ok, _, ResData} = eadm_pgpool:equery(pool_pg,
         "select username
         from eadm_user
         where loginname = $1
         limit 1;", [LoginName]),
-    {ReturnData} = hd(ResData),
-    ReturnData.
-
+    eadm_utils:pg_as_jsonmap(ResData).
