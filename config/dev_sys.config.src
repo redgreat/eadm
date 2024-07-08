@@ -22,14 +22,6 @@
       ]}
     ]}
   %% Lager Bein %%%
-  , {sasl, [
-      {utc_log, true},
-      {sasl_error_logger, {file, "logs/sasl-error.log"}},
-      {errlog_type, error},
-      {error_logger_mf_dir, "logs/sasl"},      % Log dqirectory
-      {error_logger_mf_maxbytes, 104857600},   % 100 MB max file size
-      {error_logger_mf_maxfiles, 255}           % 255 files max
-  ]}
   , {lager, [
       {log_root, "logs"}
       %% What handlers to install with what arguments
