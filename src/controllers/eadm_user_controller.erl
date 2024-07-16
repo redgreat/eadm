@@ -62,8 +62,7 @@ search(#{auth_data := #{<<"authed">> := false}}) ->
 %% @doc
 %% 查询返回数据结果
 %% @end
-searchself(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
-      <<"permission">> := #{<<"usermanage">> := true}}}) ->
+searchself(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName}}) ->
     try
         {ok, _, ResData} = eadm_pgpool:equery(pool_pg,
             "select loginname, username, email
@@ -72,16 +71,13 @@ searchself(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
               and userstatus = 0
               and deleted is false
             limit 1", [LoginName]),
-        {json, hd(ResData)}
+        ResList = eadm_utils:pg_as_list(ResData),
+        {json, ResList}
     catch
         _:Error ->
             Alert = #{<<"Alert">> => unicode:characters_to_binary("数据查询失败! " ++ binary_to_list(Error))},
             {json, [Alert]}
     end;
-
-searchself(#{auth_data := #{<<"permission">> := #{<<"usermanage">> := false}}}) ->
-    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败! ")},
-    {json, [Alert]};
 
 searchself(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
@@ -333,12 +329,12 @@ reset(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
     % 重置密码123456
     CryptoGram = <<"4WpJ2hODluWuRFXsypv38CLIolSjGbe999q6gmCOa+0=">>,
     try
-        Result = eadm_pgpool:equery(pool_pg, "update eadm_user
-                                  set updateduser = $1,
-                                  updatedat = current_timestamp,
-                                  passwd = $2
-                                  where id = $3;",
-                                  [LoginName, CryptoGram, UserId]),
+        eadm_pgpool:equery(pool_pg, "update eadm_user
+                         set updateduser = $1,
+                         updatedat = current_timestamp,
+                         passwd = $2
+                         where id = $3;",
+                         [LoginName, CryptoGram, UserId]),
         Info = #{<<"Alert">> => unicode:characters_to_binary("用户密码重置成功! ")},
         {json, [Info]}
     catch
@@ -418,12 +414,12 @@ userrole(#{auth_data := #{<<"authed">> := true,
       <<"permission">> := #{<<"usermanage">> := true}},
       bindings := #{<<"userId">> := UserId}}) ->
     try
-        {ok, Res_Col, Res_Data} = eadm_pgpool:equery(pool_pg,
+        {ok, ResCol, ResData} = eadm_pgpool:equery(pool_pg,
             "select id, rolename, updatedat
             from vi_userrole
             where userid = $1;",
             [UserId]),
-        Response = eadm_utils:pg_as_json(Res_Col, Res_Data),
+        Response = eadm_utils:pg_as_json(ResCol, ResData),
         {json, Response}
     catch
         _:Error ->

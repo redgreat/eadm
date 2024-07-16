@@ -51,7 +51,7 @@ AMapLoader.load({
         };
         $.ajaxSetup({async:false});
         $.getJSON('/data/location', searchParams, function (mapsData) {
-            console.log("mapsData: ", JSON.stringify(mapsData));
+            // console.log("mapsData: ", JSON.stringify(mapsData));
             if (mapsData && mapsData.length > 0 && mapsData[0].Alert) {
                 const toastElList = [].slice.call(document.querySelectorAll('.toast'));
                 const toastList = toastElList.map(function (toastEl) {

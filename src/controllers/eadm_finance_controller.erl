@@ -42,72 +42,81 @@ search(#{auth_data := #{<<"authed">> := true,
       <<"permission">> := #{<<"finance">> := #{<<"finlist">> := true}}},
       parsed_qs := #{<<"sourceType">> := SourceType, <<"inorOut">> := InOrOut,
         <<"startTime">> := StartTime, <<"endTime">> := EndTime}}) ->
-    ParameterStartTime = eadm_utils:parse_date_time(StartTime),
-    ParameterEndTime = eadm_utils:parse_date_time(EndTime),
-    ParameterSourceType = binary_to_integer(SourceType),
-    MaxSearchSpan = application:get_env(restwong_cfg, max_fin_search_span, 366),
-    TimeDiff = eadm_utils:time_diff(StartTime, EndTime),
-    case TimeDiff > (MaxSearchSpan * 86400) of
-        true ->
-            Alert = #{<<"Alert">> => unicode:characters_to_binary("查询时长超过 " ++ integer_to_list(MaxSearchSpan) ++ " 天，禁止查询!")},
-            io:format("Alert: ~p~n", [Alert]),
+    case {eadm_utils:validate_date_time(StartTime), eadm_utils:validate_date_time(EndTime)} of
+        {false, _} ->
+            Alert = #{<<"Alert">> => unicode:characters_to_binary("开始时间格式错误！"), <<"data">> => []},
             {json, [Alert]};
-        _ ->
-            try
-                case {SourceType, InOrOut} of
-                    {<<"0">>, <<"0">>} ->
-                        {ok, ResCol, ResData} = eadm_pgpool:equery(pool_pg,
-                            "select id, sourcetype, inorout, tradetype, amount, tradetime
-                            from fn_paybilldetail
-                            where tradetime >= $1
-                              and tradetime < $2
-                              and deleted is false
-                            order by tradetime;",
-                            [ParameterStartTime, ParameterEndTime]),
-                        Response = eadm_utils:pg_as_json(ResCol, ResData),
-                        {json, Response};
-                    {<<"0">>, _} ->
-                        {ok, ResCol, ResData} = eadm_pgpool:equery(pool_pg,
-                            "select id, sourcetype, inorout, tradetype, amount, tradetime
-                            from fn_paybilldetail
-                            where tradetime >= $1
-                              and tradetime < $2
-                              and inorout = $3
-                              and deleted is false
-                            order by tradetime;",
-                            [ParameterStartTime, ParameterEndTime, InOrOut]),
-                        Response = eadm_utils:return_as_json(ResCol, ResData),
-                        {json, Response};
-                    {_, <<"0">>} ->
-                        {ok, ResCol, ResData} = eadm_pgpool:equery(pool_pg,
-                            "select id, sourcetype, inorout, tradetype, amount, tradetime
-                            from fn_paybilldetail
-                            where tradetime >= $1
-                              and tradetime < $2
-                              and sourcetype = $3
-                              and deleted is false
-                            order by tradetime;",
-                            [ParameterStartTime, ParameterEndTime, ParameterSourceType]),
-                        Response = eadm_utils:return_as_json(ResCol, ResData),
-                        {json, Response};
-                    {_, _} ->
-                        {ok, ResCol, ResData} = eadm_pgpool:equery(pool_pg,
-                            "select id, sourcetype, inorout, tradetype, amount, tradetime
-                            from fn_paybilldetail
-                            where tradetime >= $1
-                              and tradetime < $2
-                              and sourcetype = $3
-                              and inorout = $4
-                              and deleted is false
-                            order by tradetime;",
-                            [ParameterStartTime, ParameterEndTime, SourceType, InOrOut]),
-                        Response = eadm_utils:pg_as_json(ResCol, ResData),
-                        {json, Response}
-                end
-            catch
-                _:Error ->
-                    Alert = #{<<"Alert">> => unicode:characters_to_binary("数据查询失败! " ++ Error)},
-                    {json, [Alert]}
+        {_, false} ->
+            Alert = #{<<"Alert">> => unicode:characters_to_binary("结束时间格式错误！"), <<"data">> => []},
+            {json, [Alert]};
+        {_, _} ->
+            ParameterStartTime = eadm_utils:parse_date_time(StartTime),
+            ParameterEndTime = eadm_utils:parse_date_time(EndTime),
+            ParameterSourceType = binary_to_integer(SourceType),
+            MaxSearchSpan = application:get_env(restwong_cfg, max_fin_search_span, 366),
+            TimeDiff = eadm_utils:time_diff(StartTime, EndTime),
+            case TimeDiff > (MaxSearchSpan * 86400) of
+                true ->
+                    Alert = #{<<"Alert">> => unicode:characters_to_binary("查询时长超过 " ++ integer_to_list(MaxSearchSpan) ++ " 天，禁止查询!")},
+                    io:format("Alert: ~p~n", [Alert]),
+                    {json, [Alert]};
+                _ ->
+                    try
+                        case {SourceType, InOrOut} of
+                            {<<"0">>, <<"0">>} ->
+                                {ok, ResCol, ResData} = eadm_pgpool:equery(pool_pg,
+                                    "select id, sourcetype, inorout, tradetype, amount, tradetime
+                                    from fn_paybilldetail
+                                    where tradetime >= $1
+                                      and tradetime < $2
+                                      and deleted is false
+                                    order by tradetime;",
+                                    [ParameterStartTime, ParameterEndTime]),
+                                Response = eadm_utils:pg_as_json(ResCol, ResData),
+                                {json, Response};
+                            {<<"0">>, _} ->
+                                {ok, ResCol, ResData} = eadm_pgpool:equery(pool_pg,
+                                    "select id, sourcetype, inorout, tradetype, amount, tradetime
+                                    from fn_paybilldetail
+                                    where tradetime >= $1
+                                      and tradetime < $2
+                                      and inorout = $3
+                                      and deleted is false
+                                    order by tradetime;",
+                                    [ParameterStartTime, ParameterEndTime, InOrOut]),
+                                Response = eadm_utils:return_as_json(ResCol, ResData),
+                                {json, Response};
+                            {_, <<"0">>} ->
+                                {ok, ResCol, ResData} = eadm_pgpool:equery(pool_pg,
+                                    "select id, sourcetype, inorout, tradetype, amount, tradetime
+                                    from fn_paybilldetail
+                                    where tradetime >= $1
+                                      and tradetime < $2
+                                      and sourcetype = $3
+                                      and deleted is false
+                                    order by tradetime;",
+                                    [ParameterStartTime, ParameterEndTime, ParameterSourceType]),
+                                Response = eadm_utils:return_as_json(ResCol, ResData),
+                                {json, Response};
+                            {_, _} ->
+                                {ok, ResCol, ResData} = eadm_pgpool:equery(pool_pg,
+                                    "select id, sourcetype, inorout, tradetype, amount, tradetime
+                                    from fn_paybilldetail
+                                    where tradetime >= $1
+                                      and tradetime < $2
+                                      and sourcetype = $3
+                                      and inorout = $4
+                                      and deleted is false
+                                    order by tradetime;",
+                                    [ParameterStartTime, ParameterEndTime, SourceType, InOrOut]),
+                                Response = eadm_utils:pg_as_json(ResCol, ResData),
+                                {json, Response}
+                        end
+                    catch
+                        _:Error ->
+                            Alert = #{<<"Alert">> => unicode:characters_to_binary("数据查询失败! " ++ Error)},
+                            {json, [Alert]}
+                    end
             end
     end;
 

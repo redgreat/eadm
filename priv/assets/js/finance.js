@@ -25,6 +25,7 @@ function loadFinanceData(sourceType, inorOut, startTime, endTime) {
         startTime: startTime,
         endTime: endTime
     };
+
     let dynamicColumns = [];
     let dynamicDatas = [];
 
@@ -63,23 +64,24 @@ function loadFinanceData(sourceType, inorOut, startTime, endTime) {
         else {
             buildDynamicData(response);
         }
-
         //#TODO 调整为固定表格列，接口返回JSON数据后直接渲染
         $('#table-finance').DataTable().destroy();
         $('#table-finance').empty();
         $('#table-finance').DataTable({
             // lengthChange: true,  //是否允许用户改变表格每页显示的记录数
             // bStateSave: true,  //记录cookie
-            columnDefs: [{
-                targets: -1, // 将按钮添加到最后一列
-                render: function (data, type, full, meta) {
-                    return `
-                        <button class="btn btn-outline-danger btn-rounded delete-btn">
-                          <i class="fas fa-trash"></i>
-                        </button>
-                    `;
+            columnDefs: dynamicColumns && dynamicColumns.length ? [
+                {
+                    targets: -1,
+                    render: function (data, type, full, meta) {
+                        return `
+                    <button class="btn btn-outline-danger btn-rounded delete-btn">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                `;
+                    }
                 }
-            }],
+            ] : [],
             destroy: true, // 销毁重新渲染
             columns: dynamicColumns,
             data: dynamicDatas,

@@ -21,7 +21,7 @@
 -export([as_map/1, as_map/3, return_as_map/1, return_as_map/2, return_as_json/1, return_as_json/2,
     validate_date_time/1, time_diff/2, utc_to_cts/1, cts_to_utc/1, pass_encrypt/1, validate_login/2, verify_password/2,
     current_date_binary/0, yesterday_date_binary/0, lastyear_date_binary/0, parse_date_time/1, pg_as_map/2, pg_as_json/2,
-    convert_to_array/1, pg_as_jsonmap/1, pg_as_jsondata/1]).
+    convert_to_array/1, pg_as_jsonmap/1, pg_as_jsondata/1, pg_as_list/1]).
 
 %%====================================================================
 %% API 函数
@@ -120,6 +120,13 @@ pg_as_jsondata(ResData) ->
     {ResBin} = hd(ResData),
     {ok, RetuenData} = thoas:decode(ResBin),
     RetuenData.
+
+%% @doc
+%% epgsql返回结果转换为list格式data
+%% @end
+pg_as_list(ResData) ->
+    [ResList] = [[A, B, C] || {A, B, C} <- ResData],
+    ResList.
 
 %% @doc
 %% 校验字符串是否为时间格式
