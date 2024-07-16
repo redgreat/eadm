@@ -44,10 +44,10 @@ search(#{auth_data := #{<<"authed">> := true,
         <<"startTime">> := StartTime, <<"endTime">> := EndTime}}) ->
     case {eadm_utils:validate_date_time(StartTime), eadm_utils:validate_date_time(EndTime)} of
         {false, _} ->
-            Alert = #{<<"Alert">> => unicode:characters_to_binary("开始时间格式错误！"), <<"data">> => []},
+            Alert = #{<<"Alert">> => unicode:characters_to_binary("开始时间格式错误！")},
             {json, [Alert]};
         {_, false} ->
-            Alert = #{<<"Alert">> => unicode:characters_to_binary("结束时间格式错误！"), <<"data">> => []},
+            Alert = #{<<"Alert">> => unicode:characters_to_binary("结束时间格式错误！")},
             {json, [Alert]};
         {_, _} ->
             ParameterStartTime = eadm_utils:parse_date_time(StartTime),
@@ -58,7 +58,6 @@ search(#{auth_data := #{<<"authed">> := true,
             case TimeDiff > (MaxSearchSpan * 86400) of
                 true ->
                     Alert = #{<<"Alert">> => unicode:characters_to_binary("查询时长超过 " ++ integer_to_list(MaxSearchSpan) ++ " 天，禁止查询!")},
-                    io:format("Alert: ~p~n", [Alert]),
                     {json, [Alert]};
                 _ ->
                     try
@@ -173,7 +172,6 @@ searchdetail(#{auth_data := #{<<"authed">> := true,
                and id = $1;",
             [ParameterDetailId]),
         Response = eadm_utils:pg_as_map(ResCol, ResData),
-        io:format("Response: ~p~n", [Response]),
         {json, Response}
     catch
         _:Error ->

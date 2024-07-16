@@ -46,10 +46,10 @@ search(#{auth_data := #{<<"authed">> := true,
     parsed_qs := #{<<"dataType">> := DataType, <<"startTime">> := StartTime, <<"endTime">> := EndTime}}) ->
     case {eadm_utils:validate_date_time(StartTime), eadm_utils:validate_date_time(EndTime)} of
         {false, _} ->
-            Alert = #{<<"Alert">> => unicode:characters_to_binary("开始时间格式错误！"), <<"data">> => []},
+            Alert = #{<<"Alert">> => unicode:characters_to_binary("开始时间格式错误！")},
             {json, [Alert]};
         {_, false} ->
-            Alert = #{<<"Alert">> => unicode:characters_to_binary("结束时间格式错误！"), <<"data">> => []},
+            Alert = #{<<"Alert">> => unicode:characters_to_binary("结束时间格式错误！")},
             {json, [Alert]};
         {_, _} ->
             ParameterStartTime = eadm_utils:parse_date_time(StartTime),
