@@ -45,9 +45,8 @@ start_link() ->
 %% Child :: {Id,StartFunc,Restart,Shutdown,Type,Modules}.
 %% @end
 init([]) ->
-    Pools = application:get_env(pgpool, pools, []),
-    lager:info("所有数据库连接参数：~p~n", [application:get_all_env(pgpool)]),
-    lager:info("所有nova参数：~p~n", [application:get_all_env(nova)]),
+    Pools = application:get_env(epgsql, pools, []),
+    lager:info("所有数据库连接参数：~p~n", [application:get_all_env(epgsql)]),
     PoolSpec = lists:map(fun ({PoolName, SizeArgs, WorkerArgs}) ->
         PoolArgs = [{name, {local, PoolName}},
             {worker_module, eadm_pgpool_worker}] ++ SizeArgs,
