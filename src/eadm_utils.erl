@@ -21,7 +21,7 @@
 -export([as_map/1, as_map/3, return_as_map/1, return_as_map/2, return_as_json/1, return_as_json/2,
     validate_date_time/1, time_diff/2, utc_to_cts/1, cts_to_utc/1, pass_encrypt/1, validate_login/2, verify_password/2,
     current_date_binary/0, yesterday_date_binary/0, lastyear_date_binary/0, parse_date_time/1, pg_as_map/2, pg_as_json/2,
-    convert_to_array/1, pg_as_jsonmap/1, pg_as_jsondata/1, pg_as_list/1]).
+    convert_to_array/1, pg_as_jsonmap/1, pg_as_jsondata/1, pg_as_list/1, binary_to_float/1]).
 
 %%====================================================================
 %% API 函数
@@ -33,18 +33,18 @@
 %% @end
 to_json([Hd|Tl]) ->
     [to_json(Hd)|to_json(Tl)];
-to_json(Tuple) when is_tuple(Tuple) ->
+to_json(Tuple) when erlang:is_tuple(Tuple) ->
     to_json(erlang:tuple_to_list(Tuple));
-to_json(Map) when is_map(Map) ->
+to_json(Map) when erlang:is_map(Map) ->
     %% What should we do here? Nothing?
     maps:map(fun(_, Value) ->
         to_json(Value)
              end, Map);
-to_json(Pid) when is_pid(Pid) ->
+to_json(Pid) when erlang:is_pid(Pid) ->
     erlang:list_to_binary(erlang:pid_to_list(Pid));
-to_json(Port) when is_port(Port) ->
+to_json(Port) when erlang:is_port(Port) ->
     erlang:list_to_binary(erlang:port_to_list(Port));
-to_json(Ref) when is_reference(Ref) ->
+to_json(Ref) when erlang:is_reference(Ref) ->
     erlang:list_to_binary(erlang:ref_to_list(Ref));
 to_json(Element) ->
     Element.
@@ -98,7 +98,7 @@ return_as_json(Columns, Rows) ->
 %% @end
 pg_as_map(ResCol, ResData) ->
     ColumnNames = [Name || {column, Name, _, _, _, _, _, _, _} <- ResCol],
-    [maps:from_list(lists:zip(ColumnNames, tuple_to_list(Row))) || Row <- ResData].
+    [maps:from_list(lists:zip(ColumnNames, erlang:tuple_to_list(Row))) || Row <- ResData].
 
 %% @doc
 %% epgsql返回结果转换为erlang的带列名的json格式
@@ -110,14 +110,14 @@ pg_as_json(ResCol, ResData) ->
 %% epgsql返回结果转换为map格式data
 %% @end
 pg_as_jsonmap(ResData) ->
-    {ResBin} = hd(ResData),
+    {ResBin} = erlang:hd(ResData),
     ResBin.
 
 %% @doc
 %% epgsql返回结果转换为json格式data
 %% @end
 pg_as_jsondata(ResData) ->
-    {ResBin} = hd(ResData),
+    {ResBin} = erlang:hd(ResData),
     {ok, RetuenData} = thoas:decode(ResBin),
     RetuenData.
 
@@ -145,7 +145,7 @@ validate_date_time(DateTimeBin) ->
 time_diff(DateTimeStrA, DateTimeStrB) ->
     ASeconds = calendar:datetime_to_gregorian_seconds(parse_date_time(DateTimeStrA)),
     BSeconds = calendar:datetime_to_gregorian_seconds(parse_date_time(DateTimeStrB)),
-    DiffSeconds = abs(BSeconds - ASeconds),
+    DiffSeconds = erlang:abs(BSeconds - ASeconds),
     DiffSeconds.
 
 %% @doc
@@ -172,7 +172,7 @@ cts_to_utc(DateTimeBin) ->
 %% 查询pg经纬度，转换为列表
 %% @end
 convert_to_array(Coords) ->
-    Response = [[binary_to_float(Lat), binary_to_float(Lng)] || {Lat, Lng} <- Coords],
+    Response = [[erlang:binary_to_float(Lat), erlang:binary_to_float(Lng)] || {Lat, Lng} <- Coords],
     Response.
 
 %%====================================================================
@@ -184,7 +184,8 @@ convert_to_array(Coords) ->
 %% Time convertor, erl to ISO8601.
 %% @end
 transform_value(_, {{Year, Month, Day}, {Hour, Minute, Second}}) when
-    is_integer(Year), is_integer(Month), is_integer(Day), is_integer(Hour), is_integer(Minute), is_integer(Second)
+    erlang:is_integer(Year), erlang:is_integer(Month), erlang:is_integer(Day),
+      erlang:is_integer(Hour), erlang:is_integer(Minute), erlang:is_integer(Second)
     ->
     TimeStr =
         % 带时区格式 2024-02-13T13:32:12Z

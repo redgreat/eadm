@@ -1,5 +1,5 @@
--sname 'eadm'
--setcookie 'eadm_cookie'
+-sname eadm@localhost
+-setcookie eadm_cookie
 -smp auto
 -megabytes 64
 -env ERL_MAX_PORTS 64
