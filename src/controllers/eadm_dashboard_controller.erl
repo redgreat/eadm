@@ -39,6 +39,7 @@ search(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName}}) ->
         from eadm_dashboard
         where loginname = $1
           and datatype in (1, 2, 3, 4)
+          and datavalue is not null
         order by datetype, datatype;",[LoginName]),
     {ok, _, ResLocation} = eadm_pgpool:equery(pool_pg,
         "select cast(right(checkdate, 2) as int) as month, datavalue

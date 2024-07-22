@@ -2,6 +2,7 @@ version: '3.8'
 services:
     postgres:
         image: 'redgreat/postgres:latest'
+        container_name: postgres
         hostname: postgres
         restart: unless-stopped
         environment:
@@ -19,9 +20,9 @@ services:
       ports:
         - '8080:8090'
       volumes:
-        - ./config/prod_db.config:/opt/eadm/releases/0.1.13/prod_db.config
-        - ./config/prod_sys.config.src:/opt/eadm/releases/0.1.13/sys.config.src
-        - ./config/vm.args.src:/opt/eadm/releases/0.1.13/vm.args.src
+        - ./config/prod_db.config:/opt/eadm/releases/0.1.14/prod_db.config
+        - ./config/sys.config.src:/opt/eadm/releases/0.1.14/sys.config.src
+        - ./config/vm.args.src:/opt/eadm/releases/0.1.14/vm.args.src
         - ./log/:/var/log/eadm/
       environment:
         DISABLE_IPV6: 'true'
