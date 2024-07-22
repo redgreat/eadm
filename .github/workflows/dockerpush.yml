@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Free disk space
         run: |
@@ -51,7 +51,7 @@ jobs:
           otp-version: ${{ env.OTP-VERSION }}
           rebar3-version: ${{ env.REBAR3-VERSION }}
 
-      - uses: actions/cache@v4.0.2
+      - uses: actions/cache@v4
         id: rebar3-cache
         with:
           path: |
@@ -185,8 +185,8 @@ jobs:
       - name: inspect
         if: ${{ steps.prep.outputs.is_release == 'yes' }}
         run: |
-          docker buildx imagetools inspect ${{ env.DOCKER_IMAGE_NAME }}:${{ steps.prep.outputs.version }}
-          docker buildx imagetools inspect ${{ env.ALIYUN_REGISTRY }}/${{ env.DOCKER_IMAGE_NAME }}:${{ steps.prep.outputs.version }}
+          docker buildx imagetools inspect ${{ env.DOCKER_IMAGE_NAME }}:${{ steps.prep.outputs.label_version }}
+          docker buildx imagetools inspect ${{ env.ALIYUN_REGISTRY }}/${{ env.DOCKER_IMAGE_NAME }}:${{ steps.prep.outputs.label_version }}
 
       - name: dockerhub description
         if: ${{ steps.prep.outputs.release_type == 'standard' }}

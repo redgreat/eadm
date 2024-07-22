@@ -1,24 +1,37 @@
 version: '3.8'
 services:
-  app:
-    image: 'redgreat/eadm:latest'
-    container_name: eadm
-    restart: unless-stopped
-    ports:
-      - '8080:8090'
-    volumes:
-      - ./config/prod_db.config:/opt/eadm/releases/0.1.11/prod_db.config
-      - ./config/prod_sys.config.src:/opt/eadm/releases/0.1.11/sys.config.src
-      - ./config/vm.args.src:/opt/eadm/releases/0.1.11/vm.args.src
-      - ./log/:/var/log/eadm/
-    environment:
-      DISABLE_IPV6: 'true'
-
-    deploy:
-      resources:
-        limits:
-          memory: 1G
-        reservations:
-          memory: 500M
-    mem_swappiness: 0
-    oom_kill_disable: true
+    postgres:
+        image: 'redgreat/postgres:latest'
+        hostname: postgres
+        restart: unless-stopped
+        environment:
+            POSTGRES_USER: user_eadm
+            POSTGRES_DB: eadm
+            POSTGRES_PASSWORD: iyS62bvt
+        volumes:
+            - pgdata:/var/lib/postgresql/data
+        ports:
+            - '5432:5432'
+    eadm:
+      image: 'redgreat/eadm:latest'
+      container_name: eadm
+      restart: unless-stopped
+      ports:
+        - '8080:8090'
+      volumes:
+        - ./config/prod_db.config:/opt/eadm/releases/0.1.12/prod_db.config
+        - ./config/prod_sys.config.src:/opt/eadm/releases/0.1.12/sys.config.src
+        - ./config/vm.args.src:/opt/eadm/releases/0.1.12/vm.args.src
+        - ./log/:/var/log/eadm/
+      environment:
+        DISABLE_IPV6: 'true'
+      depends_on:
+          - postgres
+      deploy:
+        resources:
+          limits:
+            memory: 1G
+          reservations:
+            memory: 500M
+      mem_swappiness: 0
+      oom_kill_disable: true
