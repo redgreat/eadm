@@ -1,49 +1,49 @@
+#!/bin/bash
+
+# 设置远程仓库URL
+REMOTE_REPO_URL="https://github.com/redgreat/eadm"
+
 # 获取最近的提交哈希值
-$RemoteRepoUrl = "https://github.com/redgreat/eadm"
-$LastCommitHash = git rev-parse HEAD
+LAST_COMMIT_HASH=$(git rev-parse HEAD)
 
 # 检查最近的提交中是否包含 VERSION 文件
-$IsVersionUpdated = git diff-tree --no-commit-id --name-only -r $LastCommitHash | Select-String "VERSION"
+IS_VERSION_UPDATED=$(git diff-tree --no-commit-id --name-only -r $LAST_COMMIT_HASH | grep -q "VERSION"; echo $?)
 
-if ($null -ne $IsVersionUpdated) {
-    # 获取远程仓库的VERSION文件内容
-    $remoteVersionContent = (Invoke-WebRequest -Uri "$RemoteRepoUrl/raw/main/VERSION" | Select-Object -ExpandProperty Content) -replace '\r?\n', ''
+# 如果提交中包含了 VERSION 文件
+if [[ $IS_VERSION_UPDATED -eq 0 ]]; then
+# 获取远程仓库的 VERSION 文件内容
+REMOTE_VERSION_CONTENT=$(curl -sSL "$REMOTE_REPO_URL/raw/main/VERSION")
+REMOTE_VERSION_CONTENT=${REMOTE_VERSION_CONTENT//$'\r'/$'\n'}
+REMOTE_VERSION_CONTENT=$(echo "$REMOTE_VERSION_CONTENT" | tr -d '\n')
 
-    # 获取最后一次提交的 VERSION 内容
-    $lastCommitVersionContent = git show HEAD:VERSION
+# 获取最后一次提交的 VERSION 内容
+LAST_COMMIT_VERSION_CONTENT=$(git show HEAD:VERSION)
 
-    # 判断提交的VERSION 与 远程 VERSION 是否一致
-    if ($lastCommitVersionContent -ne $remoteVersionContent) {
-        if ($lastCommitVersionContent -gt $remoteVersionContent) {
-            # 更新代码文件内版本号
-            # rebar.conf
-            $content = Get-Content rebar.conf -Raw
-            $newContent = [regex]::Replace($content, '(?<=\{release, \{eadm, ")\d+\.\d+\.\d+(?="\}\})', $lastCommitVersionContent.Trim())
-            $finalContent = [regex]::Replace($newContent, '(?<=releases/)(\d+\.\d+\.\d+)(?=/prod_db.config)', $lastCommitVersionContent.Trim())
-            $finalContent | Set-Content rebar.conf
+# 判断提交的 VERSION 与远程 VERSION 是否一致
+if [[ "$LAST_COMMIT_VERSION_CONTENT" != "$REMOTE_VERSION_CONTENT" ]]; then
+if [[ "$LAST_COMMIT_VERSION_CONTENT" > "$REMOTE_VERSION_CONTENT" ]]; then
+# 更新代码文件内版本号
+# rebar.conf
+sed -i "s/\(.*\{release, \{eadm, \"\)\([0-9]\+\.[0-9]\+\.[0-9]\+\)(\".*\}\}\)/\1$LATEST_COMMIT_VERSION_CONTENT\3/" rebar.conf
 
-            # app.src
-            $content = Get-Content src/eadm.app.src -Raw
-            $newContent = [regex]::Replace($content, '(?<=\{vsn, ")(\d+\.\d+\.\d+)(?="\},)', $lastCommitVersionContent.Trim())
-            $newContent | Set-Content src/eadm.app.src
+# app.src
+sed -i "s/\(.*\{vsn, \"\)\([0-9]\+\.[0-9]\+\.[0-9]\+\)(\".*\},\)/\1$LATEST_COMMIT_VERSION_CONTENT\3/" src/eadm.app.src
 
-            # docker-compose.yml
-            $content = Get-Content docker-compose.yml -Raw
-            $newContent = [regex]::Replace($content, '(?<=releases/)(\d+\.\d+\.\d+)(?=/)', $lastCommitVersionContent.Trim())
-            $newContent | Set-Content docker-compose.yml
+# docker-compose.yml
+sed -i "s/\(.*releases\/\)\([0-9]\+\.[0-9]\+\.[0-9]\+\)(\/.*\)/\1$LATEST_COMMIT_VERSION_CONTENT\3/" docker-compose.yml
 
-            # 添加标签
-            $newVersionTag = "v" + $lastCommitVersionContent.Trim()
-            git -c credential.helper= -c core.quotepath=false -c log.showSignature=false tag $newVersionTag $LastCommitHash
+# 添加标签
+NEW_VERSION_TAG="v$LATEST_COMMIT_VERSION_CONTENT"
+git tag $NEW_VERSION_TAG $LAST_COMMIT_HASH
 
-            # Push 代码
-            # git push origin $newVersionTag
-        } else {
-            Write-Host "本地版本号小于远程版本号，无法进行版本更新..."
-        }
-    } else {
-        Write-Host "本地版本号与远程版本一致，版本未更新..."
-    }
-} else {
-    Write-Host "未提交版本更新..."
-}
+# Push 代码
+# git push origin $NEW_VERSION_TAG
+else
+echo "本地版本号小于远程版本号，无法进行版本更新..."
+fi
+else
+echo "本地版本号与远程版本一致，版本未更新..."
+fi
+else
+echo "未提交版本更新..."
+fi
