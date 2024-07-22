@@ -7,7 +7,7 @@ $IsVersionUpdated = git diff-tree --no-commit-id --name-only -r $LastCommitHash 
 
 if ($null -ne $IsVersionUpdated) {
     # 获取远程仓库的VERSION文件内容
-    $remoteVersionContent = (Invoke-WebRequest -Uri "$remoteRepoUrl/raw/main/VERSION" | Select-Object -ExpandProperty Content) -replace '\r?\n', ''
+    $remoteVersionContent = (Invoke-WebRequest -Uri "$RemoteRepoUrl/raw/main/VERSION" | Select-Object -ExpandProperty Content) -replace '\r?\n', ''
 
     # 获取最后一次提交的 VERSION 内容
     $lastCommitVersionContent = git show HEAD:VERSION
@@ -18,28 +18,27 @@ if ($null -ne $IsVersionUpdated) {
             # 更新代码文件内版本号
             # rebar.conf
             $content = Get-Content rebar.conf -Raw
-            $newContent = [regex]::Replace($content, '(?<=\{release, \{eadm, ")\d+\.\d+\.\d+(?="\}\})', $lastCommitVersionContent)
-            $finalContent = [regex]::Replace($newContent, '(?<=releases/)(\d+\.\d+\.\d+)(?=/prod_db.config)', $lastCommitVersionContent)
+            $newContent = [regex]::Replace($content, '(?<=\{release, \{eadm, ")\d+\.\d+\.\d+(?="\}\})', $lastCommitVersionContent.Trim())
+            $finalContent = [regex]::Replace($newContent, '(?<=releases/)(\d+\.\d+\.\d+)(?=/prod_db.config)', $lastCommitVersionContent.Trim())
             $finalContent | Set-Content rebar.conf
 
             # app.src
             $content = Get-Content src/eadm.app.src -Raw
-            $newContent = [regex]::Replace($content, '(?<=\{vsn, ")(\d+\.\d+\.\d+)(?="\},)', $lastCommitVersionContent)
+            $newContent = [regex]::Replace($content, '(?<=\{vsn, ")(\d+\.\d+\.\d+)(?="\},)', $lastCommitVersionContent.Trim())
             $newContent | Set-Content src/eadm.app.src
 
             # docker-compose.yml
             $content = Get-Content docker-compose.yml -Raw
-            $newContent = [regex]::Replace($content, '(?<=releases/)(\d+\.\d+\.\d+)(?=/)', $lastCommitVersionContent)
+            $newContent = [regex]::Replace($content, '(?<=releases/)(\d+\.\d+\.\d+)(?=/)', $lastCommitVersionContent.Trim())
             $newContent | Set-Content docker-compose.yml
 
             # 添加标签
-            $newVersionTag = "v" + $lastCommitVersionContent
+            $newVersionTag = "v" + $lastCommitVersionContent.Trim()
             git -c credential.helper= -c core.quotepath=false -c log.showSignature=false tag $newVersionTag $LastCommitHash
 
             # Push 代码
-            git push origin $newVersionTag
-        }
-        else {
+            # git push origin $newVersionTag
+        } else {
             Write-Host "本地版本号小于远程版本号，无法进行版本更新..."
         }
     } else {
