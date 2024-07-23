@@ -32,7 +32,6 @@ index(#{auth_data := #{<<"authed">> := true, <<"username">> := Username}}) ->
     SysInfo = observer_backend:sys_info(),
     Uptime = observer_lib:to_str({time_ms, proplists:get_value(uptime, SysInfo)}),
     {ok, [{sys_info, SysInfo}, {uptime, Uptime}, {username, Username}]};
-
 index(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 
@@ -97,8 +96,8 @@ flatten_routes([#node{segment = Segment, value = Values, children = Children, is
 %% @end
 %%--------------------------------------------------------------------
 to_string('_') -> <<"/">>;
-to_string(S) when is_list(S) -> S;
-to_string(I) when is_integer(I) ->
+to_string(S) when erlang:is_list(S) -> S;
+to_string(I) when erlang:is_integer(I) ->
     SCode = erlang:integer_to_binary(I),
     << <<"StatusCode: ">>/binary,
        SCode/binary >>;

@@ -46,6 +46,7 @@ start_link() ->
 %% @end
 init([]) ->
     Pools = application:get_env(epgsql, pools, []),
+    %% lager:info("数据库连接参数：~p~n", [Pools]),
     PoolSpec = lists:map(fun ({PoolName, SizeArgs, WorkerArgs}) ->
         PoolArgs = [{name, {local, PoolName}},
             {worker_module, eadm_pgpool_worker}] ++ SizeArgs,
