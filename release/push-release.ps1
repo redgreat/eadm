@@ -17,20 +17,20 @@ if ($null -ne $IsVersionUpdated) {
         if ($lastCommitVersionContent -gt $remoteVersionContent) {
             # 更新代码文件内版本号
             # rebar.conf
-            $content = Get-Content rebar.conf -Raw
+            $content = Get-Content ../rebar.conf -Raw
             $newContent = [regex]::Replace($content, '(?<=\{release, \{eadm, ")\d+\.\d+\.\d+(?="\}\})', $lastCommitVersionContent.Trim())
             $finalContent = [regex]::Replace($newContent, '(?<=releases/)(\d+\.\d+\.\d+)(?=/prod_db.config)', $lastCommitVersionContent.Trim())
-            $finalContent | Set-Content rebar.conf
+            $finalContent | Set-Content ../rebar.conf
 
             # app.src
-            $content = Get-Content src/eadm.app.src -Raw
+            $content = Get-Content ..\src\eadm.app.src -Raw
             $newContent = [regex]::Replace($content, '(?<=\{vsn, ")(\d+\.\d+\.\d+)(?="\},)', $lastCommitVersionContent.Trim())
-            $newContent | Set-Content src/eadm.app.src
+            $newContent | Set-Content ../src/eadm.app.src
 
             # docker-compose.yml
-            $content = Get-Content docker-compose.yml -Raw
+            $content = Get-Content ../docker-compose.yml -Raw
             $newContent = [regex]::Replace($content, '(?<=releases/)(\d+\.\d+\.\d+)(?=/)', $lastCommitVersionContent.Trim())
-            $newContent | Set-Content docker-compose.yml
+            $newContent | Set-Content ../docker-compose.yml
 
             # 添加标签
             $newVersionTag = "v" + $lastCommitVersionContent.Trim()
