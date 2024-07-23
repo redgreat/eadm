@@ -27,6 +27,5 @@
 %    {ok, [{username, UserName}]};
 index(Req) ->
     lager:info("请求内容: ~p~n", [Req]),
-    io:format("请求内容: ~p~n", [Req]),
-    [].
+    io:format("请求内容: ~p~n", [Req]).
 
