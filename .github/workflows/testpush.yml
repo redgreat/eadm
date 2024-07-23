@@ -1,0 +1,156 @@
+name: dockerpush
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  push:
+    tags:
+      - 't*'
+
+env:
+  OTP-VERSION: 26.2.4
+  REBAR3-VERSION: 3.23.0
+  DOCKER_IMAGE_NAME: redgreat/eadm
+  ALIYUN_REGISTRY: registry.cn-hangzhou.aliyuncs.com
+  PLATFORMS: linux/amd64,linux/386,linux/arm/v7,linux/arm64/v8,linux/ppc64le,linux/mips64le,linux/s390x
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Free disk space
+        run: |
+          # Free disk space.
+          echo "::group::Before"
+          df -h /
+          echo "::endgroup::"
+          echo "::group::Removing unneeded softwares and files..."
+          for DIR in /usr/local/lib/android /usr/share/dotnet /opt/ghc
+          do
+            if [ -d "$DIR" ]; then
+                echo "Removing $DIR..."
+                sudo rm -r "$DIR"
+            fi
+          done
+          echo "::endgroup::"
+          echo "::group::After"
+          df -h /
+          echo "::endgroup::"
+
+      - uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - uses: erlef/setup-beam@v1
+        with:
+          otp-version: ${{ env.OTP-VERSION }}
+          rebar3-version: ${{ env.REBAR3-VERSION }}
+
+      - uses: actions/cache@v4
+        id: rebar3-cache
+        with:
+          path: |
+            ~/.cache/rebar3
+            _build
+          key: ${{ runner.os }}-${{ env.OTP-VERSION }}-${{ env.REBAR3-VERSION }}-${{ hashFiles('rebar.lock') }}
+
+      - name: prepare
+        id: prep
+        run: |
+          # Determine the Docker container version.
+          VERSION=unknown
+          if [[ $GITHUB_REF =~ refs/tags/* ]]; then
+            # Git tag pushed: use tag as the version.
+            VERSION=${GITHUB_REF#refs/tags/}
+          elif [[ $GITHUB_REF =~ refs/heads/* ]]; then
+            # Git commit pushed: use the commit SHA as the version.
+            VERSION=${GITHUB_SHA::8}
+          elif [[ $GITHUB_REF =~ refs/pull/* ]]; then
+            # Pull request: use PR number as the version.
+            VERSION=pr-${{ github.event.number }}
+          else
+            echo "::error::Unexpected GITHUB_REF: $GITHUB_REF"
+            exit 1
+          fi
+          # Determine the version to put in container label.
+          LABEL_VERSION=${VERSION}
+          if [[ $GITHUB_REF =~ refs/tags/* ]]; then
+            # Do not include the starting 't' of the version.
+            LABEL_VERSION=${VERSION:1}
+          fi
+          # Determine the Docker container tags.
+          TAGS="${{ env.ALIYUN_REGISTRY}}/${{ env.DOCKER_IMAGE_NAME}}:${LABEL_VERSION}"
+          # Determine the release type.
+          if [[ $GITHUB_REF =~ refs/tags/* ]]; then
+              IS_RELEASE=yes
+              if [[ $GITHUB_REF =~ -pre\.[0-9]+ ]]; then
+                  RELEASE_TYPE="pre"
+              else
+                  RELEASE_TYPE="standard"
+              fi
+          else
+              IS_RELEASE=no
+              RELEASE_TYPE="n/a"
+          fi
+          # Print results.
+          echo "::group::Results"
+          echo "Github reference: $GITHUB_REF"
+          echo "Release: $IS_RELEASE"
+          echo "Release type: $RELEASE_TYPE"
+          echo "Docker container version: $VERSION"
+          echo "Docker container version label: $LABEL_VERSION"
+          echo "Docker container tag(s): $TAGS"
+          echo "::endgroup::"
+          # Export outputs.
+          echo "is_release=${IS_RELEASE}" >> $GITHUB_OUTPUT
+          echo "release_type=${RELEASE_TYPE}" >> $GITHUB_OUTPUT
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "label_version=${LABEL_VERSION}" >> $GITHUB_OUTPUT
+          echo "tags=${TAGS}" >> $GITHUB_OUTPUT
+          echo "build_date=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_OUTPUT
+
+      - name: compile
+        run: |
+          rebar3 clean
+          rebar3 as prod release
+          tar -czvf eadm-${{ steps.prep.outputs.label_version }}.tar.gz _build/prod/rel/eadm
+
+      - name: setup QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm,arm64,ppc64le,mips64,s390x
+
+      - name: docker build load
+        id: buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: aliyun registry login
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.ALIYUN_REGISTRY }}
+          username: ${{ secrets.ALIYUN_REGISTRY_USER }}
+          password: ${{ secrets.ALIYUN_REGISTRY_PASSWORD }}
+
+      - name: docker image build & push
+        id: docker_build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: ${{ steps.prep.outputs.is_release == 'yes' }}
+          provenance: false
+          platforms: ${{ env.PLATFORMS }}
+          tags: ${{ steps.prep.outputs.tags }}
+          build-args: |
+              DOCKER_IMAGE_VERSION=${{ steps.prep.outputs.label_version }}
+          cache-from: type=gha,scope=${{ env.DOCKER_IMAGE_NAME }}
+          cache-to: type=gha,mode=max,scope=${{ env.DOCKER_IMAGE_NAME }}
+
+      - name: inspect
+        if: ${{ steps.prep.outputs.is_release == 'yes' }}
+        run: |
+          docker buildx imagetools inspect ${{ env.ALIYUN_REGISTRY }}/${{ env.DOCKER_IMAGE_NAME }}:${{ steps.prep.outputs.label_version }}
