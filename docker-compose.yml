@@ -20,9 +20,9 @@ services:
       ports:
         - '8080:8090'
       volumes:
-        - ./config/prod_db.config:/opt/eadm/releases/0.1.15/prod_db.config
-        - ./config/sys.config.src:/opt/eadm/releases/0.1.15/sys.config.src
-        - ./config/vm.args.src:/opt/eadm/releases/0.1.15/vm.args.src
+        - ./config/prod_db.config:/opt/eadm/releases/0.1.16/prod_db.config
+        - ./config/sys.config.src:/opt/eadm/releases/0.1.16/sys.config.src
+        - ./config/vm.args.src:/opt/eadm/releases/0.1.16/vm.args.src
         - ./log/:/var/log/eadm/
       environment:
         DISABLE_IPV6: 'true'
