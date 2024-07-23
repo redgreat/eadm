@@ -22,11 +22,11 @@
 %% @doc
 %% 主函数
 %% @end
-index(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName,
-      <<"permission">> := #{<<"api">> := #{<<"watch">> := true}}}}) ->
+% index(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName,
+%       <<"permission">> := #{<<"api">> := #{<<"watch">> := true}}}}) ->
+%    {ok, [{username, UserName}]};
+index(Req) ->
+    lager:info("请求内容: ~p~n", [Req]),
+    io:format("请求内容: ~p~n", [Req]),
+    [].
 
-    {ok, [{username, UserName}]};
-
-index(#{auth_data := #{<<"permission">> := #{<<"api">> := #{<<"watch">> := false}}}}) ->
-    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败! ")},
-    {json, [Alert]}.

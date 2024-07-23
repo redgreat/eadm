@@ -112,9 +112,9 @@ routes(_Environment) ->
           {"/tables", fun eadm_sys_tv_controller:index/1, #{methods => [get]}}
         ]
       },
-      #{prefix => "api",
+      #{prefix => "watch",
       security => false,
       routes => [
-          {"/watch", fun api_watch:index/1, #{methods => [post]}}
+          {"/receive", fun api_watch:index/1, #{methods => [post]}}
         ]
       }].
