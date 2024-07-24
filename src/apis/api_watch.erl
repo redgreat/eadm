@@ -22,12 +22,16 @@
 %% @doc
 %% 主函数
 %% @end
-% index(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName,
-%       <<"permission">> := #{<<"api">> := #{<<"watch">> := true}}}}) ->
-%    {ok, [{username, UserName}]};
 index(#{params := Params}) ->
-    lager:info("请求内容: ~p~n", [Params]),
     MsgType = maps:get(<<"type">>, Params),
+    % BinaryOptions = [<<"3">>, <<"4">>, <<"5">>, <<"6">>, <<"8">>, <<"11">>, <<"12">>, <<"14">>, <<"16">>, <<"30">>, <<"31">>,
+    %     <<"58">>, <<"59">>, <<"18">>, <<"19">>, <<"20">>, <<"21">>, <<"24">>, <<"25">>, <<"36">>, <<"38">>, <<"39">>,
+    %     <<"57">>, <<"91">>, <<"110">>, <<"154">>, <<"155">>, <<"156">>],
+    % IsInOptions = lists:any(fun(BinaryOption) -> MsgType =:= BinaryOption end, BinaryOptions),
+    % case IsInOptions of
+    %     false ->
+    %         lager:info("请求内容: ~p~n", [Params]),
+    % end,
     case MsgType of
         %% 数据
         <<"3">> ->
@@ -312,6 +316,16 @@ index(#{params := Params}) ->
             catch
                 _:_ -> {error}
             end;
+        <<"110">> ->
+            try
+                MsgContent = <<"手表跌落！">>,
+                BTUtcTime = maps:get(<<"BTUtcTime">>, Params),
+                eadm_pgpool:equery(pool_pg, "insert into lc_watchalarm(alarmtime, alarmtype, aarminfo)
+                  values('$1, $2, $3);", [BTUtcTime, 110, MsgContent]),
+                eadm_wechat:send_msg(MsgContent)
+            catch
+                _:_ -> {error}
+            end;
         <<"154">> ->
             try
                 MsgContent = <<"充电关机！">>,
@@ -341,7 +355,9 @@ index(#{params := Params}) ->
                 eadm_wechat:send_msg(MsgContent)
             catch
                 _:_ -> {error}
-            end
+            end;
+        _ ->
+            lager:info("编码未定义: ~p~n", [Params])
     end,
     {ok, success}.
 
