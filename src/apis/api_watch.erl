@@ -38,7 +38,10 @@ index(#{params := Params}) ->
                   values($1, $2, $3, $4);", [BTUtcTime, Lac, Cid, Db]),
                 #{<<"success">> => true}
             catch
-                _:_ -> #{<<"success">> => false}
+                oops         -> lager:error("got_throw_oops！~n");
+                throw:Other  -> lager:error("got_throw: ~p~n", [Other]);
+                exit:Reason  -> lager:error("got_exit: ~p~n", [Reason]);
+                error:Reason -> lager:error("got_error: ~p~n", [Reason])
             end;
         <<"4">> ->
             % 每日累计步数
@@ -49,7 +52,10 @@ index(#{params := Params}) ->
                   values($1, $2);", [BTUtcTime, Steps]),
                 #{<<"success">> => true}
             catch
-                _:_ -> #{<<"success">> => false}
+                oops         -> lager:error("got_throw_oops！~n");
+                throw:Other  -> lager:error("got_throw: ~p~n", [Other]);
+                exit:Reason  -> lager:error("got_exit: ~p~n", [Reason]);
+                error:Reason -> lager:error("got_error: ~p~n", [Reason])
             end;
         <<"5">> ->
             % WIFI 定位
@@ -61,18 +67,26 @@ index(#{params := Params}) ->
                   values($1, $2, $3);", [TimeStr, Latitude, Longitude]),
                 #{<<"success">> => true}
             catch
-                _:_ -> #{<<"success">> => false, <<"status">> => 200}
+                oops         -> lager:error("got_throw_oops！~n");
+                throw:Other  -> lager:error("got_throw: ~p~n", [Other]);
+                exit:Reason  -> lager:error("got_exit: ~p~n", [Reason]);
+                error:Reason -> lager:error("got_error: ~p~n", [Reason])
             end;
         <<"6">> ->
             % 心率数据
             try
                 Heartbeat = maps:get(<<"heartbeat">>, Params, null),
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
-                eadm_pgpool:equery(pool_pg, "replace into lc_watchhb(ptime, heartbeat)
+                lager:info("心率入参： Heartbeat: ~p,BTUtcTime: ~p~n", [Heartbeat, BTUtcTime]),
+                ResData = eadm_pgpool:equery(pool_pg, "replace into lc_watchhb(ptime, heartbeat)
                   values($1, $2);", [BTUtcTime, Heartbeat]),
+                lager:info("心率写入结果: ~p~n", [ResData]),
                 #{<<"success">> => true}
             catch
-                _:_ -> #{<<"success">> => false}
+                oops         -> lager:error("got_throw_oops！~n");
+                throw:Other  -> lager:error("got_throw: ~p~n", [Other]);
+                exit:Reason  -> lager:error("got_exit: ~p~n", [Reason]);
+                error:Reason -> lager:error("got_error: ~p~n", [Reason])
             end;
         <<"8">> ->
             % 血压
@@ -80,11 +94,16 @@ index(#{params := Params}) ->
                 Diastolic = maps:get(<<"diastolic">>, Params, null),
                 Shrink = maps:get(<<"shrink">>, Params, null),
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
-                eadm_pgpool:equery(pool_pg, "replace into lc_watchbp(ptime, diastolic, shrink)
+                lager:info("血压入参： Diastolic: ~p,Shrink: ~p,BTUtcTime: ~p~n", [Diastolic, Shrink, BTUtcTime]),
+                ResData = eadm_pgpool:equery(pool_pg, "replace into lc_watchbp(ptime, diastolic, shrink)
                   values($1, $2, $3);", [BTUtcTime, Diastolic, Shrink]),
+                lager:info("血压写入结果: ~p~n", [ResData]),
                 #{<<"success">> => true}
             catch
-                _:_ -> #{<<"success">> => false}
+                oops         -> lager:error("got_throw_oops！~n");
+                throw:Other  -> lager:error("got_throw: ~p~n", [Other]);
+                exit:Reason  -> lager:error("got_exit: ~p~n", [Reason]);
+                error:Reason -> lager:error("got_error: ~p~n", [Reason])
             end;
         <<"10">> ->
             % 血糖
@@ -95,7 +114,10 @@ index(#{params := Params}) ->
                   values($1, $2);", [BTUtcTime, BloodSugar]),
                 #{<<"success">> => true}
             catch
-                _:_ -> #{<<"success">> => false}
+                oops         -> lager:error("got_throw_oops！~n");
+                throw:Other  -> lager:error("got_throw: ~p~n", [Other]);
+                exit:Reason  -> lager:error("got_exit: ~p~n", [Reason]);
+                error:Reason -> lager:error("got_error: ~p~n", [Reason])
             end;
         <<"11">> ->
             % 翻转数据
@@ -106,7 +128,10 @@ index(#{params := Params}) ->
                   values($1, $2);", [BTUtcTime, Roll]),
                 #{<<"success">> => true}
             catch
-                _:_ -> #{<<"success">> => false}
+                oops         -> lager:error("got_throw_oops！~n");
+                throw:Other  -> lager:error("got_throw: ~p~n", [Other]);
+                exit:Reason  -> lager:error("got_exit: ~p~n", [Reason]);
+                error:Reason -> lager:error("got_error: ~p~n", [Reason])
             end;
         <<"12">> ->
             % 体温数据
@@ -117,7 +142,10 @@ index(#{params := Params}) ->
                   values($1, $2);", [BTUtcTime, BodyTemperature]),
                 #{<<"success">> => true}
             catch
-                _:_ -> #{<<"success">> => false}
+                oops         -> lager:error("got_throw_oops！~n");
+                throw:Other  -> lager:error("got_throw: ~p~n", [Other]);
+                exit:Reason  -> lager:error("got_exit: ~p~n", [Reason]);
+                error:Reason -> lager:error("got_error: ~p~n", [Reason])
             end;
         <<"14">> ->
             % 体温数据
@@ -129,7 +157,10 @@ index(#{params := Params}) ->
                   values($1, $2, $3);", [BTUtcTime, BodyTemperature, WristTemperature]),
                 #{<<"success">> => true}
             catch
-                _:_ -> #{<<"success">> => false}
+                oops         -> lager:error("got_throw_oops！~n");
+                throw:Other  -> lager:error("got_throw: ~p~n", [Other]);
+                exit:Reason  -> lager:error("got_exit: ~p~n", [Reason]);
+                error:Reason -> lager:error("got_error: ~p~n", [Reason])
             end;
         <<"16">> ->
             % 定位数据
@@ -142,7 +173,10 @@ index(#{params := Params}) ->
                   values($1, $2, $3, $4);", [BTUtcTime, LatStr, LngStr, SpeedStr]),
                 #{<<"success">> => true}
             catch
-                _:_ -> #{<<"success">> => false}
+                oops         -> lager:error("got_throw_oops！~n");
+                throw:Other  -> lager:error("got_throw: ~p~n", [Other]);
+                exit:Reason  -> lager:error("got_exit: ~p~n", [Reason]);
+                error:Reason -> lager:error("got_error: ~p~n", [Reason])
             end;
         <<"30">> ->
             % 信号/电量 (手表信号未传，只有一个电量字段)
@@ -157,7 +191,10 @@ index(#{params := Params}) ->
                   values($1, $2);", [BTUtcTime, Steps]),
                 #{<<"success">> => true}
             catch
-                _:_ -> #{<<"success">> => false}
+                oops         -> lager:error("got_throw_oops！~n");
+                throw:Other  -> lager:error("got_throw: ~p~n", [Other]);
+                exit:Reason  -> lager:error("got_exit: ~p~n", [Reason]);
+                error:Reason -> lager:error("got_error: ~p~n", [Reason])
             end;
         <<"31">> ->
             % 血氧
@@ -168,7 +205,10 @@ index(#{params := Params}) ->
                   values($1, $2);", [BTUtcTime, BloodOxygen]),
                 #{<<"success">> => true}
             catch
-                _:_ -> #{<<"success">> => false}
+                oops         -> lager:error("got_throw_oops！~n");
+                throw:Other  -> lager:error("got_throw: ~p~n", [Other]);
+                exit:Reason  -> lager:error("got_exit: ~p~n", [Reason]);
+                error:Reason -> lager:error("got_error: ~p~n", [Reason])
             end;
         <<"58">> ->
             % 睡眠
@@ -182,7 +222,10 @@ index(#{params := Params}) ->
                   values($1, $2, $3, $4, $5);", [BTUtcTime, SleepType, Minute, StartTime, EndTime]),
                 #{<<"success">> => true}
             catch
-                _:_ -> #{<<"success">> => false}
+                oops         -> lager:error("got_throw_oops！~n");
+                throw:Other  -> lager:error("got_throw: ~p~n", [Other]);
+                exit:Reason  -> lager:error("got_exit: ~p~n", [Reason]);
+                error:Reason -> lager:error("got_error: ~p~n", [Reason])
             end;
         <<"59">> ->
             % 蓝牙信息
@@ -193,7 +236,10 @@ index(#{params := Params}) ->
                   values($1, $2);", [BTUtcTime, BTInfo]),
                 #{<<"success">> => true}
             catch
-                _:_ -> #{<<"success">> => false}
+                oops         -> lager:error("got_throw_oops！~n");
+                throw:Other  -> lager:error("got_throw: ~p~n", [Other]);
+                exit:Reason  -> lager:error("got_exit: ~p~n", [Reason]);
+                error:Reason -> lager:error("got_error: ~p~n", [Reason])
             end;
         %% 提醒
         <<"18">> ->
@@ -205,7 +251,10 @@ index(#{params := Params}) ->
                 eadm_wechat:send_msg(MsgContent),
                 #{<<"success">> => true}
             catch
-                _:_ -> #{<<"success">> => false}
+                oops         -> lager:error("got_throw_oops！~n");
+                throw:Other  -> lager:error("got_throw: ~p~n", [Other]);
+                exit:Reason  -> lager:error("got_exit: ~p~n", [Reason]);
+                error:Reason -> lager:error("got_error: ~p~n", [Reason])
             end;
         <<"19">> ->
             try
@@ -216,7 +265,10 @@ index(#{params := Params}) ->
                 eadm_wechat:send_msg(MsgContent),
                 #{<<"success">> => true}
             catch
-                _:_ -> #{<<"success">> => false}
+                oops         -> lager:error("got_throw_oops！~n");
+                throw:Other  -> lager:error("got_throw: ~p~n", [Other]);
+                exit:Reason  -> lager:error("got_exit: ~p~n", [Reason]);
+                error:Reason -> lager:error("got_error: ~p~n", [Reason])
             end;
         <<"20">> ->
             try
@@ -227,7 +279,10 @@ index(#{params := Params}) ->
                 eadm_wechat:send_msg(MsgContent),
                 #{<<"success">> => true}
             catch
-                _:_ -> #{<<"success">> => false}
+                oops         -> lager:error("got_throw_oops！~n");
+                throw:Other  -> lager:error("got_throw: ~p~n", [Other]);
+                exit:Reason  -> lager:error("got_exit: ~p~n", [Reason]);
+                error:Reason -> lager:error("got_error: ~p~n", [Reason])
             end;
         <<"21">> ->
             try
@@ -238,7 +293,10 @@ index(#{params := Params}) ->
                 eadm_wechat:send_msg(MsgContent),
                 #{<<"success">> => true}
             catch
-                _:_ -> #{<<"success">> => false}
+                oops         -> lager:error("got_throw_oops！~n");
+                throw:Other  -> lager:error("got_throw: ~p~n", [Other]);
+                exit:Reason  -> lager:error("got_exit: ~p~n", [Reason]);
+                error:Reason -> lager:error("got_error: ~p~n", [Reason])
             end;
         <<"24">> ->
             try
@@ -249,7 +307,10 @@ index(#{params := Params}) ->
                 eadm_wechat:send_msg(MsgContent),
                 #{<<"success">> => true}
             catch
-                _:_ -> #{<<"success">> => false}
+                oops         -> lager:error("got_throw_oops！~n");
+                throw:Other  -> lager:error("got_throw: ~p~n", [Other]);
+                exit:Reason  -> lager:error("got_exit: ~p~n", [Reason]);
+                error:Reason -> lager:error("got_error: ~p~n", [Reason])
             end;
         <<"25">> ->
             try
@@ -260,7 +321,10 @@ index(#{params := Params}) ->
                 eadm_wechat:send_msg(MsgContent),
                 #{<<"success">> => true}
             catch
-                _:_ -> #{<<"success">> => false}
+                oops         -> lager:error("got_throw_oops！~n");
+                throw:Other  -> lager:error("got_throw: ~p~n", [Other]);
+                exit:Reason  -> lager:error("got_exit: ~p~n", [Reason]);
+                error:Reason -> lager:error("got_error: ~p~n", [Reason])
             end;
         <<"36">> ->
             try
@@ -271,7 +335,10 @@ index(#{params := Params}) ->
                 eadm_wechat:send_msg(MsgContent),
                 #{<<"success">> => true}
             catch
-                _:_ -> #{<<"success">> => false}
+                oops         -> lager:error("got_throw_oops！~n");
+                throw:Other  -> lager:error("got_throw: ~p~n", [Other]);
+                exit:Reason  -> lager:error("got_exit: ~p~n", [Reason]);
+                error:Reason -> lager:error("got_error: ~p~n", [Reason])
             end;
         <<"38">> ->
             try
@@ -282,7 +349,10 @@ index(#{params := Params}) ->
                 eadm_wechat:send_msg(MsgContent),
                 #{<<"success">> => true}
             catch
-                _:_ -> #{<<"success">> => false}
+                oops         -> lager:error("got_throw_oops！~n");
+                throw:Other  -> lager:error("got_throw: ~p~n", [Other]);
+                exit:Reason  -> lager:error("got_exit: ~p~n", [Reason]);
+                error:Reason -> lager:error("got_error: ~p~n", [Reason])
             end;
         <<"39">> ->
             try
@@ -293,7 +363,10 @@ index(#{params := Params}) ->
                 eadm_wechat:send_msg(MsgContent),
                 #{<<"success">> => true}
             catch
-                _:_ -> #{<<"success">> => false}
+                oops         -> lager:error("got_throw_oops！~n");
+                throw:Other  -> lager:error("got_throw: ~p~n", [Other]);
+                exit:Reason  -> lager:error("got_exit: ~p~n", [Reason]);
+                error:Reason -> lager:error("got_error: ~p~n", [Reason])
             end;
         <<"51">> ->
             try
@@ -304,7 +377,10 @@ index(#{params := Params}) ->
                 eadm_wechat:send_msg(MsgContent),
                 #{<<"success">> => true}
             catch
-                _:_ -> #{<<"success">> => false}
+                oops         -> lager:error("got_throw_oops！~n");
+                throw:Other  -> lager:error("got_throw: ~p~n", [Other]);
+                exit:Reason  -> lager:error("got_exit: ~p~n", [Reason]);
+                error:Reason -> lager:error("got_error: ~p~n", [Reason])
             end;
         <<"52">> ->
             try
@@ -315,7 +391,10 @@ index(#{params := Params}) ->
                 eadm_wechat:send_msg(MsgContent),
                 #{<<"success">> => true}
             catch
-                _:_ -> #{<<"success">> => false}
+                oops         -> lager:error("got_throw_oops！~n");
+                throw:Other  -> lager:error("got_throw: ~p~n", [Other]);
+                exit:Reason  -> lager:error("got_exit: ~p~n", [Reason]);
+                error:Reason -> lager:error("got_error: ~p~n", [Reason])
             end;
         <<"57">> ->
             try
@@ -326,7 +405,10 @@ index(#{params := Params}) ->
                 eadm_wechat:send_msg(MsgContent),
                 #{<<"success">> => true}
             catch
-                _:_ -> #{<<"success">> => false}
+                oops         -> lager:error("got_throw_oops！~n");
+                throw:Other  -> lager:error("got_throw: ~p~n", [Other]);
+                exit:Reason  -> lager:error("got_exit: ~p~n", [Reason]);
+                error:Reason -> lager:error("got_error: ~p~n", [Reason])
             end;
         <<"91">> ->
             try
@@ -337,7 +419,10 @@ index(#{params := Params}) ->
                 eadm_wechat:send_msg(MsgContent),
                 #{<<"success">> => true}
             catch
-                _:_ -> #{<<"success">> => false}
+                oops         -> lager:error("got_throw_oops！~n");
+                throw:Other  -> lager:error("got_throw: ~p~n", [Other]);
+                exit:Reason  -> lager:error("got_exit: ~p~n", [Reason]);
+                error:Reason -> lager:error("got_error: ~p~n", [Reason])
             end;
         <<"110">> ->
             try
@@ -348,7 +433,10 @@ index(#{params := Params}) ->
                 eadm_wechat:send_msg(MsgContent),
                 #{<<"success">> => true}
             catch
-                _:_ -> #{<<"success">> => false}
+                oops         -> lager:error("got_throw_oops！~n");
+                throw:Other  -> lager:error("got_throw: ~p~n", [Other]);
+                exit:Reason  -> lager:error("got_exit: ~p~n", [Reason]);
+                error:Reason -> lager:error("got_error: ~p~n", [Reason])
             end;
         <<"154">> ->
             try
@@ -359,7 +447,10 @@ index(#{params := Params}) ->
                 eadm_wechat:send_msg(MsgContent),
                 #{<<"success">> => true}
             catch
-                _:_ -> #{<<"success">> => false}
+                oops         -> lager:error("got_throw_oops！~n");
+                throw:Other  -> lager:error("got_throw: ~p~n", [Other]);
+                exit:Reason  -> lager:error("got_exit: ~p~n", [Reason]);
+                error:Reason -> lager:error("got_error: ~p~n", [Reason])
             end;
         <<"155">> ->
             try
@@ -370,7 +461,10 @@ index(#{params := Params}) ->
                 eadm_wechat:send_msg(MsgContent),
                 #{<<"success">> => true}
             catch
-                _:_ -> #{<<"success">> => false}
+                oops         -> lager:error("got_throw_oops！~n");
+                throw:Other  -> lager:error("got_throw: ~p~n", [Other]);
+                exit:Reason  -> lager:error("got_exit: ~p~n", [Reason]);
+                error:Reason -> lager:error("got_error: ~p~n", [Reason])
             end;
         <<"156">> ->
             try
@@ -381,7 +475,10 @@ index(#{params := Params}) ->
                 eadm_wechat:send_msg(MsgContent),
                 #{<<"success">> => true}
             catch
-                _:_ -> #{<<"success">> => false}
+                oops         -> lager:error("got_throw_oops！~n");
+                throw:Other  -> lager:error("got_throw: ~p~n", [Other]);
+                exit:Reason  -> lager:error("got_exit: ~p~n", [Reason]);
+                error:Reason -> lager:error("got_error: ~p~n", [Reason])
             end;
         _ ->
             lager:info("编码未定义: ~p~n", [Params]),
