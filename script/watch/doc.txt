@@ -1,0 +1,142 @@
+手表推送数据字段含义：
+type 描述
+字段
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+数据
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+3 基站数据
+Lac 基站lac
+cid 基站的cid
+Db 信号强度
+dataContext 设备暂时没传，所以为空
+BTUtcTime
+
+4 每日累计步数
+steps
+BTUtcTime
+
+5 WIFI定位
+Latitude
+Longitude
+timeStr
+
+6 心率数据
+heartbeat
+BTUtcTime
+
+8 血压
+Diastolic 舒张压
+Shrink  收缩压
+BTUtcTime
+
+10 血糖
+bloodSugar
+BTUtcTime
+
+11 翻转数据
+roll
+BTUtcTime
+
+12 体温
+bodyTemperature
+BTUtcTime
+
+14 双温度（腕温/体温）
+bodyTemperature
+wristTemperature
+BTUtcTime
+
+16 GPS定位
+latStr
+lngStr
+speedStr
+dataContext 设备暂时没传，所以为空
+distance 设备传的为0所以固定为0
+BTUtcTime
+
+30 电池电量
+Signal
+battery
+BTUtcTime
+
+31 血氧
+BloodOxygen
+BTUtcTime
+
+58 睡眠
+sleepType
+minute
+startTime
+endTime
+BTUtcTime
+
+59 蓝牙数据
+BTUtcTime
+BTInfo
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+消息提醒
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+18 低电量
+AlertInfo
+BTUtcTime
+
+19 SOS
+AlertInfo
+BTUtcTime
+
+20 关机
+BTUtcTime
+
+21 摘除
+AlertInfo
+BTUtcTime
+
+24 签到
+BTUtcTime
+
+25 签退
+BTUtcTime
+
+36 久坐
+BTUtcTime
+
+38 锁打开
+AlertInfo
+BTUtcTime
+
+39 表带破坏
+AlertInfo
+BTUtcTime
+
+57 佩戴
+AlertInfo
+BTUtcTime
+
+110 跌落
+BTUtcTime
+
+154 充电关机
+AlertInfo
+BTUtcTime
+
+155 低电关机
+AlertInfo
+BTUtcTime
+
+156 主动关机
+AlertInfo
+BTUtcTime
+
+%%%%特殊型号
+
+AlertInfo
+19是佩戴 65 是摘除
+140 是锁打开 141 是表带破坏
+
+AlertInfo
+51 代表休眠进入 52 休眠退出
+57 进入园区 58 出园区
+91 无信号
+No Signal（type=91才有）
+
