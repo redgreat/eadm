@@ -1,4 +1,4 @@
-name: dockerpush
+name: testpush
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
