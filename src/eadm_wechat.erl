@@ -19,7 +19,7 @@
 -define(WX_KEY, application:get_env(nova, wx_key, "ea50a2d0-2d51-4ba3-a90c-66919a51ca01")).
 -define(WX_URL, "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=" ++ ?WX_KEY).
 -define(WX_HEADERS, [{"Content-Type", "application/json"}]).
--define(WX_MENTIONS, [<<"@all">>]).
+-define(WX_MENTIONS, []).
 
 %%====================================================================
 %% API 函数
@@ -29,17 +29,17 @@
 %% @end
 send_msg(Content) ->
     try
-        Options = [{timeout, 5000}, [{body_format, binary}]],
         JsonData = thoas:encode(#{msgtype => 'text',
             text => #{content => Content, mentioned_list => ?WX_MENTIONS}}),
-        httpc:request(post, {?WX_URL, ?WX_HEADERS, "application/json", JsonData}, [], Options),
-        {ok, #{<<"success">> => true}}
+        httpc:request(post, {?WX_URL, ?WX_HEADERS, "application/json", JsonData}, [], []),
+        #{<<"success">> => true}
     catch
         Exception:Error ->
             lager:error("Message Send Failed: ~p:~p", [Exception, Error]),
-            {error, #{<<"success">> => false}}
+            #{<<"success">> => false}
     end.
 
 %%====================================================================
 %% 内部函数
 %%====================================================================
+% eadm_wechat:send_msg('test').
