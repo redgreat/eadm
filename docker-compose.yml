@@ -2,7 +2,7 @@ version: '3.8'
 services:
     postgres:
         image: 'redgreat/postgres:latest'
-        container_name: postgres
+        container_name: pg
         hostname: postgres
         restart: unless-stopped
         environment:
@@ -14,26 +14,41 @@ services:
         ports:
             - '5432:5432'
     eadm:
-      image: 'redgreat/eadm:latest'
-      container_name: eadm
-      restart: unless-stopped
-      ports:
-        - '8080:8090'
-      volumes:
-        - ./config/prod_db.config:/opt/eadm/releases/0.1.23/prod_db.config
-        - ./config/sys.config.src:/opt/eadm/releases/0.1.23/sys.config.src
-        - ./config/vm.args.src:/opt/eadm/releases/0.1.23/vm.args.src
-        - ./log/:/var/log/eadm/
-      environment:
-        DISABLE_IPV6: 'true'
-      depends_on:
-          - postgres
-      deploy:
-        resources:
-          limits:
-            memory: 1G
-          reservations:
-            memory: 500M
-      mem_swappiness: 0
-      oom_kill_disable: true
-
+        image: 'redgreat/eadm:latest'
+        container_name: eadm
+        restart: unless-stopped
+        ports:
+            - '8080:8090'
+        volumes:
+            - ./config/prod_db.config:/opt/eadm/releases/0.1.23/prod_db.config
+            - ./config/sys.config.src:/opt/eadm/releases/0.1.23/sys.config.src
+            - ./config/vm.args.src:/opt/eadm/releases/0.1.23/vm.args.src
+            - ./log/:/var/log/eadm/
+        environment:
+            DISABLE_IPV6: 'true'
+        depends_on:
+            - postgres
+        deploy:
+            resources:
+                limits:
+                    memory: 1G
+                reservations:
+                    memory: 500M
+        mem_swappiness: 0
+        oom_kill_disable: true
+    npm:
+        image: 'redgreat/nginxpm:latest'
+        container_name: npm
+        restart: unless-stopped
+        ports:
+            - '80:8080'
+            - '8181:8181'
+            - '443:4443'
+        volumes:
+            - ./npmdata:/config:rw
+        depends_on:
+            - eadm
+        environment:
+            DISABLE_IPV6: 'true'
+            TZ: 'Asia/Shanghai'
+            LANG: 'zh_CN.UTF-8'
