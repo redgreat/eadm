@@ -373,7 +373,7 @@ index(#{params := Params}) ->
             end;
         <<"156">> ->
             try
-                MsgContent = MsgContent = unicode:characters_to_binary'主动关机！"),
+                MsgContent = MsgContent = unicode:characters_to_binary("主动关机！"),
                 BTUtcTime = maps:get(<<"BTUtcTime">>, Params, null),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchalarm(alarmtime, alarmtype, aarminfo)
                   values($1, $2, $3);", [BTUtcTime, 156, MsgContent]),
@@ -386,6 +386,4 @@ index(#{params := Params}) ->
             lager:info("编码未定义: ~p~n", [Params]),
             #{<<"success">> => false}
     end,
-    {ok, success}.
-
-
+    #{<<"success">> => false}.
