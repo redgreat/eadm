@@ -26,6 +26,9 @@
 %%====================================================================
 %% @doc
 %% 消息发送
+%% 中文发送方法：
+%% Content = unicode:characters_to_binary("测试消息！").
+%% eadm_wechat:send_msg(Content).
 %% @end
 send_msg(Content) ->
     try
@@ -36,10 +39,12 @@ send_msg(Content) ->
     catch
         Exception:Error ->
             lager:error("Message Send Failed: ~p:~p", [Exception, Error]),
+
+
             #{<<"success">> => false}
     end.
 
 %%====================================================================
 %% 内部函数
 %%====================================================================
-% eadm_wechat:send_msg('test').
+
