@@ -23,7 +23,7 @@
 %% 主函数
 %% @end
 index(#{params := Params}) ->
-    lager:info("传入参数：~p~n", [Params]),
+    % lager:info("传入参数：~p~n", [Params]),
     MsgType = maps:get(<<"type">>, Params, null),
     case MsgType of
         %% 数据
@@ -81,11 +81,9 @@ index(#{params := Params}) ->
             try
                 Heartbeat = maps:get(<<"heartbeat">>, Params, null),
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
-                lager:info("心率入参： Heartbeat: ~p,BTUtcTime: ~p~n", [Heartbeat, BTUtcTime]),
-                ResData = eadm_pgpool:equery(pool_pg, "insert into lc_watchhb(ptime, heartbeat)
+                eadm_pgpool:equery(pool_pg, "insert into lc_watchhb(ptime, heartbeat)
                   values($1, $2) on conflict (ptime)
                   do update set heartbeat=excluded.heartbeat;", [BTUtcTime, Heartbeat]),
-                lager:info("心率写入结果: ~p~n", [ResData]),
                 #{<<"success">> => true}
             catch
                 oops         -> lager:error("got_throw_oops！~n");
@@ -99,12 +97,10 @@ index(#{params := Params}) ->
                 Diastolic = maps:get(<<"diastolic">>, Params, null),
                 Shrink = maps:get(<<"shrink">>, Params, null),
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
-                lager:info("血压入参： Diastolic: ~p,Shrink: ~p,BTUtcTime: ~p~n", [Diastolic, Shrink, BTUtcTime]),
-                ResData = eadm_pgpool:equery(pool_pg, "insert into lc_watchbp(ptime, diastolic, shrink)
+                eadm_pgpool:equery(pool_pg, "insert into lc_watchbp(ptime, diastolic, shrink)
                   values($1, $2, $3) on conflict (ptime)
                   do update set diastolic=excluded.diastolic, shrink=excluded.shrink;",
                     [BTUtcTime, Diastolic, Shrink]),
-                lager:info("血压写入结果: ~p~n", [ResData]),
                 #{<<"success">> => true}
             catch
                 oops         -> lager:error("got_throw_oops！~n");
@@ -194,7 +190,7 @@ index(#{params := Params}) ->
                 error:Reason -> lager:error("got_error: ~p~n", [Reason])
             end;
         <<"30">> ->
-            % 信号/电量 (手表信号未传，只有一个电量字段)
+            % 信号/电量
             try
                 Signal = maps:get(<<"signal">>, Params, null),
                 Battery = maps:get(<<"battery">>, Params, null),
