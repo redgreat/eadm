@@ -39,8 +39,6 @@ send_msg(Content) ->
     catch
         Exception:Error ->
             lager:error("Message Send Failed: ~p:~p", [Exception, Error]),
-
-
             #{<<"success">> => false}
     end.
 
