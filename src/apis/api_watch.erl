@@ -32,7 +32,7 @@ index(#{params := Params}) ->
                 Lac = maps:get(<<"Lac">>, Params, null),
                 Cid = maps:get(<<"cid">>, Params, null),
                 Db = maps:get(<<"Db">>, Params, null),
-                BTUtcTime = maps:get(<<"BTUtcTime">>, Params, null),
+                BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchcell(ptime, lac, cid, db)
                   values($1, $2, $3, $4);", [BTUtcTime, Lac, Cid, Db]),
                 #{<<"success">> => true}
@@ -43,7 +43,7 @@ index(#{params := Params}) ->
             % 每日累计步数
             try
                 Steps = maps:get(<<"steps">>, Params, null),
-                BTUtcTime = maps:get(<<"BTUtcTime">>, Params, null),
+                BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
                 ResData = eadm_pgpool:equery(pool_pg, "insert into lc_watchstep(ptime, steps)
                   values($1, $2);", [BTUtcTime, Steps]),
                 lager:info("数据类型【~p】写入成功，时间：~p，步数：~p~n", [MsgType, BTUtcTime, Steps]),
@@ -57,7 +57,7 @@ index(#{params := Params}) ->
             try
                 Latitude = maps:get(<<"Latitude">>, Params, null),
                 Longitude = maps:get(<<"Longitude">>, Params, null),
-                TimeStr = maps:get(<<"timeStr">>, Params, null),
+                TimeStr = eadm_utils:parse_date_time(maps:get(<<"timeStr">>, Params, null)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchlocation(ptime, lat, lng)
                   values($1, $2, $3);", [TimeStr, Latitude, Longitude]),
                 lager:info("数据类型【~p】写入成功，时间：~p~n", [MsgType, TimeStr]),
@@ -69,7 +69,7 @@ index(#{params := Params}) ->
             % 翻转数据
             try
                 Roll = maps:get(<<"roll">>, Params, null),
-                BTUtcTime = maps:get(<<"BTUtcTime">>, Params, null),
+                BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchroll(ptime, roll)
                   values($1, $2);", [BTUtcTime, Roll]),
                 #{<<"success">> => true}
@@ -81,7 +81,7 @@ index(#{params := Params}) ->
             try
                 Diastolic = maps:get(<<"Diastolic">>, Params, null),
                 Shrink = maps:get(<<"Shrink">>, Params, null),
-                BTUtcTime = maps:get(<<"BTUtcTime">>, Params, null),
+                BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchbp(ptime, diastolic, shrink)
                   values($1, $2, $3);", [BTUtcTime, Diastolic, Shrink]),
                 #{<<"success">> => true}
@@ -92,7 +92,7 @@ index(#{params := Params}) ->
             % 血糖
             try
                 BloodSugar = maps:get(<<"bloodSugar">>, Params, null),
-                BTUtcTime = maps:get(<<"BTUtcTime">>, Params, null),
+                BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchbs(ptime, bloodsugar)
                   values($1, $2);", [BTUtcTime, BloodSugar]),
                 #{<<"success">> => true}
@@ -103,7 +103,7 @@ index(#{params := Params}) ->
             % 心率数据
             try
                 Heartbeat = maps:get(<<"heartbeat">>, Params, null),
-                BTUtcTime = maps:get(<<"BTUtcTime">>, Params, null),
+                BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchhb(ptime, heartbeat)
                   values($1, $2);", [BTUtcTime, Heartbeat]),
                 #{<<"success">> => true}
@@ -114,7 +114,7 @@ index(#{params := Params}) ->
             % 体温数据
             try
                 BodyTemperature = maps:get(<<"bodyTemperature">>, Params, null),
-                BTUtcTime = maps:get(<<"BTUtcTime">>, Params, null),
+                BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchbt(ptime, bodytemperature)
                   values($1, $2);", [BTUtcTime, BodyTemperature]),
                 #{<<"success">> => true}
@@ -126,7 +126,7 @@ index(#{params := Params}) ->
             try
                 BodyTemperature = maps:get(<<"bodyTemperature">>, Params, null),
                 WristTemperature = maps:get(<<"wristTemperature">>, Params, null),
-                BTUtcTime = maps:get(<<"BTUtcTime">>, Params, null),
+                BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchbt(ptime, bodytemperature, wristtemperature)
                   values($1, $2, $3);", [BTUtcTime, BodyTemperature, WristTemperature]),
                 #{<<"success">> => true}
@@ -139,7 +139,7 @@ index(#{params := Params}) ->
                 LatStr = maps:get(<<"latStr">>, Params, null),
                 LngStr = maps:get(<<"lngStr">>, Params, null),
                 SpeedStr = maps:get(<<"speedStr">>, Params, null),
-                BTUtcTime = maps:get(<<"BTUtcTime">>, Params, null),
+                BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchlocation(ptime, lat, lng, speed)
                   values($1, $2, $3, $4);", [BTUtcTime, LatStr, LngStr, SpeedStr]),
                 #{<<"success">> => true}
@@ -151,7 +151,7 @@ index(#{params := Params}) ->
             try
                 % Signal = maps:get(<<"Signal">>, Params, null),
                 Battery = maps:get(<<"battery">>, Params, null),
-                BTUtcTime = maps:get(<<"BTUtcTime">>, Params, null),
+                BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchsb(ptime, battery)
                   values($1, $2, $3);", [BTUtcTime, Battery]),
                 #{<<"success">> => true}
@@ -162,7 +162,7 @@ index(#{params := Params}) ->
             % 血氧
             try
                 BloodOxygen = maps:get(<<"BloodOxygen">>, Params, null),
-                BTUtcTime = maps:get(<<"BTUtcTime">>, Params, null),
+                BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchbo(ptime, bloodoxygen)
                   values($1, $2);", [BTUtcTime, BloodOxygen]),
                 #{<<"success">> => true}
@@ -174,9 +174,9 @@ index(#{params := Params}) ->
             try
                 SleepType = maps:get(<<"sleepType">>, Params, null),
                 Minute = maps:get(<<"minute">>, Params, null),
-                StartTime = maps:get(<<"startTime">>, Params, null),
-                EndTime = maps:get(<<"endTime">>, Params, null),
-                BTUtcTime = maps:get(<<"BTUtcTime">>, Params, null),
+                StartTime = eadm_utils:parse_date_time(maps:get(<<"startTime">>, Params, null)),
+                EndTime = eadm_utils:parse_date_time(maps:get(<<"endTime">>, Params, null)),
+                BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchsleep(ptime, sleeptype, minute, starttime, endtime)
                   values($1, $2, $3, $4, $5);", [BTUtcTime, SleepType, Minute, StartTime, EndTime]),
                 #{<<"success">> => true}
@@ -187,7 +187,7 @@ index(#{params := Params}) ->
             % 蓝牙信息
             try
                 BTInfo = maps:get(<<"BTInfo">>, Params, null),
-                BTUtcTime = maps:get(<<"BTUtcTime">>, Params, null),
+                BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchbluet(ptime, btinfo)
                   values($1, $2);", [BTUtcTime, BTInfo]),
                 #{<<"success">> => true}
@@ -198,7 +198,7 @@ index(#{params := Params}) ->
         <<"18">> ->
             try
                 MsgContent = unicode:characters_to_binary("手表电量低！"),
-                BTUtcTime = maps:get(<<"BTUtcTime">>, Params, null),
+                BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchalarm(alarmtime, alarmtype, aarminfo)
                   values($1, $2, $3);", [BTUtcTime, 18, MsgContent]),
                 eadm_wechat:send_msg(MsgContent),
@@ -209,7 +209,7 @@ index(#{params := Params}) ->
         <<"19">> ->
             try
                 MsgContent = unicode:characters_to_binary("紧急预警！"),
-                BTUtcTime = maps:get(<<"BTUtcTime">>, Params, null),
+                BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchalarm(alarmtime, alarmtype, aarminfo)
                   values($1, $2, $3);", [BTUtcTime, 19, MsgContent]),
                 eadm_wechat:send_msg(MsgContent),
@@ -220,7 +220,7 @@ index(#{params := Params}) ->
         <<"20">> ->
             try
                 MsgContent = unicode:characters_to_binary("手表已关机！"),
-                BTUtcTime = maps:get(<<"BTUtcTime">>, Params, null),
+                BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchalarm(alarmtime, alarmtype, aarminfo)
                   values($1, $2, $3);", [BTUtcTime, 20, MsgContent]),
                 eadm_wechat:send_msg(MsgContent),
@@ -231,7 +231,7 @@ index(#{params := Params}) ->
         <<"21">> ->
             try
                 MsgContent = unicode:characters_to_binary("手表已摘除！"),
-                BTUtcTime = maps:get(<<"BTUtcTime">>, Params, null),
+                BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchalarm(alarmtime, alarmtype, aarminfo)
                   values($1, $2, $3);", [BTUtcTime, 21, MsgContent]),
                 eadm_wechat:send_msg(MsgContent),
@@ -242,7 +242,7 @@ index(#{params := Params}) ->
         <<"24">> ->
             try
                 MsgContent = unicode:characters_to_binary("签到！"),
-                BTUtcTime = maps:get(<<"BTUtcTime">>, Params, null),
+                BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchalarm(alarmtime, alarmtype, aarminfo)
                   values($1, $2, $3);", [BTUtcTime, 24, MsgContent]),
                 eadm_wechat:send_msg(MsgContent),
@@ -253,7 +253,7 @@ index(#{params := Params}) ->
         <<"25">> ->
             try
                 MsgContent = unicode:characters_to_binary("签退！"),
-                BTUtcTime = maps:get(<<"BTUtcTime">>, Params, null),
+                BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchalarm(alarmtime, alarmtype, aarminfo)
                   values($1, $2, $3);", [BTUtcTime, 25, MsgContent]),
                 eadm_wechat:send_msg(MsgContent),
@@ -264,7 +264,7 @@ index(#{params := Params}) ->
         <<"36">> ->
             try
                 MsgContent = unicode:characters_to_binary("久坐！"),
-                BTUtcTime = maps:get(<<"BTUtcTime">>, Params, null),
+                BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchalarm(alarmtime, alarmtype, aarminfo)
                   values($1, $2, $3);", [BTUtcTime, 36, MsgContent]),
                 eadm_wechat:send_msg(MsgContent),
@@ -275,7 +275,7 @@ index(#{params := Params}) ->
         <<"38">> ->
             try
                 MsgContent = unicode:characters_to_binary("表带锁打开！"),
-                BTUtcTime = maps:get(<<"BTUtcTime">>, Params, null),
+                BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchalarm(alarmtime, alarmtype, aarminfo)
                   values($1, $2, $3);", [BTUtcTime, 38, MsgContent]),
                 eadm_wechat:send_msg(MsgContent),
@@ -286,7 +286,7 @@ index(#{params := Params}) ->
         <<"39">> ->
             try
                 MsgContent = unicode:characters_to_binary("表带破坏！"),
-                BTUtcTime = maps:get(<<"BTUtcTime">>, Params, null),
+                BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchalarm(alarmtime, alarmtype, aarminfo)
                   values($1, $2, $3);", [BTUtcTime, 39, MsgContent]),
                 eadm_wechat:send_msg(MsgContent),
@@ -297,7 +297,7 @@ index(#{params := Params}) ->
         <<"51">> ->
             try
                 MsgContent = unicode:characters_to_binary("进入睡眠！"),
-                BTUtcTime = maps:get(<<"BTUtcTime">>, Params, null),
+                BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchalarm(alarmtime, alarmtype, aarminfo)
                   values($1, $2, $3);", [BTUtcTime, 51, MsgContent]),
                 eadm_wechat:send_msg(MsgContent),
@@ -308,7 +308,7 @@ index(#{params := Params}) ->
         <<"52">> ->
             try
                 MsgContent = unicode:characters_to_binary("退出睡眠！"),
-                BTUtcTime = maps:get(<<"BTUtcTime">>, Params, null),
+                BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchalarm(alarmtime, alarmtype, aarminfo)
                   values($1, $2, $3);", [BTUtcTime, 52, MsgContent]),
                 eadm_wechat:send_msg(MsgContent),
@@ -319,7 +319,7 @@ index(#{params := Params}) ->
         <<"57">> ->
             try
                 MsgContent = unicode:characters_to_binary("手表已佩戴！"),
-                BTUtcTime = maps:get(<<"BTUtcTime">>, Params, null),
+                BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchalarm(alarmtime, alarmtype, aarminfo)
                   values($1, $2, $3);", [BTUtcTime, 39, MsgContent]),
                 eadm_wechat:send_msg(MsgContent),
@@ -330,7 +330,7 @@ index(#{params := Params}) ->
         <<"91">> ->
             try
                 MsgContent = unicode:characters_to_binary("无信号！"),
-                BTUtcTime = maps:get(<<"BTUtcTime">>, Params, null),
+                BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchalarm(alarmtime, alarmtype, aarminfo)
                   values($1, $2, $3);", [BTUtcTime, 91, MsgContent]),
                 eadm_wechat:send_msg(MsgContent),
@@ -341,7 +341,7 @@ index(#{params := Params}) ->
         <<"110">> ->
             try
                 MsgContent = unicode:characters_to_binary("手表跌落！"),
-                BTUtcTime = maps:get(<<"BTUtcTime">>, Params, null),
+                BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchalarm(alarmtime, alarmtype, aarminfo)
                   values($1, $2, $3);", [BTUtcTime, 110, MsgContent]),
                 eadm_wechat:send_msg(MsgContent),
@@ -352,7 +352,7 @@ index(#{params := Params}) ->
         <<"154">> ->
             try
                 MsgContent = unicode:characters_to_binary("充电关机！"),
-                BTUtcTime = maps:get(<<"BTUtcTime">>, Params, null),
+                BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchalarm(alarmtime, alarmtype, aarminfo)
                   values($1, $2, $3);", [BTUtcTime, 154, MsgContent]),
                 eadm_wechat:send_msg(MsgContent),
@@ -363,7 +363,7 @@ index(#{params := Params}) ->
         <<"155">> ->
             try
                 MsgContent = unicode:characters_to_binary("低电关机！"),
-                BTUtcTime = maps:get(<<"BTUtcTime">>, Params, null),
+                BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchalarm(alarmtime, alarmtype, aarminfo)
                   values($1, $2, $3);", [BTUtcTime, 155, MsgContent]),
                 eadm_wechat:send_msg(MsgContent),
@@ -374,7 +374,7 @@ index(#{params := Params}) ->
         <<"156">> ->
             try
                 MsgContent = MsgContent = unicode:characters_to_binary("主动关机！"),
-                BTUtcTime = maps:get(<<"BTUtcTime">>, Params, null),
+                BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchalarm(alarmtime, alarmtype, aarminfo)
                   values($1, $2, $3);", [BTUtcTime, 156, MsgContent]),
                 eadm_wechat:send_msg(MsgContent),
@@ -385,5 +385,4 @@ index(#{params := Params}) ->
         _ ->
             lager:info("编码未定义: ~p~n", [Params]),
             #{<<"success">> => false}
-    end,
-    #{<<"success">> => false}.
+    end.

@@ -208,11 +208,17 @@ parse_date_time(DateTimeBin) ->
 
 %% @private
 %% @doc
-%% 日期字符串(<<"YYYY-MM-DD">>)转换为erl日期{{Year, Month, Day}}.
+%% 日期字符串(<<"YYYY-MM-DD">>或<<"YYYY/MM/DD">>)转换为erl日期{{Year, Month, Day}}.
 %% @end
 date_from_binary(DateBin) ->
-    [Year, Month, Day] = binary:split(DateBin, <<"-">>, [global]),
-    {binary_to_integer(Year), binary_to_integer(Month), binary_to_integer(Day)}.
+    case binary:split(DateBin, <<"-">>, [global]) of
+        [Year, Month, Day] ->
+            binary:split(DateBin, <<"-">>, [global]),
+            {binary_to_integer(Year), binary_to_integer(Month), binary_to_integer(Day)};
+        _ ->
+            [Year, Month, Day] = binary:split(DateBin, <<"/">>, [global]),
+            {binary_to_integer(Year), binary_to_integer(Month), binary_to_integer(Day)}
+    end.
 
 %% @private
 %% @doc
