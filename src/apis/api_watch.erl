@@ -23,6 +23,7 @@
 %% 主函数
 %% @end
 index(#{params := Params}) ->
+    lager:info("传入参数：~p~n", [Params]),
     MsgType = maps:get(<<"type">>, Params, null),
     case MsgType of
         %% 数据
@@ -33,7 +34,7 @@ index(#{params := Params}) ->
                 Cid = maps:get(<<"cid">>, Params, null),
                 Db = maps:get(<<"Db">>, Params, null),
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
-                eadm_pgpool:equery(pool_pg, "insert into lc_watchcell(ptime, lac, cid, db)
+                eadm_pgpool:equery(pool_pg, "replace into lc_watchcell(ptime, lac, cid, db)
                   values($1, $2, $3, $4);", [BTUtcTime, Lac, Cid, Db]),
                 #{<<"success">> => true}
             catch
@@ -44,10 +45,8 @@ index(#{params := Params}) ->
             try
                 Steps = maps:get(<<"steps">>, Params, null),
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
-                ResData = eadm_pgpool:equery(pool_pg, "insert into lc_watchstep(ptime, steps)
+                eadm_pgpool:equery(pool_pg, "replace into lc_watchstep(ptime, steps)
                   values($1, $2);", [BTUtcTime, Steps]),
-                lager:info("数据类型【~p】写入成功，时间：~p，步数：~p~n", [MsgType, BTUtcTime, Steps]),
-                lager:info("数据写入结果：~p~n", [ResData]),
                 #{<<"success">> => true}
             catch
                 _:_ -> #{<<"success">> => false}
@@ -58,20 +57,19 @@ index(#{params := Params}) ->
                 Latitude = maps:get(<<"Latitude">>, Params, null),
                 Longitude = maps:get(<<"Longitude">>, Params, null),
                 TimeStr = eadm_utils:parse_date_time(maps:get(<<"timeStr">>, Params, null)),
-                eadm_pgpool:equery(pool_pg, "insert into lc_watchlocation(ptime, lat, lng)
+                eadm_pgpool:equery(pool_pg, "replace into lc_watchlocation(ptime, lat, lng)
                   values($1, $2, $3);", [TimeStr, Latitude, Longitude]),
-                lager:info("数据类型【~p】写入成功，时间：~p~n", [MsgType, TimeStr]),
                 #{<<"success">> => true}
             catch
                 _:_ -> #{<<"success">> => false, <<"status">> => 200}
             end;
         <<"6">> ->
-            % 翻转数据
+            % 心率数据
             try
-                Roll = maps:get(<<"roll">>, Params, null),
+                Heartbeat = maps:get(<<"heartbeat">>, Params, null),
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
-                eadm_pgpool:equery(pool_pg, "insert into lc_watchroll(ptime, roll)
-                  values($1, $2);", [BTUtcTime, Roll]),
+                eadm_pgpool:equery(pool_pg, "replace into lc_watchhb(ptime, heartbeat)
+                  values($1, $2);", [BTUtcTime, Heartbeat]),
                 #{<<"success">> => true}
             catch
                 _:_ -> #{<<"success">> => false}
@@ -79,10 +77,10 @@ index(#{params := Params}) ->
         <<"8">> ->
             % 血压
             try
-                Diastolic = maps:get(<<"Diastolic">>, Params, null),
-                Shrink = maps:get(<<"Shrink">>, Params, null),
+                Diastolic = maps:get(<<"diastolic">>, Params, null),
+                Shrink = maps:get(<<"shrink">>, Params, null),
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
-                eadm_pgpool:equery(pool_pg, "insert into lc_watchbp(ptime, diastolic, shrink)
+                eadm_pgpool:equery(pool_pg, "replace into lc_watchbp(ptime, diastolic, shrink)
                   values($1, $2, $3);", [BTUtcTime, Diastolic, Shrink]),
                 #{<<"success">> => true}
             catch
@@ -93,19 +91,19 @@ index(#{params := Params}) ->
             try
                 BloodSugar = maps:get(<<"bloodSugar">>, Params, null),
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
-                eadm_pgpool:equery(pool_pg, "insert into lc_watchbs(ptime, bloodsugar)
+                eadm_pgpool:equery(pool_pg, "replace into lc_watchbs(ptime, bloodsugar)
                   values($1, $2);", [BTUtcTime, BloodSugar]),
                 #{<<"success">> => true}
             catch
                 _:_ -> #{<<"success">> => false}
             end;
         <<"11">> ->
-            % 心率数据
+            % 翻转数据
             try
-                Heartbeat = maps:get(<<"heartbeat">>, Params, null),
+                Roll = maps:get(<<"roll">>, Params, null),
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
-                eadm_pgpool:equery(pool_pg, "insert into lc_watchhb(ptime, heartbeat)
-                  values($1, $2);", [BTUtcTime, Heartbeat]),
+                eadm_pgpool:equery(pool_pg, "replace into lc_watchroll(ptime, roll)
+                  values($1, $2);", [BTUtcTime, Roll]),
                 #{<<"success">> => true}
             catch
                 _:_ -> #{<<"success">> => false}
@@ -115,7 +113,7 @@ index(#{params := Params}) ->
             try
                 BodyTemperature = maps:get(<<"bodyTemperature">>, Params, null),
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
-                eadm_pgpool:equery(pool_pg, "insert into lc_watchbt(ptime, bodytemperature)
+                eadm_pgpool:equery(pool_pg, "replace into lc_watchbt(ptime, bodytemperature)
                   values($1, $2);", [BTUtcTime, BodyTemperature]),
                 #{<<"success">> => true}
             catch
@@ -127,7 +125,7 @@ index(#{params := Params}) ->
                 BodyTemperature = maps:get(<<"bodyTemperature">>, Params, null),
                 WristTemperature = maps:get(<<"wristTemperature">>, Params, null),
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
-                eadm_pgpool:equery(pool_pg, "insert into lc_watchbt(ptime, bodytemperature, wristtemperature)
+                eadm_pgpool:equery(pool_pg, "replace into lc_watchbt(ptime, bodytemperature, wristtemperature)
                   values($1, $2, $3);", [BTUtcTime, BodyTemperature, WristTemperature]),
                 #{<<"success">> => true}
             catch
@@ -140,7 +138,7 @@ index(#{params := Params}) ->
                 LngStr = maps:get(<<"lngStr">>, Params, null),
                 SpeedStr = maps:get(<<"speedStr">>, Params, null),
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
-                eadm_pgpool:equery(pool_pg, "insert into lc_watchlocation(ptime, lat, lng, speed)
+                eadm_pgpool:equery(pool_pg, "replace into lc_watchlocation(ptime, lat, lng, speed)
                   values($1, $2, $3, $4);", [BTUtcTime, LatStr, LngStr, SpeedStr]),
                 #{<<"success">> => true}
             catch
@@ -149,11 +147,14 @@ index(#{params := Params}) ->
         <<"30">> ->
             % 信号/电量 (手表信号未传，只有一个电量字段)
             try
-                % Signal = maps:get(<<"Signal">>, Params, null),
+                Signal = maps:get(<<"signal">>, Params, null),
                 Battery = maps:get(<<"battery">>, Params, null),
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
-                eadm_pgpool:equery(pool_pg, "insert into lc_watchsb(ptime, battery)
-                  values($1, $2, $3);", [BTUtcTime, Battery]),
+                eadm_pgpool:equery(pool_pg, "insert into lc_watchsb(ptime, signal, battery)
+                  values($1, $2, $3);", [BTUtcTime, Signal, Battery]),
+                Steps = maps:get(<<"steps">>, Params, null),
+                eadm_pgpool:equery(pool_pg, "replace into lc_watchstep(ptime, steps)
+                  values($1, $2);", [BTUtcTime, Steps]),
                 #{<<"success">> => true}
             catch
                 _:_ -> #{<<"success">> => false}
@@ -163,7 +164,7 @@ index(#{params := Params}) ->
             try
                 BloodOxygen = maps:get(<<"BloodOxygen">>, Params, null),
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
-                eadm_pgpool:equery(pool_pg, "insert into lc_watchbo(ptime, bloodoxygen)
+                eadm_pgpool:equery(pool_pg, "replace into lc_watchbo(ptime, bloodoxygen)
                   values($1, $2);", [BTUtcTime, BloodOxygen]),
                 #{<<"success">> => true}
             catch
@@ -177,7 +178,7 @@ index(#{params := Params}) ->
                 StartTime = eadm_utils:parse_date_time(maps:get(<<"startTime">>, Params, null)),
                 EndTime = eadm_utils:parse_date_time(maps:get(<<"endTime">>, Params, null)),
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
-                eadm_pgpool:equery(pool_pg, "insert into lc_watchsleep(ptime, sleeptype, minute, starttime, endtime)
+                eadm_pgpool:equery(pool_pg, "replace into lc_watchsleep(ptime, sleeptype, minute, starttime, endtime)
                   values($1, $2, $3, $4, $5);", [BTUtcTime, SleepType, Minute, StartTime, EndTime]),
                 #{<<"success">> => true}
             catch
@@ -188,7 +189,7 @@ index(#{params := Params}) ->
             try
                 BTInfo = maps:get(<<"BTInfo">>, Params, null),
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
-                eadm_pgpool:equery(pool_pg, "insert into lc_watchbluet(ptime, btinfo)
+                eadm_pgpool:equery(pool_pg, "replace into lc_watchbluet(ptime, btinfo)
                   values($1, $2);", [BTUtcTime, BTInfo]),
                 #{<<"success">> => true}
             catch
