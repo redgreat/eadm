@@ -24,6 +24,8 @@ RUN apk add --no-cache --repository https://dl-cdn.alpinelinux.org/alpine/edge/t
 COPY --from=builder /eadmbuild/_build/prod/rel/eadm /opt/eadm/
 COPY --from=builder /eadmbuild/docker/docker-entrypoint.sh /opt/eadm/docker/docker-entrypoint.sh
 
+RUN chmod +x /opt/eadm/docker/docker-entrypoint.sh
+
 VOLUME /opt/eadm
 
 EXPOSE 8090
