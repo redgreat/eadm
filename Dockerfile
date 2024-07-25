@@ -36,4 +36,6 @@ LABEL \
       org.label-schema.maintainer="wangcw <rubygreat@msn.com>" \
       org.label-schema.schema-version="1.0" \
 
-ENTRYPOINT ["/usr/bin/dumb-init", "-c", "--", "/opt/eadm/docker/docker-entrypoint.sh"]
+ENTRYPOINT ["/usr/bin/dumb-init", "--"]
+
+CMD ["/opt/eadm/docker/docker-entrypoint.sh"]
