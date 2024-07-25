@@ -18,8 +18,8 @@ ENV \
 
 WORKDIR /opt/eadm
 
-RUN apk add --no-cache ncurses-libs libgcc libstdc++ dumb-init \
-    apk add --no-cache --repository https://dl-cdn.alpinelinux.org/alpine/edge/testing/ gosu
+RUN apk add --no-cache ncurses-libs libgcc libstdc++ dumb-init
+RUN apk add --no-cache --repository https://dl-cdn.alpinelinux.org/alpine/edge/testing/ gosu
 
 COPY --from=builder /eadmbuild/_build/prod/rel/eadm /opt/eadm/
 COPY --from=builder /eadmbuild/docker/docker-entrypoint.sh /opt/eadm/docker/docker-entrypoint.sh
@@ -34,8 +34,6 @@ LABEL \
       org.label-schema.version="${DOCKER_IMAGE_VERSION:-unknown}" \
       org.label-schema.vcs-url="https://github.com/redgreat/eadm" \
       org.label-schema.maintainer="wangcw <rubygreat@msn.com>" \
-      org.label-schema.schema-version="1.0" \
+      org.label-schema.schema-version="1.0"
 
-ENTRYPOINT ["/usr/bin/dumb-init", "--"]
-
-CMD ["/opt/eadm/docker/docker-entrypoint.sh"]
+ENTRYPOINT ["/usr/bin/dumb-init", "-c", "--", "/opt/eadm/docker/docker-entrypoint.sh"]
