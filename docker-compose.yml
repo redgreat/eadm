@@ -20,9 +20,9 @@ services:
         ports:
             - '8080:8090'
         volumes:
-            - ./config/prod_db.config:/opt/eadm/releases/0.1.27/prod_db.config
-            - ./config/sys.config.src:/opt/eadm/releases/0.1.27/sys.config.src
-            - ./config/vm.args.src:/opt/eadm/releases/0.1.27/vm.args.src
+            - ./config/prod_db.config:/opt/eadm/releases/latest/prod_db.config
+            - ./config/sys.config.src:/opt/eadm/releases/latest/sys.config.src
+            - ./config/vm.args.src:/opt/eadm/releases/latest/vm.args.src
             - ./log/:/var/log/eadm/
         environment:
             DISABLE_IPV6: 'true'
@@ -52,3 +52,5 @@ services:
             DISABLE_IPV6: 'true'
             TZ: 'Asia/Shanghai'
             LANG: 'zh_CN.UTF-8'
+volumes:
+    pgdata:
