@@ -20,10 +20,10 @@ services:
         ports:
             - '8080:8090'
         volumes:
-            - ./config/prod_db.config:/opt/eadm/releases/latest/prod_db.config
-            - ./config/sys.config.src:/opt/eadm/releases/latest/sys.config.src
-            - ./config/vm.args.src:/opt/eadm/releases/latest/vm.args.src
-            - ./log/:/var/log/eadm/
+            - ./docker/db.config:/opt/eadm/config/db.config
+            - ./docker/sys.config.src:/opt/eadm/config/sys.config
+            - ./docker/vm.args.src:/opt/eadm/config/vm.args
+            - ./logs/:/opt/eadm/log/
         environment:
             DISABLE_IPV6: 'true'
         depends_on:
@@ -40,6 +40,7 @@ services:
         image: 'redgreat/nginxpm:latest'
         container_name: npm
         restart: unless-stopped
+
         ports:
             - '80:8080'
             - '8181:8181'
