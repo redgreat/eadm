@@ -9,6 +9,7 @@ services:
             POSTGRES_USER: user_eadm
             POSTGRES_DB: eadm
             POSTGRES_PASSWORD: iyS62bvt
+            POSTGRES_HOST_AUTH_METHOD: trust
         volumes:
             - pgdata:/var/lib/postgresql/data
         ports:
@@ -21,8 +22,8 @@ services:
             - '8080:8090'
         volumes:
             - ./docker/db.config:/opt/eadm/config/db.config
-            - ./docker/sys.config.src:/opt/eadm/config/sys.config
-            - ./docker/vm.args.src:/opt/eadm/config/vm.args
+            - ./docker/sys.config.src:/opt/eadm/config/sys.config.src
+            - ./docker/vm.args.src:/opt/eadm/config/vm.args.src
             - ./logs/:/opt/eadm/log/
         environment:
             DISABLE_IPV6: 'true'
