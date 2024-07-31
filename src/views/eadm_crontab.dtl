@@ -21,8 +21,11 @@
                     <button class="btn btn-outline-success me-1" id="cleanCrontab">
                         <i class="fa-fw select-all fas"></i> 清空
                     </button>
-                    <button class="btn btn-outline-success" id="searchCrontab">
+                    <button class="btn btn-outline-success me-1" id="searchCrontab">
                         <i class="fa-fw select-all fas"></i> 查询
+                    </button>
+                    <button class="btn btn-outline-success" id="addCrontab">
+                        <i class="fa-fw select-all fas"></i> 新增
                     </button>
                 </div>
             </div>

@@ -16,7 +16,7 @@
 %%%===================================================================
 -export([send_msg/1]).
 
--define(WX_KEY, application:get_env(nova, wx_key, "ea50a2d0-2d51-4ba3-a90c-66919a51ca01")).
+-define(WX_KEY, application:get_env(nova, wx_key, "9be2a47b-6d0d-4615-9dff-af5ed91f853d")).
 -define(WX_URL, "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=" ++ ?WX_KEY).
 -define(WX_HEADERS, [{"Content-Type", "application/json"}]).
 -define(WX_MENTIONS, []).

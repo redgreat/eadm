@@ -9,7 +9,7 @@
     {secret_key, <<"aVkmcGh2qbLqtpY8NXqcUA==">>},
     {max_search_span, 3},
     {max_fin_search_span, 366},
-    {wx_key, "ea50a2d0-2d51-4ba3-a90c-66919a51ca01"},
+    {wx_key, "9be2a47b-6d0d-4615-9dff-af5ed91f853d"},
     %% Plugins is written on form {RequestType, Module, Options, Priority}
     %% Priority is that the lowest number is executed first
     {plugins, [
@@ -27,7 +27,7 @@
       %% What handlers to install with what arguments
       , {handlers, [
           {lager_console_backend, [{level, debug}, {level, debug}, {formatter, lager_default_formatter},
-              {formatter_config, [color, date," ",time, " [", severity, "] ", node, " #", pid, " ", message, "\n"]}]}
+              {formatter_config, [color, date," ", time, " [", severity, "] ", node, " #", pid, " ", message, "\n"]}]}
           , {lager_file_backend, [
               {file, "error.log"}, {level, error}, {size, 10485760}, {date, "$D0"}, {count, 999}]
           }
