@@ -12,12 +12,25 @@ window.i18nCrontab = window.i18nCrontab || {};
 
 i18nCrontab.columnName = {
     zh: {
-        "cronname": "任务名称",
-        "cronexp": "定时表达式",
-        "cronmfa": "任务备注",
-        "starttime": "任务开始时间",
-        "endtime": "任务结束时间",
-        "cronstatus": "任务状态",
-        "createdat": "任务创建时间",
+        "id": "任务Id",
+        "cronname": "名称",
+        "crontype": "类型",
+        "cronmfa": "详情",
+        "cronexp": "频率",
+        "starttime": "开始时间",
+        "endtime": "结束时间",
+        "cronstatus": "状态",
+        "createdat": "创建时间",
+    },
+    en: {
+        "id": "CronId",
+        "cronname": "CronName",
+        "crontype": "CronType",
+        "cronmfa": "CronMfa",
+        "cronexp": "CronExp",
+        "starttime": "StartTime",
+        "endtime": "EndTime",
+        "cronstatus": "CronStatus",
+        "createdat": "CreatedTime",
     }
 };

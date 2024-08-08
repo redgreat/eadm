@@ -9,7 +9,7 @@
  */
 
 function loadMemu() {
-    $.getJSON('/data/userpermission', function (resdata) {
+    $.getJSON('/user/permission', function (resdata) {
         let menuHtml = '';
         if ('data' in resdata[0]) {
             const resobj = resdata[0].data;
@@ -52,7 +52,7 @@ $(document).ready(function() {
         e.preventDefault();
         let clickedId = $(this).attr('id');
         if (clickedId === 'userinfo') {
-            $.getJSON('/data/userself', function (resdata) {
+            $.getJSON('/user/info', function (resdata) {
                 $('#loginname-self').val(resdata[0]);
                 $('#username-self').val(resdata[1]);
                 $('#email-self').val(resdata[2]);
@@ -88,7 +88,7 @@ $(document).ready(function() {
         };
         $.ajaxSetup({async:false});
         $.ajax({
-            url: '/data/usereditself',
+            url: '/user/editself',
             type: 'POST',
             data: editParams,
             success: function (resdata) {
@@ -108,7 +108,7 @@ $(document).ready(function() {
         };
         if (passwordNew === passwordConfirm){
             $.ajax({
-                url: '/data/userpass',
+                url: '/user/pwd',
                 type: 'POST',
                 data: paswordParams,
                 success: function (resdata) {

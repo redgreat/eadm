@@ -13,11 +13,14 @@ function translateColumnNames(columnName) {
   return translations[columnName] || columnName;
 }
 
-function loadCrontabData(cronName) {
+function loadCronData(cronName) {
     let dynamicColumns = [];
     let dynamicDatas = [];
+    const searchParams = {
+        cronName: cronName
+    };
 
-    $.getJSON('/data/crontab/' + cronName, function (response) {
+    $.getJSON('/data/crontab/', searchParams, function (response) {
 
         function buildDynamicData(response) {
             response.columns.forEach(function (column) {
@@ -26,6 +29,7 @@ function loadCrontabData(cronName) {
                 dynamicColumn['title'] = translateColumnNames(column);
                 dynamicColumns.push(dynamicColumn);
             });
+            dynamicColumns.push({"data": "Action", "title": "操作"});
             dynamicDatas = response.data;
         }
 
@@ -45,40 +49,65 @@ function loadCrontabData(cronName) {
             buildDynamicData(response)
         }
 
-        $('#table-crontab').DataTable().destroy();
-        $('#table-crontab').empty();
-        $('#table-crontab').DataTable({
-            // lengthChange: true,  //是否允许用户改变表格每页显示的记录数
-            // bStateSave: true,  //记录cookie
-            destroy: true, // 销毁重新渲染
+        $('#table-cron').DataTable().destroy();
+        $('#table-cron').empty();
+        $('#table-cron').DataTable({
+            columnDefs: [{
+                targets: -1,
+                render: function (data, type, full, meta) {
+                    return `
+                        <button class="btn btn-outline-primary btn-rounded cron-detail-btn"
+                          data-bs-toggle="modal" data-bs-target="#modal-cron-detail"
+                          data-bs-placement="top" title="任务日志">
+                          <i class="fas fa-list"></i>
+                        </button>
+                        <button class="btn btn-outline-primary btn-rounded cron-edit-btn"
+                          data-bs-toggle="modal" data-bs-target="#modal-cron-edit"
+                          data-bs-placement="top" title="编辑任务信息">
+                          <i class="fa-fw select-all fas"></i>
+                        </button>
+                        <button class="btn btn-outline-primary btn-rounded cron-disable-btn"
+                          data-bs-toggle="tooltip" data-bs-placement="top" title="启禁任务">
+                          <i class="fas fa-toggle-on"></i>
+                        </button>
+                        <button class="btn btn-outline-danger btn-rounded cron-delete-btn"
+                          data-bs-toggle="tooltip" data-bs-placement="top" title="删除任务">
+                          <i class="fas fa-trash"></i>
+                        </button>
+                    `;
+                }
+            },{
+                targets: 0,
+                visible: false,
+                orderable: false
+            }],
+            createdRow: function(row, data) {
+                let dataId = data['id'];
+                $(row).attr('data-id', dataId);
+            },
+            destroy: true,
             columns: dynamicColumns,
             data: dynamicDatas,
             responsive: true,
-            info: true, // 是否显示左下角分页信息
-            processing: true,  //是否显示处理状态(排序的时候，数据很多耗费时间长的话，也会显示这个)
-            orderMulti: true,  //启用多列排序
-            ordering: true,  //使用排序
-            paging: true,  //是否分页
-            pageLength: 10, //每页默认行数
-            lengthChange: false, //是否可以改变每页显示的记录数
-            pagingType: "full_numbers",  //除首页、上一页、下一页、末页四个按钮还有页数按钮
-            searching: false,  //是否开始本地搜索
-            stateSave: true,  //刷新时是否保存状态
-            // autoWidth: true,  //自动计算宽度
-            deferRender: true, // 延迟渲染
+            info: true,
+            processing: true,
+            orderMulti: true,
+            ordering: true,
+            paging: true,
+            pageLength: 10,
+            lengthChange: false,
+            pagingType: "full_numbers",
+            searching: false,
+            stateSave: true,
+            deferRender: true,
             language: {
-                // decimal: "",//小数的小数位符号  比如“，”作为数字的小数位符号
-                // infoFiltered: "(从 _MAX_ 条记录过滤)",//当表格过滤的时候，将此字符串附加到主要信息
-                // infoPostFix: "",//在摘要信息后继续追加的字符串
-                // search: "搜索",//用来描述搜索输入框的字符串
-                // zeroRecords: "没有找到",//当没有搜索到结果时，显示
-                info: "当前 _START_ 条到 _END_ 条 共 _TOTAL_ 条",//左下角的信息，变量可以自定义，到官网详细查看
-                infoEmpty: "无记录",//当没有数据时，左下角的信息
-                emptyTable: "未查到数据",//当表格为空时，表格中信息
-                thousands: ",",//千分位分隔符
-                lengthMenu: "每页 _MENU_ 条记录",//用来描述分页长度选项的字符串
-                loadingRecords: "加载中...",//用来描述数据在加载中等待的提示字符串 - 当异步读取数据的时候显示
-                processing: "处理中...",//用来描述加载进度的字符串
+                info: "当前 _START_ 条到 _END_ 条 共 _TOTAL_ 条",
+                infoEmpty: "无记录",
+                emptyTable: "未查到数据",
+                thousands: ",",
+                lengthMenu: "每页 _MENU_ 条记录",
+                loadingRecords: "加载中...",
+                processing: "处理中...",
                 paginate: {
                   first: "首页",
                   previous: "上一页",
@@ -94,18 +123,104 @@ function loadCrontabData(cronName) {
     })
 }
 
+function addCron() {
+    const AddParams = {
+        cronName: $('#cronname').val(),
+        cronType: $('#crontype').val(),
+        cronExp: $('#cronexp').val(),
+        cronModule: $('#cronmodule').val(),
+        startTime: $('#starttime').val(),
+        endTime: $('#endtime').val()
+    };
+    $.ajaxSetup({async:false});
+    $.ajax({
+        url: '/data/crontab/add',
+        type: 'POST',
+        data: AddParams,
+        success: function (resdata) {
+            if (resdata && resdata.length > 0 && resdata[0].Alert) {
+                showWarningToast(resdata[0].Alert);
+            } else {
+                showWarningToast("服务器运行错误，请联系管理员！");
+            }
+        }
+    });
+}
+
+function cleanAddTab(){
+    $('#cronname').val('');
+    $('#crontype').val('');
+    $('#cronexp').val('');
+    $('#cronmodule').val('');
+    $('#starttime').val('');
+    $('#endtime').val('');
+}
 
 $(document).ready(function() {
-    // $('#cronname').val('all');
-    loadCrontabData("all");
+    loadCronData("");
 
-    $('#searchCrontab').click(function() {
+    $('#searchCron').click(function() {
         const cronName = $('#cronname').val();
-        loadCrontabData(cronName);
+        loadCronData(cronName);
     });
 
-    $('#cleanCrontab').click(function() {
+    $('#cleanCron').click(function() {
         $('input[type="text"]').val('');
     });
 
+    $('#addCron').click(function() {
+        $('#starttime').val(defaultEndTime);
+        $('#endtime').val("");
+    });
+
+    $('#cron-add-submit-btn').click(function () {
+        addCron();
+        loadCronData();
+        cleanAddTab();
+    });
+
+    $('#cron-add-cancel-btn').click(function () {
+        cleanAddTab();
+    });
+
+    let dataTableCron = $('#table-cron').DataTable();
+    dataTableCron.on('click', '.cron-edit-btn', function() {
+        let editRow = $(this).closest('tr');
+        $('#cronname-edit').val(editRow.find('td')[1].innerText);
+        $('#crontype-edit').val(editRow.find('td')[2].innerText);
+        $('#cronexp-edit').val(editRow.find('td')[3].innerText);
+        $('#cronmodule-edit').val(editRow.find('td')[4].innerText);
+        $('#starttime-edit').val(editRow.find('td')[5].innerText);
+        $('#endtime-edit').val(editRow.find('td')[6].innerText);
+    });
+
+    dataTableCron.on('click', '.cron-disable-btn', function() {
+        let disableRow = $(this).closest('tr');
+        let cronId = disableRow.data('id');
+        if (cronId !== "未查到数据" && typeof cronId !== 'undefined' && cronId !== null) {
+            disableCron(cronId);
+            setTimeout(function () {
+                loadCronData();
+            }, 100);
+        } else {
+            showWarningToast("未查到需禁用任务，请刷新页面重试!");
+        }
+    });
+
+    dataTableCron.on('click', '.cron-delete-btn', function() {
+        let delRow = $(this).closest('tr');
+        $('#cron-del-confirm').modal('show');
+        $('#cron-del-confirm-btn').click(function () {
+            let cronId = delRow.data('id');
+            if (cronId !== "未查到数据" && typeof cronId !== 'undefined' && cronId !== null) {
+                deleteCron(cronId);
+                delRow.remove();
+                setTimeout(function () {
+                    dataTableCron.draw(false);
+                }, 100);
+            } else {
+                showWarningToast("未查到需删除数据，请刷新页面重试!");
+            }
+        });
+    });
 });

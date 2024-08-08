@@ -192,6 +192,7 @@ index(#{params := Params}) ->
         <<"30">> ->
             % 信号/电量
             try
+                Steps = maps:get(<<"steps">>, Params, null),
                 Signal = maps:get(<<"signal">>, Params, null),
                 Battery = maps:get(<<"battery">>, Params, null),
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),

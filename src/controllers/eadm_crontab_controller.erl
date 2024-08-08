@@ -32,20 +32,18 @@ index(#{auth_data := #{<<"permission">> := #{<<"crontab">> := false}}}) ->
 
 index(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
-
 %% @doc
 %% 查询任务信息
 %% @end
 search(#{auth_data := #{<<"authed">> := true, <<"permission">> := #{<<"crontab">> := true}},
-      bindings := #{<<"cronName">> := CronName}}) ->
+    parsed_qs := #{<<"cronName">> := CronName}}) ->
     CronNamePattern = <<"%", CronName/binary, "%">>,
     {ok, Res_Col, Res_Data} = eadm_pgpool:equery(pool_pg,
-        "select cronname, cronexp, cronmfa, starttime, endtime, cronstatus, createdat
-        from eadm_crontab
+        "select id, cronname, crontype, cronexp, cronmfa,
+          starttime, endtime, cronstatus, createdat
+        from vi_crontab
         where cronname like $1
-          and deleted is false
-        order by createdat desc;",
-        [CronNamePattern]),
+        order by createdat desc;",[CronNamePattern]),
     Response = eadm_utils:pg_as_json(Res_Col, Res_Data),
     {json, Response};
 
@@ -59,18 +57,27 @@ search(#{auth_data := #{<<"authed">> := false}}) ->
 %% @doc
 %% 新增任务信息
 %% @end
-add(#{auth_data := #{<<"authed">> := true, <<"permission">> := #{<<"crontab">> := true}},
-    bindings := #{<<"cronName">> := CronName}}) ->
-    CronNamePattern = <<"%", CronName/binary, "%">>,
-    {ok, Res_Col, Res_Data} = eadm_pgpool:equery(pool_pg,
-        "select cronname, cronexp, cronmfa, starttime, endtime, cronstatus, createdat
-        from eadm_crontab
-        where cronname like $1
-          and deleted is false
-        order by createdat desc;",
-        [CronNamePattern]),
-    Response = eadm_utils:pg_as_json(Res_Col, Res_Data),
-    {json, Response};
+add(#{auth_data := #{<<"authed">> := true, <<"loginname">> := CreatedUser,
+    <<"permission">> := #{<<"crontab">> := true}},
+    params := #{<<"cronName">> := CronName, <<"cronType">> := CronType,
+        <<"cronExp">> := CronExp, <<"cronModule">> := CronModule,
+        <<"startTime">> := StartTime, <<"endTime">> := EndTime}}) ->
+    try
+        ParameterStartTime = eadm_utils:parse_date_time(StartTime),
+        ParameterEndTime = eadm_utils:parse_date_time(EndTime),
+        eadm_pgpool:equery(pool_pg, "insert into eadm_crontab(cronname, crontype, cronexp, cronmfa,
+        starttime, endtime, createduser, updateduser) values($1, $2, $3, $4, $5, $6, $7, $8);",
+        [CronName, CronType, CronExp, CronModule,
+        ParameterStartTime, ParameterEndTime, CreatedUser, CreatedUser]),
+        A = unicode:characters_to_binary("任务【"),
+        B = unicode:characters_to_binary("】新增成功! "),
+        Info = #{<<"Alert">> => <<A/binary, CronName/binary, B/binary>>},
+        {json, [Info]}
+    catch
+        _:Error ->
+            Alert = #{<<"Alert">> => unicode:characters_to_binary("用户新增失败！") ++ binary_to_list(Error)},
+            {json, [Alert]}
+    end;
 
 add(#{auth_data := #{<<"permission">> := #{<<"crontab">> := false}}}) ->
     Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败! ")},

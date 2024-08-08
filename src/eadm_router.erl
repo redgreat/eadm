@@ -60,8 +60,42 @@ routes(_Environment) ->
       security => {eadm_auth, auth},
       routes => [
           {"/", fun eadm_user_controller:index/1, #{methods => [get]}},
-          {"/role", fun eadm_role_controller:index/1, #{methods => [get]}}
+          {"/list", fun eadm_user_controller:search/1, #{methods => [get]}},
+          {"/info", fun eadm_user_controller:searchself/1, #{methods => [get]}},
+          {"/pwd", fun eadm_user_controller:password/1, #{methods => [post]}},
+
+          {"/add", fun eadm_user_controller:add/1, #{methods => [post]}},
+          {"/edit", fun eadm_user_controller:edit/1, #{methods => [post]}},
+          {"/editself", fun eadm_user_controller:editself/1, #{methods => [post]}},
+
+          {"/:userId", fun eadm_user_controller:delete/1, #{methods => [delete]}},
+          {"/reset/:userId", fun eadm_user_controller:reset/1, #{methods => [post]}},
+          {"/disable/:userId", fun eadm_user_controller:disable/1, #{methods => [post]}},
+
+          {"/userrole/:userId", fun eadm_user_controller:userrole/1, #{methods => [get]}},
+          {"/userrole/:userRoleId", fun eadm_user_controller:userroledel/1, #{methods => [delete]}},
+          {"/userrole/add", fun eadm_user_controller:userroleadd/1, #{methods => [post]}},
+
+          {"/role", fun eadm_role_controller:index/1, #{methods => [get]}},
+          {"/role/list", fun eadm_role_controller:search/1, #{methods => [get]}},
+          {"/role/list/:userId", fun eadm_role_controller:getrolelist/1, #{methods => [get]}},
+          {"/role/add", fun eadm_role_controller:add/1, #{methods => [post]}},
+          {"/role/:roleId", fun eadm_role_controller:delete/1, #{methods => [delete]}},
+          {"/role/disable/:roleId", fun eadm_role_controller:disable/1, #{methods => [post]}},
+
+          {"/permission", fun eadm_user_controller:userpermission/1, #{methods => [get]}},
+          {"/permission/edit", fun eadm_role_controller:updatepermission/1, #{methods => [post]}},
+          {"/permission/:roleId", fun eadm_role_controller:loadpermission/1, #{methods => [get]}}
         ]
+      },
+      #{prefix => "finance",
+      security => {eadm_auth, auth},
+      routes => [
+          {"/", fun eadm_finance_controller:search/1, #{methods => [get]}},
+          {"/:detailId", fun eadm_finance_controller:delete/1, #{methods => [delete]}},
+          {"/:detailId", fun eadm_finance_controller:searchdetail/1, #{methods => [get]}},
+          {"/upload", fun eadm_finance_controller:upload/1, #{methods => [post]}}
+      ]
       },
       #{prefix => "data",
       security => {eadm_auth, auth},
@@ -69,36 +103,7 @@ routes(_Environment) ->
           {"/dashboard", fun eadm_dashboard_controller:search/1, #{methods => [get]}},
           {"/health", fun eadm_health_controller:search/1, #{methods => [get]}},
           {"/location", fun eadm_location_controller:search/1, #{methods => [get]}},
-          {"/finance", fun eadm_finance_controller:search/1, #{methods => [get]}},
-          {"/finance/:detailId", fun eadm_finance_controller:delete/1, #{methods => [delete]}},
-          {"/finance/:detailId", fun eadm_finance_controller:searchdetail/1, #{methods => [get]}},
-          {"/crontab/:cronName", fun eadm_crontab_controller:search/1, #{methods => [get]}},
-          {"/useradd", fun eadm_user_controller:add/1, #{methods => [post]}},
-          {"/useredit", fun eadm_user_controller:edit/1, #{methods => [post]}},
-          {"/usereditself", fun eadm_user_controller:editself/1, #{methods => [post]}},
-          {"/userpass", fun eadm_user_controller:password/1, #{methods => [post]}},
-          {"/user/:userId", fun eadm_user_controller:delete/1, #{methods => [delete]}},
-          {"/user/reset/:userId", fun eadm_user_controller:reset/1, #{methods => [post]}},
-          {"/user/disable/:userId", fun eadm_user_controller:disable/1, #{methods => [post]}},
-          {"/user", fun eadm_user_controller:search/1, #{methods => [get]}},
-          {"/userself", fun eadm_user_controller:searchself/1, #{methods => [get]}},
-          {"/password", fun eadm_user_controller:password/1, #{methods => [post]}},
-          {"/userrole/:userId", fun eadm_user_controller:userrole/1, #{methods => [get]}},
-          {"/userrole/delete/:userRoleId", fun eadm_user_controller:userroledel/1, #{methods => [delete]}},
-          {"/userroleadd", fun eadm_user_controller:userroleadd/1, #{methods => [post]}},
-          {"/userpermission", fun eadm_user_controller:userpermission/1, #{methods => [get]}},
-          {"/role/:roleId", fun eadm_role_controller:delete/1, #{methods => [delete]}},
-          {"/role/disable/:roleId", fun eadm_role_controller:disable/1, #{methods => [post]}},
-          {"/role", fun eadm_role_controller:search/1, #{methods => [get]}},
-          {"/role/add", fun eadm_role_controller:add/1, #{methods => [post]}},
-          {"/rolelist/:userId", fun eadm_role_controller:getrolelist/1, #{methods => [get]}},
-          {"/permission", fun eadm_role_controller:updatepermission/1, #{methods => [post]}},
-          {"/permission/:roleId", fun eadm_role_controller:loadpermission/1, #{methods => [get]}}
-        ]
-      },#{prefix => "upload",
-      security => {eadm_auth, auth},
-      routes => [
-          {"/finance", fun eadm_finance_controller:upload/1, #{methods => [post]}}
+          {"/crontab", fun eadm_crontab_controller:search/1, #{methods => [get]}}
         ]
       },
       #{prefix => "sys",

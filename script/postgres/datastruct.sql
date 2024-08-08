@@ -413,9 +413,10 @@ drop table if exists eadm_crontab cascade;
 create table eadm_crontab (
   id char(12) not null default ('cr' || lpad((nextval('cr')::varchar), 10, '0')),
   cronname varchar(50) not null,
+  crontype char(12),
   cronexp varchar(50),
   cronmfa varchar(50),
-  starttime timestamptz,
+  starttime timestamptz default current_timestamp,
   endtime timestamptz,
   cronstatus smallint not null default 0,
   createduser varchar(50),
@@ -432,10 +433,13 @@ alter table eadm_crontab drop constraint if exists pk_crontab_id cascade;
 alter table eadm_crontab add constraint pk_crontab_id primary key (id);
 
 drop index if exists non_crontab_cronname;
+drop index if exists non_crontab_crontype;
 create index non_crontab_cronname on eadm_crontab using btree (cronname asc nulls last);
+create index non_crontab_crontype on eadm_crontab using btree (crontype asc nulls last);
 
 comment on column eadm_crontab.id is '自定义主键(cr)';
 comment on column eadm_crontab.cronname is '任务名称';
+comment on column eadm_crontab.crontype is '任务类型';
 comment on column eadm_crontab.cronexp is '定时表达式';
 comment on column eadm_crontab.cronmfa is '任务备注';
 comment on column eadm_crontab.starttime is '任务开始时间';
@@ -457,6 +461,39 @@ create or replace trigger crontab_lastupdate
 before update on eadm_crontab
 for each row
 execute function lastupdate();
+
+-- 查询视图
+create or replace view vi_crontab
+as
+select id, cronname, crontype, cronexp, cronmfa,
+       to_char(starttime, 'yyyy-mm-dd hh24:mi:ss') as starttime,
+       to_char(endtime, 'yyyy-mm-dd hh24:mi:ss') as endtime,
+       case cronstatus when 0 then '启用' else '禁用' end as cronstatus,
+       to_char(createdat, 'yyyy-mm-dd hh24:mi:ss') as createdat
+from eadm_crontab
+where deleted is false;
+
+-- 定时任务日志
+drop table if exists sys_cronlog cascade;
+create table sys_cronlog (
+    id serial,
+    cronid char(12),
+    cronlog text,
+    exectime timestamptz default current_timestamp
+);
+
+alter table sys_cronlog owner to user_eadm;
+alter table sys_cronlog drop constraint if exists pk_cronlog_id cascade;
+alter table sys_cronlog add constraint pk_cronlog_id primary key (id);
+
+drop index if exists non_cronlog_cronid;
+create index non_cronlog_cronid on sys_cronlog using btree (cronid asc nulls last);
+
+comment on column sys_cronlog.id is '自增主键';
+comment on column sys_cronlog.cronlog is '任务Id';
+comment on column sys_cronlog.cronlog is '任务执行详情';
+comment on column sys_cronlog.exectime is '任务执行时间';
+comment on table sys_cronlog is '系统域_任务执行日志';
 
 -- 首页报表
 drop table if exists eadm_dashboard cascade;

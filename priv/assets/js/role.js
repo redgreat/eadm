@@ -16,7 +16,7 @@ function translateColumnNames(columnName) {
 function loadRoleData() {
     let dynamicColumns = []
     let dynamicDatas = []
-    $.getJSON('/data/role', function (resdata) {
+    $.getJSON('/user/role/list', function (resdata) {
         function buildDynamicData(resdata) {
             resdata.columns.forEach(function (column) {
                 let dynamicColumn = {};
@@ -112,7 +112,7 @@ function addRole() {
     };
     $.ajaxSetup({async:false});
     $.ajax({
-        url: '/data/role/add',
+        url: '/user/role/add',
         type: 'POST',
         data: AddParams,
         success: function (resdata) {
@@ -128,7 +128,7 @@ function addRole() {
 function disableRole(roleId) {
     if (typeof roleId !== 'undefined' && roleId !== null && roleId.trim() !== '') {
         $.ajax({
-            url: '/data/role/disable/' + roleId,
+            url: '/user/role/disable/' + roleId,
             type: 'POST',
             success: function (resdata) {
                 if (resdata && resdata.length > 0 && resdata[0].Alert) {
@@ -155,7 +155,7 @@ function editPermission(roleId) {
             userManage: $('#usermanage').is(':checked')
         }
         $.ajax({
-            url: '/data/permission',
+            url: '/user/permission/edit',
             type: 'POST',
             data: postParams,
             success: function (resdata) {
@@ -171,7 +171,7 @@ function editPermission(roleId) {
 
 function loadPermission(roleId) {
     if (typeof roleId !== 'undefined' && roleId !== null && roleId.trim() !== '') {
-        $.getJSON('/data/permission/' + roleId, function (resdata) {
+        $.getJSON('/user/permission/' + roleId, function (resdata) {
             $('#dashboard').prop('checked', resdata.dashboard);
             $('#health').prop('checked', resdata.health);
             $('#locate').prop('checked', resdata.locate);

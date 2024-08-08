@@ -29,7 +29,7 @@ function loadFinanceData(sourceType, inorOut, startTime, endTime) {
     let dynamicColumns = [];
     let dynamicDatas = [];
 
-    $.getJSON('/data/finance', searchParams, function (response) {
+    $.getJSON('/finance', searchParams, function (response) {
 
         function buildDynamicData(response) {
             response.columns.forEach(function (column) {
@@ -130,7 +130,7 @@ function loadFinanceData(sourceType, inorOut, startTime, endTime) {
 
 function deleteRecord(detailId) {
     $.ajax({
-        url: '/data/finance/' + detailId,
+        url: '/finance/' + detailId,
         type: 'DELETE',
         success: function (response) {
             if (response && response.length > 0 && response[0].Alert) {
@@ -144,7 +144,7 @@ function deleteRecord(detailId) {
 
 function loadFinanceDetail(detailId) {
     if (typeof detailId !== 'undefined' && detailId !== null && detailId.trim() !== '') {
-        $.getJSON('/data/finance/' + detailId, function (datas) {
+        $.getJSON('/finance/' + detailId, function (datas) {
         let data = datas[0];
         $('#findetail-owner').html(data.owner);
         $('#findetail-source').html(data.sourcetype);

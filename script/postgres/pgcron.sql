@@ -19,3 +19,6 @@ call proc_dashboard(current_date);
 select * from sys_proclog order by inserttime desc limit 10;
 
 select * from eadm_dashboard;
+
+-- 定时同步数据至pg
+

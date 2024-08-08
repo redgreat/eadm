@@ -16,7 +16,7 @@ function translateColumnNames(columnName) {
 function loadUserData() {
     let dynamicColumns = []
     let dynamicDatas = []
-    $.getJSON('/data/user', function (resdata) {
+    $.getJSON('/list', function (resdata) {
         function buildDynamicData(resdata) {
             resdata.columns.forEach(function (column) {
                 let dynamicColumn = {};
@@ -123,7 +123,7 @@ function loadUserData() {
 function deleteUser(userId) {
     if (typeof userId !== 'undefined' && userId !== null) {
         $.ajax({
-            url: '/data/user/' + userId,
+            url: '/user/' + userId,
             type: 'DELETE',
             success: function (resdata) {
                 if (resdata && resdata.length > 0 && resdata[0].Alert) {
@@ -139,7 +139,7 @@ function deleteUser(userId) {
 function disableUser(userId) {
     if (typeof userId !== 'undefined' && userId !== null) {
         $.ajax({
-            url: '/data/user/disable/' + userId,
+            url: '/user/disable/' + userId,
             type: 'POST',
             success: function (resdata) {
                 if (resdata && resdata.length > 0 && resdata[0].Alert) {
@@ -155,7 +155,7 @@ function disableUser(userId) {
 function resetUser(userId) {
     if (typeof userId !== 'undefined' && userId !== null) {
         $.ajax({
-            url: '/data/user/reset/' + userId,
+            url: '/user/reset/' + userId,
             type: 'POST',
             success: function (resdata) {
                 if (resdata && resdata.length > 0 && resdata[0].Alert) {
@@ -177,7 +177,7 @@ function addUser() {
     };
     $.ajaxSetup({async:false});
     $.ajax({
-        url: '/data/useradd',
+        url: '/user/add',
         type: 'POST',
         data: AddParams,
         success: function (resdata) {
@@ -193,7 +193,7 @@ function addUser() {
 function loadUserRole(userId) {
     let dynamicColumns = []
     let dynamicDatas = []
-    $.getJSON('/data/userrole/' + userId, function (resdata) {
+    $.getJSON('/user/userrole/' + userId, function (resdata) {
         function buildDynamicData(resdata) {
             resdata.columns.forEach(function (column) {
                 let dynamicColumn = {};
@@ -272,7 +272,7 @@ function loadUserRole(userId) {
 
 function deleteUserRole(userRoleId) {
     $.ajax({
-        url: '/data/userrole/delete/' + userRoleId,
+        url: '/user/userrole/' + userRoleId,
         type: 'DELETE',
         success: function (resdata) {
             if (resdata && resdata.length > 0 && resdata[0].Alert) {
@@ -288,7 +288,7 @@ function loadRoleList(userId) {
     let dynamicColumns = []
     let dynamicDatas = []
     // $.ajaxSetup({async:false});
-    $.getJSON('/data/rolelist/' + userId, function (resdata) {
+    $.getJSON('/user/rolelist/' + userId, function (resdata) {
         function buildDynamicData(resdata) {
             dynamicColumns.push({"data": "Action", "title": "选择"});
             resdata.columns.forEach(function (column) {
@@ -370,7 +370,7 @@ function loadRoleList(userId) {
 function addUserRole(userRoleIds) {
     $.ajaxSetup({async:false});
     $.ajax({
-        url: '/data/userroleadd',
+        url: '/user/userrole/add',
         type: 'POST',
         data: userRoleIds,
         success: function (resdata) {
@@ -392,7 +392,7 @@ function editUser(currentUserId) {
     };
     $.ajaxSetup({async:false});
     $.ajax({
-        url: '/data/useredit',
+        url: '/user/edit',
         type: 'POST',
         data: AddParams,
         success: function (resdata) {
