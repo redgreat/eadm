@@ -29,9 +29,9 @@
                         <label for="inorOut">收支类型</label>
                         <select id="inorOut">
                             <option value="0" selected>全部类型</option>
-                            <option value="收入">收入</option>
-                            <option value="支出">支出</option>
-                            <option value="其他">其他</option>
+                            <option value="1">收入</option>
+                            <option value="2">支出</option>
+                            <option value="3">其他</option>
                         </select>
                     </div>
                 </div>
