@@ -34,35 +34,42 @@ index(#{auth_data := #{<<"authed">> := false}}) ->
 %% 查询返回数据结果
 %% @end
 search(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName}}) ->
-    {ok, _, ResData} = eadm_pgpool:equery(pool_pg,
-        "select datavalue
-        from eadm_dashboard
-        where loginname = $1
-          and datatype in (1, 2, 3, 4)
-          and datavalue is not null
-        order by datetype, datatype;",[LoginName]),
-    {ok, _, ResLocation} = eadm_pgpool:equery(pool_pg,
-        "select cast(right(checkdate, 2) as int) as month, datavalue
-        from eadm_dashboard
-        where loginname = $1
-          and datatype = 5
-        order by checkdate;",[LoginName]),
-    {ok, _, ResFinanceIn} = eadm_pgpool:equery(pool_pg,
-        "select cast(right(checkdate, 2) as int) as month, datavalue
-        from eadm_dashboard
-        where loginname = $1
-          and datatype = 6
-        order by checkdate;",[LoginName]),
-    {ok, _, ResFinanceOut} = eadm_pgpool:equery(pool_pg,
-        "select cast(right(checkdate, 2) as int) as month, datavalue
-        from eadm_dashboard
-        where loginname = $1
-          and datatype = 7
-        order by checkdate;",[LoginName]),
-    ResList = ResData ++ [get_hd(ResLocation)] ++ [get_tl(ResLocation)]
-        ++ [get_hd(ResFinanceIn)] ++ [get_tl(ResFinanceIn)] ++ [get_tl(ResFinanceOut)],
-    % lager:info("ResList: ~p", [ResList]),
-    {json, ResList};
+    try
+        {ok, _, ResData} = eadm_pgpool:equery(pool_pg,
+            "select datavalue
+            from eadm_dashboard
+            where loginname = $1
+              and datatype in (1, 2, 3, 4)
+              and datavalue is not null
+            order by datetype, datatype;",[LoginName]),
+        {ok, _, ResLocation} = eadm_pgpool:equery(pool_pg,
+            "select cast(right(checkdate, 2) as int) as month, datavalue
+            from eadm_dashboard
+            where loginname = $1
+              and datatype = 5
+            order by checkdate;",[LoginName]),
+        {ok, _, ResFinanceIn} = eadm_pgpool:equery(pool_pg,
+            "select cast(right(checkdate, 2) as int) as month, datavalue
+            from eadm_dashboard
+            where loginname = $1
+              and datatype = 6
+            order by checkdate;",[LoginName]),
+        {ok, _, ResFinanceOut} = eadm_pgpool:equery(pool_pg,
+            "select cast(right(checkdate, 2) as int) as month, datavalue
+            from eadm_dashboard
+            where loginname = $1
+              and datatype = 7
+            order by checkdate;",[LoginName]),
+        ResList = ResData ++ [get_hd(ResLocation)] ++ [get_tl(ResLocation)]
+            ++ [get_hd(ResFinanceIn)] ++ [get_tl(ResFinanceIn)] ++ [get_tl(ResFinanceOut)],
+        % lager:info("ResList: ~p", [ResList]),
+        {json, ResList}
+    catch
+        _:Error ->
+            lager:error("首页信息查询失败：~p~n", [Error]),
+            Alert = #{<<"Alert">> => unicode:characters_to_binary("首页信息查询失败！")},
+            {json, [Alert]}
+    end;
 
 search(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.

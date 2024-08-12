@@ -16,7 +16,7 @@ function translateColumnNames(columnName) {
 function loadUserData() {
     let dynamicColumns = []
     let dynamicDatas = []
-    $.getJSON('/list', function (resdata) {
+    $.getJSON('/user/list', function (resdata) {
         function buildDynamicData(resdata) {
             resdata.columns.forEach(function (column) {
                 let dynamicColumn = {};

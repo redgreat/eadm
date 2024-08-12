@@ -14,7 +14,7 @@
 %%%===================================================================
 %%% 函数导出
 %%%===================================================================
--export([index/1, search/1, add/1, update/1, delete/1, activate/1, deactivate/1, statistic/1]).
+-export([index/1, search/1, add/1, update/1, delete/1, activate/1]).
 
 %%====================================================================
 %% API 函数
@@ -27,7 +27,7 @@ index(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName,
     {ok, [{username, UserName}]};
 
 index(#{auth_data := #{<<"permission">> := #{<<"crontab">> := false}}}) ->
-    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败! ")},
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败!")},
     {json, [Alert]};
 
 index(#{auth_data := #{<<"authed">> := false}}) ->
@@ -48,7 +48,7 @@ search(#{auth_data := #{<<"authed">> := true, <<"permission">> := #{<<"crontab">
     {json, Response};
 
 search(#{auth_data := #{<<"permission">> := #{<<"crontab">> := false}}}) ->
-    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败! ")},
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败!")},
     {json, [Alert]};
 
 search(#{auth_data := #{<<"authed">> := false}}) ->
@@ -75,12 +75,13 @@ add(#{auth_data := #{<<"authed">> := true, <<"loginname">> := CreatedUser,
         {json, [Info]}
     catch
         _:Error ->
-            Alert = #{<<"Alert">> => unicode:characters_to_binary("用户新增失败！") ++ binary_to_list(Error)},
+            lager:error("任务新增失败：~p~n", [Error]),
+            Alert = #{<<"Alert">> => unicode:characters_to_binary("任务新增失败！")},
             {json, [Alert]}
     end;
 
 add(#{auth_data := #{<<"permission">> := #{<<"crontab">> := false}}}) ->
-    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败! ")},
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败!")},
     {json, [Alert]};
 
 add(#{auth_data := #{<<"authed">> := false}}) ->
@@ -90,20 +91,28 @@ add(#{auth_data := #{<<"authed">> := false}}) ->
 %% 更新任务信息
 %% @end
 update(#{auth_data := #{<<"authed">> := true, <<"permission">> := #{<<"crontab">> := true}},
-    bindings := #{<<"cronName">> := CronName}}) ->
-    CronNamePattern = <<"%", CronName/binary, "%">>,
-    {ok, Res_Col, Res_Data} = eadm_pgpool:equery(pool_pg,
-        "select cronname, cronexp, cronmfa, starttime, endtime, cronstatus, createdat
-        from eadm_crontab
-        where cronname like $1
-          and deleted is false
-        order by createdat desc;",
-        [CronNamePattern]),
-    Response = eadm_utils:pg_as_json(Res_Col, Res_Data),
-    {json, Response};
+    params := #{<<"id">> := CronId, <<"cronName">> := CronName, <<"cronType">> := CronType,
+        <<"cronExp">> := CronExp, <<"cronModule">> := CronModule,
+        <<"startTime">> := StartTime, <<"endTime">> := EndTime}}) ->
+    ParameterStartTime = eadm_utils:parse_date_time(StartTime),
+    ParameterEndTime = eadm_utils:parse_date_time(EndTime),
+    try
+        eadm_pgpool:equery(pool_pg,"update eadm_crontab set cronname=$1,crontype=2,cronexp=$3,
+          cronmfa=$4,starttime=$5,endtime=$6 where id=$7;",
+          [CronName, CronType, CronExp, CronModule, ParameterStartTime, ParameterEndTime, CronId])
+    catch
+        _:Error ->
+            lager:error("任务更新失败：~p~n", [Error]),
+            Alert = #{<<"Alert">> => unicode:characters_to_binary("任务更新失败！")},
+            {json, [Alert]}
+    end,
+    A = unicode:characters_to_binary("任务【"),
+    B = unicode:characters_to_binary("】更新成功! "),
+    Info = #{<<"Alert">> => <<A/binary, CronName/binary, B/binary>>},
+    {json, [Info]};
 
 update(#{auth_data := #{<<"permission">> := #{<<"crontab">> := false}}}) ->
-    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败! ")},
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败!")},
     {json, [Alert]};
 
 update(#{auth_data := #{<<"authed">> := false}}) ->
@@ -113,92 +122,46 @@ update(#{auth_data := #{<<"authed">> := false}}) ->
 %% 删除任务信息
 %% @end
 delete(#{auth_data := #{<<"authed">> := true, <<"permission">> := #{<<"crontab">> := true}},
-    bindings := #{<<"cronName">> := CronName}}) ->
-    CronNamePattern = <<"%", CronName/binary, "%">>,
-    {ok, Res_Col, Res_Data} = eadm_pgpool:equery(pool_pg,
-        "select cronname, cronexp, cronmfa, starttime, endtime, cronstatus, createdat
-        from eadm_crontab
-        where cronname like $1
-          and deleted is false
-        order by createdat desc;",
-        [CronNamePattern]),
-    Response = eadm_utils:pg_as_json(Res_Col, Res_Data),
-    {json, Response};
+    params := #{<<"id">> := CronId}}) ->
+    try
+        eadm_pgpool:equery(pool_pg, "delete from eadm_crontab where id = $1;", [CronId])
+    catch
+        _:Error ->
+            lager:error("任务删除失败：~p~n", [Error]),
+            Alert = #{<<"Alert">> => unicode:characters_to_binary("任务删除失败！")},
+            {json, [Alert]}
+    end,
+    Info = #{<<"Alert">> => <<unicode:characters_to_binary("任务删除成功！")>>},
+    {json, [Info]};
 
 delete(#{auth_data := #{<<"permission">> := #{<<"crontab">> := false}}}) ->
-    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败! ")},
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败!")},
     {json, [Alert]};
 
 delete(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 
 %% @doc
-%% 启动任务信息
+%% 启禁用任务信息
 %% @end
 activate(#{auth_data := #{<<"authed">> := true, <<"permission">> := #{<<"crontab">> := true}},
-    bindings := #{<<"cronName">> := CronName}}) ->
-    CronNamePattern = <<"%", CronName/binary, "%">>,
-    {ok, Res_Col, Res_Data} = eadm_pgpool:equery(pool_pg,
-        "select cronname, cronexp, cronmfa, starttime, endtime, cronstatus, createdat
-        from eadm_crontab
-        where cronname like $1
-          and deleted is false
-        order by createdat desc;",
-        [CronNamePattern]),
-    Response = eadm_utils:pg_as_json(Res_Col, Res_Data),
-    {json, Response};
+    params := #{<<"id">> := CronId}}) ->
+    try
+        eadm_pgpool:equery(pool_pg, "update eadm_crontab set cornstatus=-1*cornstatus where id=$1;", [CronId])
+    catch
+        _:Error ->
+            lager:error("任务启禁用失败：~p~n", [Error]),
+            Alert = #{<<"Alert">> => unicode:characters_to_binary("任务启禁用失败！")},
+            {json, [Alert]}
+    end,
+    Info = #{<<"Alert">> => <<unicode:characters_to_binary("任务删除成功！")>>},
+    {json, [Info]};
 
 activate(#{auth_data := #{<<"permission">> := #{<<"crontab">> := false}}}) ->
-    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败! ")},
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败!")},
     {json, [Alert]};
 
 activate(#{auth_data := #{<<"authed">> := false}}) ->
-    {redirect, "/login"}.
-
-%% @doc
-%% 停止任务信息
-%% @end
-deactivate(#{auth_data := #{<<"authed">> := true, <<"permission">> := #{<<"crontab">> := true}},
-    bindings := #{<<"cronName">> := CronName}}) ->
-    CronNamePattern = <<"%", CronName/binary, "%">>,
-    {ok, Res_Col, Res_Data} = eadm_pgpool:equery(pool_pg,
-        "select cronname, cronexp, cronmfa, starttime, endtime, cronstatus, createdat
-        from eadm_crontab
-        where cronname like $1
-          and deleted is false
-        order by createdat desc;",
-        [CronNamePattern]),
-    Response = eadm_utils:pg_as_json(Res_Col, Res_Data),
-    {json, Response};
-
-deactivate(#{auth_data := #{<<"permission">> := #{<<"crontab">> := false}}}) ->
-    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败! ")},
-    {json, [Alert]};
-
-deactivate(#{auth_data := #{<<"authed">> := false}}) ->
-    {redirect, "/login"}.
-
-%% @doc
-%% 刷新任务信息
-%% @end
-statistic(#{auth_data := #{<<"authed">> := true, <<"permission">> := #{<<"crontab">> := true}},
-    bindings := #{<<"cronName">> := CronName}}) ->
-    CronNamePattern = <<"%", CronName/binary, "%">>,
-    {ok, Res_Col, Res_Data} = eadm_pgpool:equery(pool_pg,
-        "select cronname, cronexp, cronmfa, starttime, endtime, cronstatus, createdat
-        from eadm_crontab
-        where cronname like $1
-          and deleted is false
-        order by createdat desc;",
-        [CronNamePattern]),
-    Response = eadm_utils:pg_as_json(Res_Col, Res_Data),
-    {json, Response};
-
-statistic(#{auth_data := #{<<"permission">> := #{<<"crontab">> := false}}}) ->
-    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败! ")},
-    {json, [Alert]};
-
-statistic(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 %%====================================================================
 %% 内部函数

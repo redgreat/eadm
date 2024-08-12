@@ -29,7 +29,7 @@ index(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName,
     {ok, [{username, UserName}]};
 
 index(#{auth_data := #{<<"permission">> := #{<<"finance">> := #{<<"finlist">> := false}}}}) ->
-    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败! ")},
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败!")},
     {json, [Alert]};
 
 index(#{auth_data := #{<<"authed">> := false}}) ->
@@ -114,15 +114,15 @@ search(#{auth_data := #{<<"authed">> := true,
                         end
                     catch
                         _:Error ->
-                            lager:error("got_error: ~p~n", [Error]),
-                            Alert = #{<<"Alert">> => unicode:characters_to_binary("数据查询失败! ")},
+                            lager:error("数据查询失败: ~p~n", [Error]),
+                            Alert = #{<<"Alert">> => unicode:characters_to_binary("数据查询失败!")},
                             {json, [Alert]}
                     end
             end
     end;
 
 search(#{auth_data := #{<<"permission">> := #{<<"finance">> := #{<<"finlist">> := false}}}}) ->
-    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败! ")},
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败!")},
     {json, [Alert]};
 
 search(#{auth_data := #{<<"authed">> := false}}) ->
@@ -146,12 +146,13 @@ delete(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
             {json, [Info]}
         catch
             _:Error ->
-                Alert = #{<<"Alert">> => unicode:characters_to_binary("数据删除失败! " ++ Error)},
+                lager:error("数据删除失败: ~p~n", [Error]),
+                Alert = #{<<"Alert">> => unicode:characters_to_binary("数据删除失败!")},
                 {json, [Alert]}
         end;
 
 delete(#{auth_data := #{<<"permission">> := #{<<"finance">> := #{<<"findel">> := false}}}}) ->
-    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败! ")},
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败!")},
     {json, [Alert]};
 
 delete(#{auth_data := #{<<"authed">> := false}}) ->
@@ -177,12 +178,13 @@ searchdetail(#{auth_data := #{<<"authed">> := true,
         {json, Response}
     catch
         _:Error ->
-            Alert = #{<<"Alert">> => unicode:characters_to_binary("查询失败! " ++ Error)},
+            lager:error("用户信息查询失败: ~p~n", [Error]),
+            Alert = #{<<"Alert">> => unicode:characters_to_binary("用户信息查询失败!")},
             {json, [Alert]}
     end;
 
 searchdetail(#{auth_data := #{<<"permission">> := #{<<"finance">> := #{<<"finlist">> := false}}}}) ->
-    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败! ")},
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败!")},
     {json, [Alert]};
 
 searchdetail(#{auth_data := #{<<"authed">> := false}}) ->
@@ -224,7 +226,8 @@ upload(#{auth_data := #{<<"authed">> := true,
                         )
                     catch
                         _:Error ->
-                            Alert = #{<<"Alert">> => unicode:characters_to_binary("数据插入失败! " ++ Error)},
+                            lager:error("数据插入失败：~p~n", [Error]),
+                            Alert = #{<<"Alert">> => unicode:characters_to_binary("数据插入失败!")},
                             {json, [Alert]}
                     end
                 end,
@@ -255,7 +258,8 @@ upload(#{auth_data := #{<<"authed">> := true,
                         )
                     catch
                         _:Error ->
-                            Alert = #{<<"Alert">> => unicode:characters_to_binary("数据插入失败! " ++ Error)},
+                            lager:error("数据插入失败：~p~n", [Error]),
+                            Alert = #{<<"Alert">> => unicode:characters_to_binary("数据插入失败!")},
                             {json, [Alert]}
                     end
                 end,
@@ -285,7 +289,8 @@ upload(#{auth_data := #{<<"authed">> := true,
                         )
                     catch
                         _:Error ->
-                            Alert = #{<<"Alert">> => unicode:characters_to_binary("数据插入失败! " ++ Error)},
+                            lager:error("数据插入失败：~p~n", [Error]),
+                            Alert = #{<<"Alert">> => unicode:characters_to_binary("数据插入失败!")},
                             {json, [Alert]}
                     end
                 end,
@@ -320,7 +325,8 @@ upload(#{auth_data := #{<<"authed">> := true,
                         )
                     catch
                         _:Error ->
-                            Alert = #{<<"Alert">> => unicode:characters_to_binary("数据插入失败! " ++ Error)},
+                            lager:error("数据插入失败：~p~n", [Error]),
+                            Alert = #{<<"Alert">> => unicode:characters_to_binary("数据插入失败!")},
                             {json, [Alert]}
                     end
                 end,
@@ -335,7 +341,7 @@ upload(#{auth_data := #{<<"authed">> := true,
     end;
 
 upload(#{auth_data := #{<<"permission">> := #{<<"finance">> := #{<<"finimp">> := false}}}}) ->
-    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败! ")},
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败!")},
     {json, [Alert]};
 
 upload(#{auth_data := #{<<"authed">> := false}}) ->

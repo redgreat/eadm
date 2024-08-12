@@ -29,7 +29,7 @@ index(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName,
     {ok, [{username, UserName}]};
 
 index(#{auth_data := #{<<"permission">> := #{<<"usermanage">> := false}}}) ->
-    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败! ")},
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败！")},
     {json, [Alert]};
 
 index(#{auth_data := #{<<"authed">> := false}}) ->
@@ -42,18 +42,17 @@ search(#{auth_data := #{<<"authed">> := true, <<"permission">> := #{<<"usermanag
     try
         {ok, Res_Col, Res_Data} = eadm_pgpool:equery(pool_pg,
             "select id, tenantname, loginname, username, email, userstatus, createdat
-            from vi_user
-            order by createdat;", []),
+            from vi_user order by createdat;", []),
         Response = eadm_utils:pg_as_json(Res_Col, Res_Data),
         {json, Response}
     catch
         _:Error ->
-            Alert = #{<<"Alert">> => unicode:characters_to_binary("数据查询失败! " ++ binary_to_list(Error))},
+            Alert = #{<<"Alert">> => unicode:characters_to_binary("数据查询失败！")},
             {json, [Alert]}
     end;
 
 search(#{auth_data := #{<<"permission">> := #{<<"usermanage">> := false}}}) ->
-    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败! ")},
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败！")},
     {json, [Alert]};
 
 search(#{auth_data := #{<<"authed">> := false}}) ->
@@ -75,7 +74,7 @@ searchself(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName}}
         {json, ResList}
     catch
         _:Error ->
-            Alert = #{<<"Alert">> => unicode:characters_to_binary("数据查询失败! " ++ binary_to_list(Error))},
+            Alert = #{<<"Alert">> => unicode:characters_to_binary("数据查询失败！")},
             {json, [Alert]}
     end;
 
@@ -101,38 +100,39 @@ add(#{auth_data := #{<<"authed">> := true, <<"loginname">> := CreatedUser,
                                                           values('et0000000002', $1, $2, $3, $4, $5);",
                                                           [LoginName, UserName, Email, CryptoGram, CreatedUser]),
                                 A = unicode:characters_to_binary("用户【"),
-                                B = unicode:characters_to_binary("】新增成功! "),
+                                B = unicode:characters_to_binary("】新增成功！"),
                                 Info = #{<<"Alert">> => <<A/binary, UserName/binary, B/binary>>},
                                 {json, [Info]}
                             catch
                                 _:Error ->
-                                    Alert = #{<<"Alert">> => unicode:characters_to_binary("用户新增失败！") ++ binary_to_list(Error)},
+                                    lager:error("用户新增失败：~p~n", [Error]),
+                                    Alert = #{<<"Alert">> => unicode:characters_to_binary("用户新增失败！")},
                                     {json, [Alert]}
                             end;
                         _ ->
                             A = unicode:characters_to_binary("邮箱【"),
-                            B = unicode:characters_to_binary("】格式错误! "),
+                            B = unicode:characters_to_binary("】格式错误！"),
                             Info = #{<<"Alert">> => <<A/binary, Email/binary, B/binary>>},
                             {json, [Info]}
                     end;
                 {error, 1} ->
                     A = unicode:characters_to_binary("登录名【"),
-                    B = unicode:characters_to_binary("】不能少于6位! "),
+                    B = unicode:characters_to_binary("】不能少于6位！"),
                     Info = #{<<"Alert">> => <<A/binary, LoginName/binary, B/binary>>},
                     {json, [Info]};
                 {error, 2} ->
                     A = unicode:characters_to_binary("登录名【"),
-                    B = unicode:characters_to_binary("】不能大于18位! "),
+                    B = unicode:characters_to_binary("】不能大于18位！"),
                     Info = #{<<"Alert">> => <<A/binary, LoginName/binary, B/binary>>},
                     {json, [Info]};
                 {error, 3} ->
                     A = unicode:characters_to_binary("登录名【"),
-                    B = unicode:characters_to_binary("】已存在! "),
+                    B = unicode:characters_to_binary("】已存在！"),
                     Info = #{<<"Alert">> => <<A/binary, LoginName/binary, B/binary>>},
                     {json, [Info]};
                 {error, 6} ->
                     A = unicode:characters_to_binary("登录名【"),
-                    B = unicode:characters_to_binary("】仅支持英文+数字! "),
+                    B = unicode:characters_to_binary("】仅支持英文+数字！"),
                     Info = #{<<"Alert">> => <<A/binary, LoginName/binary, B/binary>>},
                     {json, [Info]};
                 _ ->
@@ -148,7 +148,7 @@ add(#{auth_data := #{<<"authed">> := true, <<"loginname">> := CreatedUser,
     end;
 
 add(#{auth_data := #{<<"permission">> := #{<<"usermanage">> := false}}}) ->
-    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败! ")},
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败！")},
     {json, [Alert]};
 
 add(#{auth_data := #{<<"authed">> := false}}) ->
@@ -175,38 +175,39 @@ edit(#{auth_data := #{<<"authed">> := true, <<"loginname">> := CreatedUser,
                                 where id = $5;",
                               [LoginName, UserName, Email, CreatedUser, UserId]),
                           A = unicode:characters_to_binary("用户【"),
-                          B = unicode:characters_to_binary("】编辑成功! "),
+                          B = unicode:characters_to_binary("】编辑成功！"),
                           Info = #{<<"Alert">> => <<A/binary, UserName/binary, B/binary>>},
                           {json, [Info]}
                       catch
                           _:Error ->
-                              Alert = #{<<"Alert">> => unicode:characters_to_binary("用户编辑失败！") ++ binary_to_list(Error)},
+                              lager:error("用户编辑失败：~p~n", [Error]),
+                              Alert = #{<<"Alert">> => unicode:characters_to_binary("用户编辑失败！")},
                               {json, [Alert]}
                       end;
                   _ ->
                       A = unicode:characters_to_binary("邮箱【"),
-                      B = unicode:characters_to_binary("】格式错误! "),
+                      B = unicode:characters_to_binary("】格式错误！"),
                       Info = #{<<"Alert">> => <<A/binary, Email/binary, B/binary>>},
                       {json, [Info]}
               end;
           {error, 1} ->
               A = unicode:characters_to_binary("登录名【"),
-              B = unicode:characters_to_binary("】不能少于6位! "),
+              B = unicode:characters_to_binary("】不能少于6位！"),
               Info = #{<<"Alert">> => <<A/binary, LoginName/binary, B/binary>>},
               {json, [Info]};
           {error, 2} ->
               A = unicode:characters_to_binary("登录名【"),
-              B = unicode:characters_to_binary("】不能大于18位! "),
+              B = unicode:characters_to_binary("】不能大于18位！"),
               Info = #{<<"Alert">> => <<A/binary, LoginName/binary, B/binary>>},
               {json, [Info]};
           {error, 3} ->
               A = unicode:characters_to_binary("登录名【"),
-              B = unicode:characters_to_binary("】已存在! "),
+              B = unicode:characters_to_binary("】已存在！"),
               Info = #{<<"Alert">> => <<A/binary, LoginName/binary, B/binary>>},
               {json, [Info]};
           {error, 6} ->
               A = unicode:characters_to_binary("登录名【"),
-              B = unicode:characters_to_binary("】仅支持英文+数字! "),
+              B = unicode:characters_to_binary("】仅支持英文+数字！"),
               Info = #{<<"Alert">> => <<A/binary, LoginName/binary, B/binary>>},
               {json, [Info]};
           _ ->
@@ -215,7 +216,7 @@ edit(#{auth_data := #{<<"authed">> := true, <<"loginname">> := CreatedUser,
       end;
 
 edit(#{auth_data := #{<<"permission">> := #{<<"usermanage">> := false}}}) ->
-    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败! ")},
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败！")},
     {json, [Alert]};
 
 edit(#{auth_data := #{<<"authed">> := false}}) ->
@@ -239,23 +240,24 @@ editself(#{auth_data := #{<<"authed">> := true, <<"loginname">> := CreatedUser,
                       where loginname = $5;",
                     [LoginName, NewUserName, Email, CreatedUser, CreatedUser]),
                 A = unicode:characters_to_binary("用户【"),
-                B = unicode:characters_to_binary("】编辑成功! "),
+                B = unicode:characters_to_binary("】编辑成功！"),
                 Info = #{<<"Alert">> => <<A/binary, NewUserName/binary, B/binary>>},
                 {json, [Info]}
             catch
                 _:Error ->
-                    Alert = #{<<"Alert">> => unicode:characters_to_binary("用户编辑失败！") ++ binary_to_list(Error)},
+                    lager:error("用户编辑失败：~p~n", [Error]),
+                    Alert = #{<<"Alert">> => unicode:characters_to_binary("用户编辑失败！")},
                     {json, [Alert]}
             end;
         _ ->
             A = unicode:characters_to_binary("邮箱【"),
-            B = unicode:characters_to_binary("】格式错误! "),
+            B = unicode:characters_to_binary("】格式错误！"),
             Info = #{<<"Alert">> => <<A/binary, Email/binary, B/binary>>},
             {json, [Info]}
     end;
 
 editself(#{auth_data := #{<<"permission">> := #{<<"usermanage">> := false}}}) ->
-    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败! ")},
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败！")},
     {json, [Alert]};
 
 editself(#{auth_data := #{<<"authed">> := false}}) ->
@@ -282,11 +284,12 @@ password(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
                               and userstatus = 0
                               and deleted is false;",
                             [LoginName, CryptoGram, LoginName]),
-                        Info = #{<<"Alert">> => unicode:characters_to_binary("密码修改成功! ")},
+                        Info = #{<<"Alert">> => unicode:characters_to_binary("密码修改成功！")},
                         {json, [Info]}
                     catch
                         _:Error ->
-                            Alert = #{<<"Alert">> => unicode:characters_to_binary("用户密码修改失败! ") ++ binary_to_list(Error)},
+                            lager:error("用户密码修改失败：~p~n", [Error]),
+                            Alert = #{<<"Alert">> => unicode:characters_to_binary("用户密码修改失败！")},
                             {json, [Alert]}
                     end;
                 2 ->
@@ -314,7 +317,7 @@ password(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
     end;
 
 password(#{auth_data := #{<<"permission">> := #{<<"usermanage">> := false}}}) ->
-    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败! ")},
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败！")},
     {json, [Alert]};
 
 password(#{auth_data := #{<<"authed">> := false}}) ->
@@ -335,16 +338,17 @@ reset(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
                          passwd = $2
                          where id = $3;",
                          [LoginName, CryptoGram, UserId]),
-        Info = #{<<"Alert">> => unicode:characters_to_binary("用户密码重置成功! ")},
+        Info = #{<<"Alert">> => unicode:characters_to_binary("用户密码重置成功！")},
         {json, [Info]}
     catch
         _:Error ->
-            Alert = #{<<"Alert">> => unicode:characters_to_binary("用户密码重置失败! ") ++ binary_to_list(Error)},
+            lager:error("用户密码重置失败：~p~n", [Error]),
+            Alert = #{<<"Alert">> => unicode:characters_to_binary("用户密码重置失败！")},
             {json, [Alert]}
     end;
 
 reset(#{auth_data := #{<<"permission">> := #{<<"usermanage">> := false}}}) ->
-    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败! ")},
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败！")},
     {json, [Alert]};
 
 reset(#{auth_data := #{<<"authed">> := false}}) ->
@@ -364,16 +368,17 @@ disable(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
                                   where id = $2
                                     and deleted is false;",
                                   [LoginName, UserId]),
-        Info = #{<<"Alert">> => unicode:characters_to_binary("用户启禁用成功! ")},
+        Info = #{<<"Alert">> => unicode:characters_to_binary("用户启禁用成功！")},
         {json, [Info]}
     catch
         _:Error ->
-            Alert = #{<<"Alert">> => unicode:characters_to_binary("用户操作失败! ") ++ binary_to_list(Error)},
+            lager:error("用户操作失败：~p~n", [Error]),
+            Alert = #{<<"Alert">> => unicode:characters_to_binary("用户操作失败！")},
             {json, [Alert]}
     end;
 
 disable(#{auth_data := #{<<"permission">> := #{<<"usermanage">> := false}}}) ->
-    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败! ")},
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败！")},
     {json, [Alert]};
 
 disable(#{auth_data := #{<<"authed">> := false}}) ->
@@ -392,16 +397,17 @@ delete(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
                                   deleted = true
                                   where id = $2;",
                                   [LoginName, UserId]),
-        Info = #{<<"Alert">> => unicode:characters_to_binary("用户删除成功! ")},
+        Info = #{<<"Alert">> => unicode:characters_to_binary("用户删除成功！")},
         {json, [Info]}
     catch
         _:Error ->
-            Alert = #{<<"Alert">> => unicode:characters_to_binary("用户删除失败! ") ++ binary_to_list(Error)},
+            lager:error("用户删除失败：~p~n", [Error]),
+            Alert = #{<<"Alert">> => unicode:characters_to_binary("用户删除失败！")},
             {json, [Alert]}
     end;
 
 delete(#{auth_data := #{<<"permission">> := #{<<"usermanage">> := false}}}) ->
-    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败! ")},
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败！")},
     {json, [Alert]};
 
 delete(#{auth_data := #{<<"authed">> := false}}) ->
@@ -423,12 +429,13 @@ userrole(#{auth_data := #{<<"authed">> := true,
         {json, Response}
     catch
         _:Error ->
-            Alert = #{<<"Alert">> => unicode:characters_to_binary("用户角色查询失败! ") ++ binary_to_list(Error)},
+            lager:error("用户角色查询失败：~p~n", [Error]),
+            Alert = #{<<"Alert">> => unicode:characters_to_binary("用户角色查询失败!")},
             {json, [Alert]}
     end;
 
 userrole(#{auth_data := #{<<"permission">> := #{<<"usermanage">> := false}}}) ->
-    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败! ")},
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败!")},
     {json, [Alert]};
 
 userrole(#{auth_data := #{<<"authed">> := false}}) ->
@@ -448,16 +455,17 @@ userroleadd(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
                 [maps:get(<<"userId">>, Map), maps:get(<<"roleId">>, Map), LoginName])
             end,
             RoleIdList),
-        Info = #{<<"Alert">> => unicode:characters_to_binary("用户角色新增成功! ")},
+        Info = #{<<"Alert">> => unicode:characters_to_binary("用户角色新增成功！")},
         {json, [Info]}
     catch
         _:Error ->
-            Alert = #{<<"Alert">> => unicode:characters_to_binary("用户角色新增失败! ") ++ binary_to_list(Error)},
+            lager:error("用户角色新增失败：~p~n", [Error]),
+            Alert = #{<<"Alert">> => unicode:characters_to_binary("用户角色新增失败!")},
             {json, [Alert]}
     end;
 
 userroleadd(#{auth_data := #{<<"permission">> := #{<<"usermanage">> := false}}}) ->
-    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败! ")},
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败！")},
     {json, [Alert]};
 
 userroleadd(#{auth_data := #{<<"authed">> := false}}) ->
@@ -476,16 +484,17 @@ userroledel(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
                                   deleted = true
                                   where id = $2;",
                                   [LoginName, UserRoleId]),
-        Info = #{<<"Alert">> => unicode:characters_to_binary("用户角色删除成功! ")},
+        Info = #{<<"Alert">> => unicode:characters_to_binary("用户角色删除成功！")},
         {json, [Info]}
     catch
         _:Error ->
-            Alert = #{<<"Alert">> => unicode:characters_to_binary("用户角色删除失败! ") ++ binary_to_list(Error)},
+            lager:error("用户角色删除失败：~p~n", [Error]),
+            Alert = #{<<"Alert">> => unicode:characters_to_binary("用户角色删除失败!")},
             {json, [Alert]}
     end;
 
 userroledel(#{auth_data := #{<<"permission">> := #{<<"usermanage">> := false}}}) ->
-    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败! ")},
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败！")},
     {json, [Alert]};
 
 userroledel(#{auth_data := #{<<"authed">> := false}}) ->
@@ -512,18 +521,25 @@ validate_password(PassWordBin) when is_binary(PassWordBin) ->
     PassWord = binary_to_list(PassWordBin),
     AllowedChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789,\._-",
     Regex = "^[" ++ AllowedChars ++ "]+$",
-    case re:run(PassWord, Regex, [global, {capture, none}]) of
-        match ->
-            case byte_size(PassWordBin) of
-                L when L < 6 ->
-                    {error, "密码不能少于6位！"};
-                L when L > 36 ->
-                    {error, "密码不能大于36位！"};
-                _ ->
-                    {ok}
-            end;
-        _ ->
-            {error, "密码仅支持【英文、数字、符号：,._-】"}
+    try
+        case re:run(PassWord, Regex, [global, {capture, none}]) of
+            match ->
+                case byte_size(PassWordBin) of
+                    L when L < 6 ->
+                        {error, "密码不能少于6位！"};
+                    L when L > 36 ->
+                        {error, "密码不能大于36位！"};
+                    _ ->
+                        {ok}
+                end;
+            _ ->
+                {error, "密码仅支持【英文、数字、符号：,._-】"}
+        end
+    catch
+        _:Error ->
+            lager:error("密码验证失败：~p~n", [Error]),
+            Alert = #{<<"Alert">> => unicode:characters_to_binary("密码验证失败！")},
+            {json, [Alert]}
     end;
 validate_password(_) ->
     {error, "密码格式错误！"}.
@@ -534,30 +550,37 @@ validate_password(_) ->
 validate_addloginname(LoginName) ->
     AllowedChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-",
     Regex = "^[" ++ AllowedChars ++ "]+$",
-    case re:run(LoginName, Regex, [global, {capture, none}]) of
-        match ->
-            case byte_size(LoginName) of
-                L when L < 6 ->
-                    {error, 1};
-                L when L > 18 ->
-                    {error, 2};
-                _ ->
-                    try
-                        case eadm_pgpool:equery(pool_pg, "select 1 from eadm_user where loginname = $1;", [LoginName]) of
-                            {ok, _, []} ->
-                                {ok};
-                            {ok, _, _} ->
-                                {error, 3};
+    try
+        case re:run(LoginName, Regex, [global, {capture, none}]) of
+            match ->
+                case byte_size(LoginName) of
+                    L when L < 6 ->
+                        {error, 1};
+                    L when L > 18 ->
+                        {error, 2};
+                    _ ->
+                        try
+                            case eadm_pgpool:equery(pool_pg, "select 1 from eadm_user where loginname = $1;", [LoginName]) of
+                                {ok, _, []} ->
+                                    {ok};
+                                {ok, _, _} ->
+                                    {error, 3};
+                                _ ->
+                                    {error, 4}
+                            end
+                        catch
                             _ ->
-                                {error, 4}
+                                {error, 5}
                         end
-                    catch
-                        _ ->
-                            {error, 5}
-                    end
-            end;
-        _ ->
-            {error, 6}
+                end;
+            _ ->
+                {error, 6}
+        end
+    catch
+        _:Error ->
+            lager:error("用户名验证失败：~p~n", [Error]),
+            Alert = #{<<"Alert">> => unicode:characters_to_binary("用户名验证失败！")},
+            {json, [Alert]}
     end.
 
 %% @doc
@@ -567,43 +590,57 @@ validate_editloginname(UserId, LoginName) ->
     % io:format("UserId: ~p, LoginName: ~p~n", [UserId, LoginName]),
     AllowedChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-",
     Regex = "^[" ++ AllowedChars ++ "]+$",
-    case re:run(LoginName, Regex, [global, {capture, none}]) of
-        match ->
-            case byte_size(LoginName) of
-                L when L < 6 ->
-                    {error, 1};
-                L when L > 18 ->
-                    {error, 2};
-                _ ->
-                    try
-                        case eadm_pgpool:equery(pool_pg,
-                            "select 1 from eadm_user where id != $1 and loginname = $2 and deleted is false;",
-                            [UserId, LoginName]) of
-                            {ok, _, []} ->
-                                {ok};
-                            {ok, _, _} ->
-                                {error, 3};
+    try
+        case re:run(LoginName, Regex, [global, {capture, none}]) of
+            match ->
+                case byte_size(LoginName) of
+                    L when L < 6 ->
+                        {error, 1};
+                    L when L > 18 ->
+                        {error, 2};
+                    _ ->
+                        try
+                            case eadm_pgpool:equery(pool_pg,
+                                "select 1 from eadm_user where id != $1 and loginname = $2 and deleted is false;",
+                                [UserId, LoginName]) of
+                                {ok, _, []} ->
+                                    {ok};
+                                {ok, _, _} ->
+                                    {error, 3};
+                                _ ->
+                                    {error, 4}
+                            end
+                        catch
                             _ ->
-                                {error, 4}
+                                {error, 5}
                         end
-                    catch
-                        _ ->
-                            {error, 5}
-                    end
-            end;
-        _ ->
-            {error, 6}
+                end;
+            _ ->
+                {error, 6}
+        end
+    catch
+        _:Error ->
+            lager:error("用户名验证失败：~p~n", [Error]),
+            Alert = #{<<"Alert">> => unicode:characters_to_binary("用户名验证失败！")},
+            {json, [Alert]}
     end.
 
 %% @doc
 %% 获取用户权限
 %% @end
 get_permission(LoginName) ->
-    {ok, _, ResData} = eadm_pgpool:equery(pool_pg,
-        "select rolepermission
-        from vi_userpermission
-        where loginname = $1
-        limit 1;", [LoginName]),
-    {ResBin} = hd(ResData),
-    {ok, ResJson} = thoas:decode(ResBin),
-    #{<<"data">> => ResJson}.
+    try
+        {ok, _, ResData} = eadm_pgpool:equery(pool_pg,
+            "select rolepermission
+            from vi_userpermission
+            where loginname = $1
+            limit 1;", [LoginName]),
+        {ResBin} = hd(ResData),
+        {ok, ResJson} = thoas:decode(ResBin),
+        #{<<"data">> => ResJson}
+    catch
+        _:Error ->
+            lager:error("权限获取失败：~p~n", [Error]),
+            Alert = #{<<"Alert">> => unicode:characters_to_binary("权限获取失败!")},
+            {json, [Alert]}
+    end.
