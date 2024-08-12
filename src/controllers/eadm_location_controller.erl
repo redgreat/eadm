@@ -29,8 +29,7 @@ index(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName,
     {ok, [{username, UserName}]};
 
 index(#{auth_data := #{<<"permission">> := #{<<"locate">> := false}}}) ->
-    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败!")},
-    {json, [Alert]};
+    {json, [#{<<"Alert">> => unicode:characters_to_binary("API鉴权失败！", utf8)}]};
 
 index(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
@@ -44,11 +43,9 @@ search(#{auth_data := #{<<"authed">> := true,
     try
         case {eadm_utils:validate_date_time(StartTime), eadm_utils:validate_date_time(EndTime)} of
             {false, _} ->
-                Alert = #{<<"Alert">> => unicode:characters_to_binary("开始时间格式错误！")},
-                {json, [Alert]};
+                {json, [#{<<"Alert">> => unicode:characters_to_binary("开始时间格式错误！", utf8)}]};
             {_, false} ->
-                Alert = #{<<"Alert">> => unicode:characters_to_binary("结束时间格式错误！")},
-                {json, [Alert]};
+                {json, [#{<<"Alert">> => unicode:characters_to_binary("结束时间格式错误！", utf8)}]};
             {_, _} ->
                 MaxSearchSpan = application:get_env(restwong_cfg, max_search_span, 3),
                 TimeDiff = eadm_utils:time_diff(StartTime, EndTime),
@@ -58,8 +55,8 @@ search(#{auth_data := #{<<"authed">> := true,
                 ParameterEndTime = eadm_utils:parse_date_time(CtsEndTime),
                 case TimeDiff > (MaxSearchSpan * 86400) of
                     true ->
-                        Alert = #{<<"Alert">> => unicode:characters_to_binary("查询时长超过 " ++ integer_to_list(MaxSearchSpan) ++ " 天，禁止查询!")},
-                        {json, [Alert]};
+                        {json, [#{<<"Alert">> => unicode:characters_to_binary(("查询时长超过 "
+                          ++ erlang:integer_to_list(MaxSearchSpan) ++ " 天，禁止查询!"), utf8)}]};
                     _ ->
                         try
                             {ok, _, ResData} = eadm_pgpool:equery(pool_pg,
@@ -73,21 +70,19 @@ search(#{auth_data := #{<<"authed">> := true,
                             {json, Response}
                         catch
                             _:Error ->
-                                Alert = #{<<"Alert">> => unicode:characters_to_binary("查询失败! " ++ Error)},
-                                {json, [Alert]}
+                                lager:error("定位信息查询失败：~p~n", [Error]),
+                                {json, [#{<<"Alert">> => unicode:characters_to_binary("定位信息查询失败！", utf8)}]}
                         end
                 end
         end
     catch
         _:Error ->
             lager:error("数据查询失败：~p~n", [Error]),
-            Alert = #{<<"Alert">> => unicode:characters_to_binary("数据查询失败！")},
-            {json, [Alert]}
+            {json, [#{<<"Alert">> => unicode:characters_to_binary("数据查询失败！", utf8)}]}
     end;
 
 search(#{auth_data := #{<<"permission">> := #{<<"locate">> := false}}}) ->
-    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败!")},
-    {json, [Alert]};
+    {json, [#{<<"Alert">> => unicode:characters_to_binary("API鉴权失败！", utf8)}]};
 
 search(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.

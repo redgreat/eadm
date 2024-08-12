@@ -41,33 +41,28 @@ login(Req) ->
                         nova_session:set(Req, <<"permission">>, Permission),
                         nova_session:set(Req, <<"exp">>, NewExp),
                         lager:info("User: ~ts, Login Success! New Exp: ~p", [UserName, NewExp]),
-                        A = unicode:characters_to_binary("欢迎【"),
-                        B = unicode:characters_to_binary("】登录! "),
-                        Info = #{<<"Alert">> => <<A/binary, UserName/binary, B/binary>>,
-                            <<"logined">> => 1},
-                        {json, [Info]};
+                        A = unicode:characters_to_binary("欢迎【", utf8),
+                        B = unicode:characters_to_binary("】登录! ", utf8),
+                        {json, [#{<<"Alert">> => <<A/binary, UserName/binary, B/binary>>,
+                            <<"logined">> => 1}]};
                     2 ->
                         lager:info("User Not Fond!"),
-                        Alert = #{<<"Alert">> => unicode:characters_to_binary("用户不存在，请联系管理员！"),
-                            <<"logined">> => 0},
-                        {json, [Alert]};
+                        {json, [#{<<"Alert">> => unicode:characters_to_binary("用户不存在，请联系管理员！", utf8),
+                            <<"logined">> => 0}]};
                     3 ->
                         lager:info("User Disable!"),
-                        Alert = #{<<"Alert">> => unicode:characters_to_binary("用户已禁用，请联系管理员！"),
-                            <<"logined">> => 0},
-                        {json, [Alert]};
+                        {json, [#{<<"Alert">> => unicode:characters_to_binary("用户已禁用，请联系管理员！", utf8),
+                            <<"logined">> => 0}]};
                     _ ->
                         lager:info("User Login Failed!"),
-                        Alert = #{<<"Alert">> => unicode:characters_to_binary("用户名或密码错误，请重新登录！"),
-                            <<"logined">> => 0},
-                        {json, [Alert]}
+                        {json, [#{<<"Alert">> => unicode:characters_to_binary("用户名或密码错误，请重新登录！", utf8),
+                            <<"logined">> => 0}]}
                 end
         end
     catch
-        _:Error ->
+        _E:Error ->
             lager:error("用户登录失败：~p~n", [Error]),
-            Alert = #{<<"Alert">> => unicode:characters_to_binary("用户登录失败！")},
-            {json, [Alert]}
+            {json, [#{<<"Alert">> => unicode:characters_to_binary("用户登录失败！", utf8)}]}
     end.
 
 %% @doc
@@ -93,10 +88,9 @@ getpermission(LoginName) ->
             limit 1;", [LoginName]),
         eadm_utils:pg_as_jsondata(ResData)
     catch
-        _:Error ->
+        _E:Error ->
             lager:error("用户权限获取失败：~p~n", [Error]),
-            Alert = #{<<"Alert">> => unicode:characters_to_binary("用户权限获取失败！")},
-            {json, [Alert]}
+            {json, [#{<<"Alert">> => unicode:characters_to_binary("用户权限获取失败！", utf8)}]}
     end.
 
 %% @doc
@@ -111,8 +105,7 @@ getusername(LoginName) ->
             limit 1;", [LoginName]),
         eadm_utils:pg_as_jsonmap(ResData)
     catch
-        _:Error ->
+        _E:Error ->
             lager:error("登录名称获取失败：~p~n", [Error]),
-            Alert = #{<<"Alert">> => unicode:characters_to_binary("登录名称获取失败！")},
-            {json, [Alert]}
+            {json, [#{<<"Alert">> => unicode:characters_to_binary("登录名称获取失败！", utf8)}]}
     end.

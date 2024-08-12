@@ -17,16 +17,16 @@ function loadMemu() {
                 menuHtml += '<li> <a href="/"><i class="fas fa-home"></i> 信息看板</a></li>';
             }
             if (resobj.health === true) {
-                menuHtml += '<li><a href="/daily/health"><i class="fas fa-heartbeat"></i> 我的健康</a></li>';
+                menuHtml += '<li><a href="/menu/health"><i class="fas fa-heartbeat"></i> 我的健康</a></li>';
             }
             if (resobj.locate === true) {
-                menuHtml += '<li><a href="/daily/location"><i class="fas fa-map-marked-alt"></i> 轨迹回放</a></li>';
+                menuHtml += '<li><a href="/menu/location"><i class="fas fa-map-marked-alt"></i> 轨迹回放</a></li>';
             }
             if (resobj.finance.finlist === true) {
-                menuHtml += '<li><a href="/daily/finance"><i class="fas fa-money-bill"></i> 我的财务</a></li>';
+                menuHtml += '<li><a href="/menu/finance"><i class="fas fa-money-bill"></i> 我的财务</a></li>';
             }
             if (resobj.crontab === true) {
-                menuHtml += '<li><a href="/daily/crontab"><i class="fas fa-hourglass-half"></i> 定时任务</a></li>';
+                menuHtml += '<li><a href="/menu/crontab"><i class="fas fa-hourglass-half"></i> 定时任务</a></li>';
             }
             if (resobj.usermanage === true) {
                 menuHtml += '<li><a href="/user"><i class="fas fa-user"></i> 用户信息</a></li>';
@@ -88,7 +88,7 @@ $(document).ready(function() {
         };
         $.ajaxSetup({async:false});
         $.ajax({
-            url: '/user/editself',
+            url: '/user/edit/self',
             type: 'POST',
             data: editParams,
             success: function (resdata) {

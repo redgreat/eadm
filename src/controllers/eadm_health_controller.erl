@@ -32,7 +32,7 @@ index(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName,
     {ok, [{username, UserName}]};
 
 index(#{auth_data := #{<<"permission">> := #{<<"health">> := false}}}) ->
-    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败!")},
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败！", utf8)},
     {json, [Alert]};
 
 index(#{auth_data := #{<<"authed">> := false}}) ->
@@ -47,10 +47,10 @@ search(#{auth_data := #{<<"authed">> := true,
     try
         case {eadm_utils:validate_date_time(StartTime), eadm_utils:validate_date_time(EndTime)} of
             {false, _} ->
-                Alert = #{<<"Alert">> => unicode:characters_to_binary("开始时间格式错误！")},
+                Alert = #{<<"Alert">> => unicode:characters_to_binary("开始时间格式错误！", utf8)},
                 {json, [Alert]};
             {_, false} ->
-                Alert = #{<<"Alert">> => unicode:characters_to_binary("结束时间格式错误！")},
+                Alert = #{<<"Alert">> => unicode:characters_to_binary("结束时间格式错误！", utf8)},
                 {json, [Alert]};
             {_, _} ->
                 ParameterStartTime = eadm_utils:parse_date_time(StartTime),
@@ -59,7 +59,8 @@ search(#{auth_data := #{<<"authed">> := true,
                 TimeDiff = eadm_utils:time_diff(StartTime, EndTime),
                 case TimeDiff > (MaxSearchSpan * 86400) of
                     true ->
-                        Alert = #{<<"Alert">> => unicode:characters_to_binary("查询时长超过 " ++ integer_to_list(MaxSearchSpan) ++ " 天，禁止查询!")},
+                        Alert = #{<<"Alert">> => unicode:characters_to_binary(("查询时长超过 "
+                            ++ erlang:integer_to_list(MaxSearchSpan) ++ " 天，禁止查询!"), utf8)},
                         {json, [Alert]};
                     _ ->
                         case DataType of
@@ -128,14 +129,14 @@ search(#{auth_data := #{<<"authed">> := true,
                 end
         end
     catch
-        _:Error ->
+        _E:Error ->
             lager:error("数据查询失败：~p~n", [Error]),
-            Alert = #{<<"Alert">> => unicode:characters_to_binary("数据查询失败!")},
+            Alert = #{<<"Alert">> => unicode:characters_to_binary("数据查询失败！", utf8)},
             {json, [Alert]}
     end;
 
 search(#{auth_data := #{<<"permission">> := #{<<"health">> := false}}}) ->
-    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败!")},
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败！", utf8)},
     {json, [Alert]};
 
 search(#{auth_data := #{<<"authed">> := false}}) ->

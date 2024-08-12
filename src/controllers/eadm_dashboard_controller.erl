@@ -65,9 +65,9 @@ search(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName}}) ->
         % lager:info("ResList: ~p", [ResList]),
         {json, ResList}
     catch
-        _:Error ->
+        _E:Error ->
             lager:error("首页信息查询失败：~p~n", [Error]),
-            Alert = #{<<"Alert">> => unicode:characters_to_binary("首页信息查询失败！")},
+            Alert = #{<<"Alert">> => unicode:characters_to_binary("首页信息查询失败！", utf8)},
             {json, [Alert]}
     end;
 
@@ -78,10 +78,10 @@ search(#{auth_data := #{<<"authed">> := false}}) ->
 %% 内部函数
 %%====================================================================
 get_hd(List) ->
-    Mon = unicode:characters_to_binary("月"),
-    HdFun = fun([X|_]) -> Y = integer_to_binary(X), <<Y/binary, Mon/binary>> end,
+    Mon = unicode:characters_to_binary("月", utf8),
+    HdFun = fun([X|_]) -> Y = erlang:integer_to_binary(X), <<Y/binary, Mon/binary>> end,
     lists:map(HdFun, List).
 
 get_tl(List) ->
-    TlFun = fun(X) -> list_to_binary(tl(X)) end,
+    TlFun = fun(X) -> erlang:list_to_binary(tl(X)) end,
     lists:map(TlFun, List).

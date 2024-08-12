@@ -29,7 +29,7 @@ index(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName,
     {ok, [{username, UserName}]};
 
 index(#{auth_data := #{<<"permission">> := #{<<"finance">> := #{<<"finlist">> := false}}}}) ->
-    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败!")},
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败！", utf8)},
     {json, [Alert]};
 
 index(#{auth_data := #{<<"authed">> := false}}) ->
@@ -44,21 +44,22 @@ search(#{auth_data := #{<<"authed">> := true,
         <<"startTime">> := StartTime, <<"endTime">> := EndTime}}) ->
     case {eadm_utils:validate_date_time(StartTime), eadm_utils:validate_date_time(EndTime)} of
         {false, _} ->
-            Alert = #{<<"Alert">> => unicode:characters_to_binary("开始时间格式错误！")},
+            Alert = #{<<"Alert">> => unicode:characters_to_binary("开始时间格式错误！", utf8)},
             {json, [Alert]};
         {_, false} ->
-            Alert = #{<<"Alert">> => unicode:characters_to_binary("结束时间格式错误！")},
+            Alert = #{<<"Alert">> => unicode:characters_to_binary("结束时间格式错误！", utf8)},
             {json, [Alert]};
         {_, _} ->
             ParameterStartTime = eadm_utils:parse_date_time(StartTime),
             ParameterEndTime = eadm_utils:parse_date_time(EndTime),
-            ParameterSourceType = binary_to_integer(SourceType),
+            ParameterSourceType = erlang:binary_to_integer(SourceType),
             ParameterInOrOut = case InOrOut of 1 -> <<"收入">>; 2 -> <<"支出">>; 3 -> <<"其他">>; _ -> 0 end,
             MaxSearchSpan = application:get_env(restwong_cfg, max_fin_search_span, 366),
             TimeDiff = eadm_utils:time_diff(StartTime, EndTime),
             case TimeDiff > (MaxSearchSpan * 86400) of
                 true ->
-                    Alert = #{<<"Alert">> => unicode:characters_to_binary("查询时长超过 " ++ integer_to_list(MaxSearchSpan) ++ " 天，禁止查询!")},
+                    Alert = #{<<"Alert">> => unicode:characters_to_binary(("查询时长超过 "
+                        ++ erlang:integer_to_list(MaxSearchSpan) ++ " 天，禁止查询!"), utf8)},
                     {json, [Alert]};
                 _ ->
                     try
@@ -113,16 +114,16 @@ search(#{auth_data := #{<<"authed">> := true,
                                 {json, Response}
                         end
                     catch
-                        _:Error ->
+                        _E:Error ->
                             lager:error("数据查询失败: ~p~n", [Error]),
-                            Alert = #{<<"Alert">> => unicode:characters_to_binary("数据查询失败!")},
+                            Alert = #{<<"Alert">> => unicode:characters_to_binary("数据查询失败！", utf8)},
                             {json, [Alert]}
                     end
             end
     end;
 
 search(#{auth_data := #{<<"permission">> := #{<<"finance">> := #{<<"finlist">> := false}}}}) ->
-    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败!")},
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败！", utf8)},
     {json, [Alert]};
 
 search(#{auth_data := #{<<"authed">> := false}}) ->
@@ -134,7 +135,7 @@ search(#{auth_data := #{<<"authed">> := false}}) ->
 delete(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
       <<"permission">> := #{<<"finance">> := #{<<"findel">> := true}}},
     bindings := #{<<"detailId">> := DetailId}}) ->
-    ParameterDetailId = binary_to_integer(DetailId),
+    ParameterDetailId = erlang:binary_to_integer(DetailId),
         try
             eadm_pgpool:equery(pool_pg, "update fn_paybilldetail
                                       set deleteduser = $1,
@@ -142,17 +143,17 @@ delete(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
                                       deleted = true
                                       where id = $2;",
                                       [LoginName, ParameterDetailId]),
-            Info = #{<<"Alert">> => unicode:characters_to_binary("数据删成功! ")},
+            Info = #{<<"Alert">> => unicode:characters_to_binary("数据删成功！", utf8)},
             {json, [Info]}
         catch
-            _:Error ->
+            _E:Error ->
                 lager:error("数据删除失败: ~p~n", [Error]),
-                Alert = #{<<"Alert">> => unicode:characters_to_binary("数据删除失败!")},
+                Alert = #{<<"Alert">> => unicode:characters_to_binary("数据删除失败！", utf8)},
                 {json, [Alert]}
         end;
 
 delete(#{auth_data := #{<<"permission">> := #{<<"finance">> := #{<<"findel">> := false}}}}) ->
-    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败!")},
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败！", utf8)},
     {json, [Alert]};
 
 delete(#{auth_data := #{<<"authed">> := false}}) ->
@@ -164,7 +165,7 @@ delete(#{auth_data := #{<<"authed">> := false}}) ->
 searchdetail(#{auth_data := #{<<"authed">> := true,
       <<"permission">> := #{<<"finance">> := #{<<"finlist">> := true}}},
     bindings := #{<<"detailId">> := DetailId}}) ->
-    ParameterDetailId = binary_to_integer(DetailId),
+    ParameterDetailId = erlang:binary_to_integer(DetailId),
     try
         {ok, ResCol, ResData} = eadm_pgpool:equery(pool_pg,
             "select owner, sourcetype, inorout, counterparty, counterbank, counteraccount,
@@ -177,14 +178,14 @@ searchdetail(#{auth_data := #{<<"authed">> := true,
         Response = eadm_utils:pg_as_map(ResCol, ResData),
         {json, Response}
     catch
-        _:Error ->
+        _E:Error ->
             lager:error("用户信息查询失败: ~p~n", [Error]),
-            Alert = #{<<"Alert">> => unicode:characters_to_binary("用户信息查询失败!")},
+            Alert = #{<<"Alert">> => unicode:characters_to_binary("用户信息查询失败！", utf8)},
             {json, [Alert]}
     end;
 
 searchdetail(#{auth_data := #{<<"permission">> := #{<<"finance">> := #{<<"finlist">> := false}}}}) ->
-    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败!")},
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败！", utf8)},
     {json, [Alert]};
 
 searchdetail(#{auth_data := #{<<"authed">> := false}}) ->
@@ -227,12 +228,13 @@ upload(#{auth_data := #{<<"authed">> := true,
                     catch
                         _:Error ->
                             lager:error("数据插入失败：~p~n", [Error]),
-                            Alert = #{<<"Alert">> => unicode:characters_to_binary("数据插入失败!")},
+                            Alert = #{<<"Alert">> => unicode:characters_to_binary("数据插入失败！", utf8)},
                             {json, [Alert]}
                     end
                 end,
                 UploadJson),
-            Info = #{<<"Alert">> => unicode:characters_to_binary("导入成功" ++ integer_to_list(count_maps(UploadJson)) ++ "行!")},
+            Info = #{<<"Alert">> => unicode:characters_to_binary(("导入成功"
+                ++ erlang:integer_to_list(count_maps(UploadJson)) ++ "行！"), utf8)},
             {json, [Info]};
         <<"1">> ->
             lists:foreach(
@@ -259,12 +261,13 @@ upload(#{auth_data := #{<<"authed">> := true,
                     catch
                         _:Error ->
                             lager:error("数据插入失败：~p~n", [Error]),
-                            Alert = #{<<"Alert">> => unicode:characters_to_binary("数据插入失败!")},
+                            Alert = #{<<"Alert">> => unicode:characters_to_binary("数据插入失败！", utf8)},
                             {json, [Alert]}
                     end
                 end,
                 UploadJson),
-            Info = #{<<"Alert">> => unicode:characters_to_binary("导入成功" ++ integer_to_list(count_maps(UploadJson)) ++ "行!")},
+            Info = #{<<"Alert">> => unicode:characters_to_binary(("导入成功"
+                ++ erlang:integer_to_list(count_maps(UploadJson)) ++ "行！"), utf8)},
             {json, [Info]};
         <<"2">> ->
             lists:foreach(
@@ -290,12 +293,13 @@ upload(#{auth_data := #{<<"authed">> := true,
                     catch
                         _:Error ->
                             lager:error("数据插入失败：~p~n", [Error]),
-                            Alert = #{<<"Alert">> => unicode:characters_to_binary("数据插入失败!")},
+                            Alert = #{<<"Alert">> => unicode:characters_to_binary("数据插入失败！", utf8)},
                             {json, [Alert]}
                     end
                 end,
                 UploadJson),
-            Info = #{<<"Alert">> => unicode:characters_to_binary("导入成功" ++ integer_to_list(count_maps(UploadJson)) ++ "行!")},
+            Info = #{<<"Alert">> => unicode:characters_to_binary(("导入成功"
+                ++ erlang:integer_to_list(count_maps(UploadJson)) ++ "行！"), utf8)},
             {json, [Info]};
         <<"3">> ->
             lists:foreach(
@@ -303,9 +307,9 @@ upload(#{auth_data := #{<<"authed">> := true,
                     InCome = maps:get(<<"Amount">>, Map),
                     case InCome of
                         _ when InCome > 0 ->
-                        InOrOut = unicode:characters_to_binary("收入");
+                        InOrOut = unicode:characters_to_binary("收入", uft8);
                         _ ->
-                        InOrOut = unicode:characters_to_binary("支出")
+                        InOrOut = unicode:characters_to_binary("支出", utf8)
                     end,
                     try
                         eadm_pgpool:equery(pool_pg,
@@ -324,24 +328,26 @@ upload(#{auth_data := #{<<"authed">> := true,
                              InOrOut]
                         )
                     catch
-                        _:Error ->
+                        _E:Error ->
                             lager:error("数据插入失败：~p~n", [Error]),
-                            Alert = #{<<"Alert">> => unicode:characters_to_binary("数据插入失败!")},
+                            Alert = #{<<"Alert">> => unicode:characters_to_binary("数据插入失败！", utf8)},
                             {json, [Alert]}
                     end
                 end,
                 UploadJson),
-            Info = #{<<"Alert">> => unicode:characters_to_binary("导入成功" ++ integer_to_list(count_maps(UploadJson)) ++ "行!")},
+            Info = #{<<"Alert">> => unicode:characters_to_binary(("导入成功"
+                ++ erlang:integer_to_list(count_maps(UploadJson)) ++ "行！"), utf8)},
             {json, [Info]};
         <<"4">> ->
-            Info = #{<<"Alert">> => unicode:characters_to_binary("导入成功" ++ integer_to_list(count_maps(UploadJson)) ++ "行!")},
+            Info = #{<<"Alert">> => unicode:characters_to_binary(("导入成功"
+                ++ erlang:integer_to_list(count_maps(UploadJson)) ++ "行！"), utf8)},
             {json, [Info]};
         _ ->
-            {json, [unicode:characters_to_binary("导入格式不对!")]}
+            {json, [unicode:characters_to_binary("导入格式不对！", utf8)]}
     end;
 
 upload(#{auth_data := #{<<"permission">> := #{<<"finance">> := #{<<"finimp">> := false}}}}) ->
-    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败!")},
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败！", utf8)},
     {json, [Alert]};
 
 upload(#{auth_data := #{<<"authed">> := false}}) ->

@@ -28,7 +28,7 @@ index(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName,
     {ok, [{username, UserName}]};
 
 index(#{auth_data := #{<<"permission">> := #{<<"usermanage">> := false}}}) ->
-    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败!")},
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败！", utf8)},
     {json, [Alert]};
 
 index(#{auth_data := #{<<"authed">> := false}}) ->
@@ -47,14 +47,14 @@ search(#{auth_data := #{<<"authed">> := true,
         Response = eadm_utils:pg_as_json(ResCol, ResData),
         {json, Response}
     catch
-        _:Error ->
+        _E:Error ->
             lager:error("数据查询失败：~p~n", [Error]),
-            Alert = #{<<"Alert">> => unicode:characters_to_binary("数据查询失败!")},
+            Alert = #{<<"Alert">> => unicode:characters_to_binary("数据查询失败！", utf8)},
             {json, [Alert]}
     end;
 
 search(#{auth_data := #{<<"permission">> := #{<<"usermanage">> := false}}}) ->
-    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败!")},
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败！", utf8)},
     {json, [Alert]};
 
 search(#{auth_data := #{<<"authed">> := false}}) ->
@@ -69,19 +69,19 @@ add(#{auth_data := #{<<"authed">> := true, <<"loginname">> := CreatedUser,
     try
         eadm_pgpool:equery(pool_pg, "insert into eadm_role(rolename, createduser) values($1, $2);",
             [RoleName, CreatedUser]),
-        A = unicode:characters_to_binary("角色【"),
-        B = unicode:characters_to_binary("】新增成功! "),
+        A = unicode:characters_to_binary("角色【", utf8),
+        B = unicode:characters_to_binary("】新增成功！", utf8),
         Info = #{<<"Alert">> => <<A/binary, RoleName/binary, B/binary>>},
         {json, [Info]}
     catch
-        _:Error ->
+        _E:Error ->
             lager:error("角色新增失败：~p~n", [Error]),
-            Alert = #{<<"Alert">> => unicode:characters_to_binary("角色新增失败")},
+            Alert = #{<<"Alert">> => unicode:characters_to_binary("角色新增失败！", utf8)},
             {json, [Alert]}
     end;
 
 add(#{auth_data := #{<<"permission">> := #{<<"usermanage">> := false}}}) ->
-    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败!")},
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败！", utf8)},
     {json, [Alert]};
 
 add(#{auth_data := #{<<"authed">> := false}}) ->
@@ -103,14 +103,14 @@ loadpermission(#{auth_data := #{<<"authed">> := true,
         RetuenJson = eadm_utils:pg_as_jsondata(ResData),
         {json, RetuenJson}
     catch
-        _:Error ->
+        _E:Error ->
             lager:error("数据查询失败：~p~n", [Error]),
-            Alert = #{<<"Alert">> => unicode:characters_to_binary("数据查询失败!")},
+            Alert = #{<<"Alert">> => unicode:characters_to_binary("数据查询失败！", utf8)},
             {json, [Alert]}
     end;
 
 loadpermission(#{auth_data := #{<<"permission">> := #{<<"usermanage">> := false}}}) ->
-    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败!")},
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败！", utf8)},
     {json, [Alert]};
 
 loadpermission(#{auth_data := #{<<"authed">> := false}}) ->
@@ -125,16 +125,16 @@ updatepermission(#{auth_data := #{<<"authed">> := true, <<"loginname">> := Login
         <<"locate">> := Locate, <<"finance">> := Finance, <<"finimp">> := Finimp,
         <<"findel">> := Findel, <<"crontab">> := Crontab, <<"userManage">> := Usermanage}}) ->
     try
-        RolePermissionMap = #{<<"dashboard">> => binary_to_atom(DashBoard),
-            <<"health">> => binary_to_atom(Health),
-            <<"locate">> => binary_to_atom(Locate),
+        RolePermissionMap = #{<<"dashboard">> => erlang:binary_to_atom(DashBoard),
+            <<"health">> => erlang:binary_to_atom(Health),
+            <<"locate">> => erlang:binary_to_atom(Locate),
             <<"finance">> =>  #{
-                <<"finlist">> => binary_to_atom(Finance),
-                <<"finimp">> => binary_to_atom(Finimp),
-                <<"findel">> => binary_to_atom(Findel)
+                <<"finlist">> => erlang:binary_to_atom(Finance),
+                <<"finimp">> => erlang:binary_to_atom(Finimp),
+                <<"findel">> => erlang:binary_to_atom(Findel)
             },
-            <<"crontab">> => binary_to_atom(Crontab),
-            <<"usermanage">> => binary_to_atom(Usermanage)
+            <<"crontab">> => erlang:binary_to_atom(Crontab),
+            <<"usermanage">> => erlang:binary_to_atom(Usermanage)
         },
         RolePermissionJson = thoas:encode(RolePermissionMap),
         eadm_pgpool:equery(pool_pg,
@@ -143,17 +143,17 @@ updatepermission(#{auth_data := #{<<"authed">> := true, <<"loginname">> := Login
                 updateduser = $2,
                 updatedat = current_timestamp
             where id = $3;", [RolePermissionJson, LoginName, RoleId]),
-        Info = #{<<"Alert">> => unicode:characters_to_binary("权限更新成功!")},
+        Info = #{<<"Alert">> => unicode:characters_to_binary("权限更新成功！", utf8)},
         {json, [Info]}
     catch
-        _:Error ->
+        _E:Error ->
             lager:error("权限更新失败：~p~n", [Error]),
-            Alert = #{<<"Alert">> => unicode:characters_to_binary("权限更新失败!")},
+            Alert = #{<<"Alert">> => unicode:characters_to_binary("权限更新失败！", utf8)},
             {json, [Alert]}
     end;
 
 updatepermission(#{auth_data := #{<<"permission">> := #{<<"usermanage">> := false}}}) ->
-    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败!")},
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败！", utf8)},
     {json, [Alert]};
 
 updatepermission(#{auth_data := #{<<"authed">> := false}}) ->
@@ -174,17 +174,17 @@ disable(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
             where id = $2
               and deleted is false;",
             [LoginName, RoleId]),
-        Info = #{<<"Alert">> => unicode:characters_to_binary("角色启禁用成功!")},
+        Info = #{<<"Alert">> => unicode:characters_to_binary("角色启禁用成功！", utf8)},
         {json, [Info]}
     catch
-        _:Error ->
+        _E:Error ->
             lager:error("任务新增失败：~p~n", [Error]),
-            Alert = #{<<"Alert">> => unicode:characters_to_binary("任务新增失败!")},
+            Alert = #{<<"Alert">> => unicode:characters_to_binary("任务新增失败！", utf8)},
             {json, [Alert]}
     end;
 
 disable(#{auth_data := #{<<"permission">> := #{<<"usermanage">> := false}}}) ->
-    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败!")},
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败！", utf8)},
     {json, [Alert]};
 
 disable(#{auth_data := #{<<"authed">> := false}}) ->
@@ -204,17 +204,17 @@ delete(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
               deleted = true
             where id = $2;",
             [LoginName, RoleId]),
-        Info = #{<<"Alert">> => unicode:characters_to_binary("角色删除成功!")},
+        Info = #{<<"Alert">> => unicode:characters_to_binary("角色删除成功！", utf8)},
         {json, [Info]}
     catch
-        _:Error ->
+        _E:Error ->
             lager:error("角色删除失败：~p~n", [Error]),
-            Alert = #{<<"Alert">> => unicode:characters_to_binary("角色删除失败!")},
+            Alert = #{<<"Alert">> => unicode:characters_to_binary("角色删除失败！", utf8)},
             {json, [Alert]}
     end;
 
 delete(#{auth_data := #{<<"permission">> := #{<<"usermanage">> := false}}}) ->
-    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败!")},
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败, utf8", utf8)},
     {json, [Alert]};
 
 delete(#{auth_data := #{<<"authed">> := false}}) ->
@@ -239,14 +239,14 @@ getrolelist(#{auth_data := #{<<"authed">> := true,
         Response = eadm_utils:pg_as_json(Res_Col, Res_Data),
         {json, Response}
     catch
-        _:Error ->
+        _E:Error ->
             lager:error("数据查询失败：~p~n", [Error]),
-            Alert = #{<<"Alert">> => unicode:characters_to_binary("数据查询失败!")},
+            Alert = #{<<"Alert">> => unicode:characters_to_binary("数据查询失败！", utf8)},
             {json, [Alert]}
     end;
 
 getrolelist(#{auth_data := #{<<"permission">> := #{<<"usermanage">> := false}}}) ->
-    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败!")},
+    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败！", utf8)},
     {json, [Alert]};
 
 getrolelist(#{auth_data := #{<<"authed">> := false}}) ->

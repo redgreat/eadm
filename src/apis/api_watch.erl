@@ -264,7 +264,7 @@ index(#{params := Params}) ->
         %% 提醒
         <<"18">> ->
             try
-                MsgContent = unicode:characters_to_binary("手表电量低！"),
+                MsgContent = unicode:characters_to_binary("手表电量低！", utf8),
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchalarm(alarmtime, alarmtype, alarminfo)
                   values($1, $2, $3);", [BTUtcTime, 18, MsgContent]),
@@ -278,7 +278,7 @@ index(#{params := Params}) ->
             end;
         <<"19">> ->
             try
-                MsgContent = unicode:characters_to_binary("紧急预警！"),
+                MsgContent = unicode:characters_to_binary("紧急预警！", utf8),
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchalarm(alarmtime, alarmtype, alarminfo)
                   values($1, $2, $3);", [BTUtcTime, 19, MsgContent]),
@@ -292,7 +292,7 @@ index(#{params := Params}) ->
             end;
         <<"20">> ->
             try
-                MsgContent = unicode:characters_to_binary("手表已关机！"),
+                MsgContent = unicode:characters_to_binary("手表已关机！", utf8),
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchalarm(alarmtime, alarmtype, alarminfo)
                   values($1, $2, $3);", [BTUtcTime, 20, MsgContent]),
@@ -306,7 +306,7 @@ index(#{params := Params}) ->
             end;
         <<"21">> ->
             try
-                MsgContent = unicode:characters_to_binary("手表已摘除！"),
+                MsgContent = unicode:characters_to_binary("手表已摘除！", utf8),
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchalarm(alarmtime, alarmtype, alarminfo)
                   values($1, $2, $3);", [BTUtcTime, 21, MsgContent]),
@@ -320,7 +320,7 @@ index(#{params := Params}) ->
             end;
         <<"24">> ->
             try
-                MsgContent = unicode:characters_to_binary("签到！"),
+                MsgContent = unicode:characters_to_binary("签到！", utf8),
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchalarm(alarmtime, alarmtype, alarminfo)
                   values($1, $2, $3);", [BTUtcTime, 24, MsgContent]),
@@ -334,7 +334,7 @@ index(#{params := Params}) ->
             end;
         <<"25">> ->
             try
-                MsgContent = unicode:characters_to_binary("签退！"),
+                MsgContent = unicode:characters_to_binary("签退！", utf8),
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchalarm(alarmtime, alarmtype, alarminfo)
                   values($1, $2, $3);", [BTUtcTime, 25, MsgContent]),
@@ -348,7 +348,7 @@ index(#{params := Params}) ->
             end;
         <<"36">> ->
             try
-                MsgContent = unicode:characters_to_binary("久坐！"),
+                MsgContent = unicode:characters_to_binary("久坐！", utf8),
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchalarm(alarmtime, alarmtype, alarminfo)
                   values($1, $2, $3);", [BTUtcTime, 36, MsgContent]),
@@ -362,7 +362,7 @@ index(#{params := Params}) ->
             end;
         <<"38">> ->
             try
-                MsgContent = unicode:characters_to_binary("表带锁打开！"),
+                MsgContent = unicode:characters_to_binary("表带锁打开！", utf8),
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchalarm(alarmtime, alarmtype, alarminfo)
                   values($1, $2, $3);", [BTUtcTime, 38, MsgContent]),
@@ -376,7 +376,7 @@ index(#{params := Params}) ->
             end;
         <<"39">> ->
             try
-                MsgContent = unicode:characters_to_binary("表带破坏！"),
+                MsgContent = unicode:characters_to_binary("表带破坏！", utf8),
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchalarm(alarmtime, alarmtype, alarminfo)
                   values($1, $2, $3);", [BTUtcTime, 39, MsgContent]),
@@ -390,7 +390,7 @@ index(#{params := Params}) ->
             end;
         <<"51">> ->
             try
-                MsgContent = unicode:characters_to_binary("进入睡眠！"),
+                MsgContent = unicode:characters_to_binary("进入睡眠！", utf8),
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchalarm(alarmtime, alarmtype, alarminfo)
                   values($1, $2, $3);", [BTUtcTime, 51, MsgContent]),
@@ -404,7 +404,7 @@ index(#{params := Params}) ->
             end;
         <<"52">> ->
             try
-                MsgContent = unicode:characters_to_binary("退出睡眠！"),
+                MsgContent = unicode:characters_to_binary("退出睡眠！", utf8),
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchalarm(alarmtime, alarmtype, alarminfo)
                   values($1, $2, $3);", [BTUtcTime, 52, MsgContent]),
@@ -418,7 +418,7 @@ index(#{params := Params}) ->
             end;
         <<"57">> ->
             try
-                MsgContent = unicode:characters_to_binary("手表已佩戴！"),
+                MsgContent = unicode:characters_to_binary("手表已佩戴！", utf8),
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchalarm(alarmtime, alarmtype, alarminfo)
                   values($1, $2, $3);", [BTUtcTime, 39, MsgContent]),
@@ -432,7 +432,7 @@ index(#{params := Params}) ->
             end;
         <<"91">> ->
             try
-                MsgContent = unicode:characters_to_binary("无信号！"),
+                MsgContent = unicode:characters_to_binary("无信号！", utf8),
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchalarm(alarmtime, alarmtype, alarminfo)
                   values($1, $2, $3);", [BTUtcTime, 91, MsgContent]),
@@ -446,7 +446,7 @@ index(#{params := Params}) ->
             end;
         <<"110">> ->
             try
-                MsgContent = unicode:characters_to_binary("手表跌落！"),
+                MsgContent = unicode:characters_to_binary("手表跌落！", utf8),
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchalarm(alarmtime, alarmtype, alarminfo)
                   values($1, $2, $3);", [BTUtcTime, 110, MsgContent]),
@@ -460,7 +460,7 @@ index(#{params := Params}) ->
             end;
         <<"154">> ->
             try
-                MsgContent = unicode:characters_to_binary("充电关机！"),
+                MsgContent = unicode:characters_to_binary("充电关机！", utf8),
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchalarm(alarmtime, alarmtype, alarminfo)
                   values($1, $2, $3);", [BTUtcTime, 154, MsgContent]),
@@ -474,7 +474,7 @@ index(#{params := Params}) ->
             end;
         <<"155">> ->
             try
-                MsgContent = unicode:characters_to_binary("低电关机！"),
+                MsgContent = unicode:characters_to_binary("低电关机！", utf8),
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchalarm(alarmtime, alarmtype, alarminfo)
                   values($1, $2, $3);", [BTUtcTime, 155, MsgContent]),
@@ -488,7 +488,7 @@ index(#{params := Params}) ->
             end;
         <<"156">> ->
             try
-                MsgContent = MsgContent = unicode:characters_to_binary("主动关机！"),
+                MsgContent = MsgContent = unicode:characters_to_binary("主动关机！", utf8),
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchalarm(alarmtime, alarmtype, alarminfo)
                   values($1, $2, $3);", [BTUtcTime, 156, MsgContent]),

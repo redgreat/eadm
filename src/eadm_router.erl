@@ -47,7 +47,7 @@ routes(_Environment) ->
           {"/", fun eadm_dashboard_controller:index/1, #{methods => [get]}}
         ]
       },
-      #{prefix => "daily",
+      #{prefix => "menu",
       security => {eadm_auth, auth},
       routes => [
           {"/health", fun eadm_health_controller:index/1, #{methods => [get]}},
@@ -55,6 +55,33 @@ routes(_Environment) ->
           {"/finance", fun eadm_finance_controller:index/1, #{methods => [get]}},
           {"/crontab", fun eadm_crontab_controller:index/1, #{methods => [get]}}
         ]
+      },
+      #{prefix => "data",
+      security => {eadm_auth, auth},
+      routes => [
+          {"/dashboard", fun eadm_dashboard_controller:search/1, #{methods => [get]}},
+          {"/health", fun eadm_health_controller:search/1, #{methods => [get]}},
+          {"/location", fun eadm_location_controller:search/1, #{methods => [get]}}
+        ]
+      },
+      #{prefix => "finance",
+      security => {eadm_auth, auth},
+      routes => [
+          {"/", fun eadm_finance_controller:search/1, #{methods => [get]}},
+          {"/:detailId", fun eadm_finance_controller:delete/1, #{methods => [delete]}},
+          {"/:detailId", fun eadm_finance_controller:searchdetail/1, #{methods => [get]}},
+          {"/upload", fun eadm_finance_controller:upload/1, #{methods => [post]}}
+      ]
+      },
+      #{prefix => "crontab",
+      security => {eadm_auth, auth},
+      routes => [
+          {"/", fun eadm_crontab_controller:search/1, #{methods => [get]}},
+          {"/:cronId", fun eadm_crontab_controller:delete/1, #{methods => [delete]}},
+          {"/add", fun eadm_crontab_controller:add/1, #{methods => [post]}},
+          {"/update", fun eadm_crontab_controller:update/1, #{methods => [post]}},
+          {"/activate/:cronId", fun eadm_crontab_controller:activate/1, #{methods => [post]}}
+      ]
       },
       #{prefix => "user",
       security => {eadm_auth, auth},
@@ -66,7 +93,7 @@ routes(_Environment) ->
 
           {"/add", fun eadm_user_controller:add/1, #{methods => [post]}},
           {"/edit", fun eadm_user_controller:edit/1, #{methods => [post]}},
-          {"/editself", fun eadm_user_controller:editself/1, #{methods => [post]}},
+          {"/edit/self", fun eadm_user_controller:editself/1, #{methods => [post]}},
 
           {"/:userId", fun eadm_user_controller:delete/1, #{methods => [delete]}},
           {"/reset/:userId", fun eadm_user_controller:reset/1, #{methods => [post]}},
@@ -86,24 +113,6 @@ routes(_Environment) ->
           {"/permission", fun eadm_user_controller:userpermission/1, #{methods => [get]}},
           {"/permission/edit", fun eadm_role_controller:updatepermission/1, #{methods => [post]}},
           {"/permission/:roleId", fun eadm_role_controller:loadpermission/1, #{methods => [get]}}
-        ]
-      },
-      #{prefix => "finance",
-      security => {eadm_auth, auth},
-      routes => [
-          {"/", fun eadm_finance_controller:search/1, #{methods => [get]}},
-          {"/:detailId", fun eadm_finance_controller:delete/1, #{methods => [delete]}},
-          {"/:detailId", fun eadm_finance_controller:searchdetail/1, #{methods => [get]}},
-          {"/upload", fun eadm_finance_controller:upload/1, #{methods => [post]}}
-      ]
-      },
-      #{prefix => "data",
-      security => {eadm_auth, auth},
-      routes => [
-          {"/dashboard", fun eadm_dashboard_controller:search/1, #{methods => [get]}},
-          {"/health", fun eadm_health_controller:search/1, #{methods => [get]}},
-          {"/location", fun eadm_location_controller:search/1, #{methods => [get]}},
-          {"/crontab", fun eadm_crontab_controller:search/1, #{methods => [get]}}
         ]
       },
       #{prefix => "sys",
