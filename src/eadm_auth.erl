@@ -24,7 +24,7 @@
 auth(Req) ->
     case nova_session:get(Req ,<<"exp">>) of
         {ok, Exp} ->
-            case is_integer(Exp) andalso (Exp > erlang:system_time(seconds)) of
+            case erlang:is_integer(Exp) andalso (Exp > erlang:system_time(seconds)) of
                 true ->
                     {ok, LoginName} = nova_session:get(Req ,<<"loginname">>),
                     {ok, UserName} = nova_session:get(Req ,<<"username">>),
