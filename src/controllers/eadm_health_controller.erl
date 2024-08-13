@@ -32,8 +32,7 @@ index(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName,
     {ok, [{username, UserName}]};
 
 index(#{auth_data := #{<<"permission">> := #{<<"health">> := false}}}) ->
-    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败！", utf8)},
-    {json, [Alert]};
+    {json, [#{<<"Alert">> => unicode:characters_to_binary("API鉴权失败！", utf8)}]};
 
 index(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
@@ -47,11 +46,9 @@ search(#{auth_data := #{<<"authed">> := true,
     try
         case {eadm_utils:validate_date_time(StartTime), eadm_utils:validate_date_time(EndTime)} of
             {false, _} ->
-                Alert = #{<<"Alert">> => unicode:characters_to_binary("开始时间格式错误！", utf8)},
-                {json, [Alert]};
+                {json, [#{<<"Alert">> => unicode:characters_to_binary("开始时间格式错误！", utf8)}]};
             {_, false} ->
-                Alert = #{<<"Alert">> => unicode:characters_to_binary("结束时间格式错误！", utf8)},
-                {json, [Alert]};
+                {json, [#{<<"Alert">> => unicode:characters_to_binary("结束时间格式错误！", utf8)}]};
             {_, _} ->
                 ParameterStartTime = eadm_utils:parse_date_time(StartTime),
                 ParameterEndTime = eadm_utils:parse_date_time(EndTime),
@@ -59,9 +56,8 @@ search(#{auth_data := #{<<"authed">> := true,
                 TimeDiff = eadm_utils:time_diff(StartTime, EndTime),
                 case TimeDiff > (MaxSearchSpan * 86400) of
                     true ->
-                        Alert = #{<<"Alert">> => unicode:characters_to_binary(("查询时长超过 "
-                            ++ erlang:integer_to_list(MaxSearchSpan) ++ " 天，禁止查询!"), utf8)},
-                        {json, [Alert]};
+                        {json, [#{<<"Alert">> => unicode:characters_to_binary(("查询时长超过 "
+                            ++ erlang:integer_to_list(MaxSearchSpan) ++ " 天，禁止查询!"), utf8)}]};
                     _ ->
                         case DataType of
                             <<"1">> ->
@@ -124,20 +120,17 @@ search(#{auth_data := #{<<"authed">> := true,
                             _ ->
                                 {ResCol, ResData} = {undefined, undefined}
                         end,
-                        Response = eadm_utils:pg_as_json(ResCol, ResData),
-                        {json, Response}
+                        {json, eadm_utils:pg_as_json(ResCol, ResData)}
                 end
         end
     catch
-        _E:Error ->
+        _:Error ->
             lager:error("数据查询失败：~p~n", [Error]),
-            Alert = #{<<"Alert">> => unicode:characters_to_binary("数据查询失败！", utf8)},
-            {json, [Alert]}
+            {json, [#{<<"Alert">> => unicode:characters_to_binary("数据查询失败！", utf8)}]}
     end;
 
 search(#{auth_data := #{<<"permission">> := #{<<"health">> := false}}}) ->
-    Alert = #{<<"Alert">> => unicode:characters_to_binary("API鉴权失败！", utf8)},
-    {json, [Alert]};
+    {json, [#{<<"Alert">> => unicode:characters_to_binary("API鉴权失败！", utf8)}]};
 
 search(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.

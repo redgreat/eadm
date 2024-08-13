@@ -58,21 +58,14 @@ search(#{auth_data := #{<<"authed">> := true,
                         {json, [#{<<"Alert">> => unicode:characters_to_binary(("查询时长超过 "
                           ++ erlang:integer_to_list(MaxSearchSpan) ++ " 天，禁止查询!"), utf8)}]};
                     _ ->
-                        try
-                            {ok, _, ResData} = eadm_pgpool:equery(pool_pg,
-                                "select lng, lat
-                                from lc_carlocdaily
-                                where ptime >= $1
-                                  and ptime < $2
-                                order by ptime desc;",
-                                [ParameterStartTime, ParameterEndTime]),
-                                Response = eadm_utils:convert_to_array(ResData),
-                            {json, Response}
-                        catch
-                            _:Error ->
-                                lager:error("定位信息查询失败：~p~n", [Error]),
-                                {json, [#{<<"Alert">> => unicode:characters_to_binary("定位信息查询失败！", utf8)}]}
-                        end
+                        {ok, _, ResData} = eadm_pgpool:equery(pool_pg,
+                            "select lng, lat
+                            from lc_carlocdaily
+                            where ptime >= $1
+                              and ptime < $2
+                            order by ptime desc;",
+                            [ParameterStartTime, ParameterEndTime]),
+                        {json, eadm_utils:convert_to_array(ResData)}
                 end
         end
     catch

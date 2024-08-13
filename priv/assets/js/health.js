@@ -27,7 +27,7 @@ function loadHealthData(dataType, startTime, endTime) {
     let dynamicColumns = [];
     let dynamicDatas = [];
 
-    $.getJSON('/data/health', searchParams, function (response) {
+    $.getJSON('/health', searchParams, function (response) {
 
         function buildDynamicData(response) {
             response.columns.forEach(function (column) {

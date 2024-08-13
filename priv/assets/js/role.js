@@ -16,7 +16,7 @@ function translateColumnNames(columnName) {
 function loadRoleData() {
     let dynamicColumns = []
     let dynamicDatas = []
-    $.getJSON('/user/role/list', function (resdata) {
+    $.getJSON('/role', function (resdata) {
         function buildDynamicData(resdata) {
             resdata.columns.forEach(function (column) {
                 let dynamicColumn = {};
@@ -112,7 +112,7 @@ function addRole() {
     };
     $.ajaxSetup({async:false});
     $.ajax({
-        url: '/user/role/add',
+        url: '/role/add',
         type: 'POST',
         data: AddParams,
         success: function (resdata) {
@@ -128,7 +128,7 @@ function addRole() {
 function disableRole(roleId) {
     if (typeof roleId !== 'undefined' && roleId !== null && roleId.trim() !== '') {
         $.ajax({
-            url: '/user/role/disable/' + roleId,
+            url: '/role/disable/' + roleId,
             type: 'POST',
             success: function (resdata) {
                 if (resdata && resdata.length > 0 && resdata[0].Alert) {
@@ -137,6 +137,21 @@ function disableRole(roleId) {
                     showWarningToast("服务器运行错误，请联系管理员！");
                 }
             }
+        });
+    }
+}
+
+function loadPermission(roleId) {
+    if (typeof roleId !== 'undefined' && roleId !== null && roleId.trim() !== '') {
+        $.getJSON('/permission/' + roleId, function (resdata) {
+            $('#dashboard').prop('checked', resdata.dashboard);
+            $('#health').prop('checked', resdata.health);
+            $('#locate').prop('checked', resdata.locate);
+            $('#finance').prop('checked', resdata.finance.finlist);
+            $('#finance-imp').prop('checked', resdata.finance.finimp);
+            $('#finance-del').prop('checked', resdata.finance.findel);
+            $('#crontab').prop('checked', resdata.crontab);
+            $('#usermanage').prop('checked', resdata.usermanage);
         });
     }
 }
@@ -155,7 +170,7 @@ function editPermission(roleId) {
             userManage: $('#usermanage').is(':checked')
         }
         $.ajax({
-            url: '/user/permission/edit',
+            url: '/permission/edit',
             type: 'POST',
             data: postParams,
             success: function (resdata) {
@@ -165,21 +180,6 @@ function editPermission(roleId) {
                     showWarningToast("服务器运行错误，请联系管理员！");
                 }
             }
-        });
-    }
-}
-
-function loadPermission(roleId) {
-    if (typeof roleId !== 'undefined' && roleId !== null && roleId.trim() !== '') {
-        $.getJSON('/user/permission/' + roleId, function (resdata) {
-            $('#dashboard').prop('checked', resdata.dashboard);
-            $('#health').prop('checked', resdata.health);
-            $('#locate').prop('checked', resdata.locate);
-            $('#finance').prop('checked', resdata.finance.finlist);
-            $('#finance-imp').prop('checked', resdata.finance.finimp);
-            $('#finance-del').prop('checked', resdata.finance.findel);
-            $('#crontab').prop('checked', resdata.crontab);
-            $('#usermanage').prop('checked', resdata.usermanage);
         });
     }
 }

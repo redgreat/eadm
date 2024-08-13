@@ -60,15 +60,12 @@ search(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName}}) ->
             where loginname = $1
               and datatype = 7
             order by checkdate;",[LoginName]),
-        ResList = ResData ++ [get_hd(ResLocation)] ++ [get_tl(ResLocation)]
-            ++ [get_hd(ResFinanceIn)] ++ [get_tl(ResFinanceIn)] ++ [get_tl(ResFinanceOut)],
-        % lager:info("ResList: ~p", [ResList]),
-        {json, ResList}
+        {json, ResData ++ [get_hd(ResLocation)] ++ [get_tl(ResLocation)]
+            ++ [get_hd(ResFinanceIn)] ++ [get_tl(ResFinanceIn)] ++ [get_tl(ResFinanceOut)]}
     catch
-        _E:Error ->
+        _:Error ->
             lager:error("首页信息查询失败：~p~n", [Error]),
-            Alert = #{<<"Alert">> => unicode:characters_to_binary("首页信息查询失败！", utf8)},
-            {json, [Alert]}
+            {json, [#{<<"Alert">> => unicode:characters_to_binary("首页信息查询失败！", utf8)}]}
     end;
 
 search(#{auth_data := #{<<"authed">> := false}}) ->

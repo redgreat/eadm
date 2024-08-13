@@ -12,7 +12,7 @@ function loadChart() {
     let location = $('#location');
     let finance = $('#finance');
 
-    $.getJSON('/data/dashboard', function (resdata) {
+    $.getJSON('/dashboard', function (resdata) {
 
         // console.log("resdata: " + JSON.stringify(resdata));
 

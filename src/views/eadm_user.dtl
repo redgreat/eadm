@@ -14,7 +14,7 @@
                 <button type="button" id="refresh-user-btn" class="btn btn-sm btn-outline-primary float-end mb-2">
                     <i class="fas fa-redo-alt"></i> 刷新
                 </button>
-                <a href="/user/role" id="role-user-btn" class="btn btn-sm btn-outline-primary float-end mb-2 me-1">
+                <a href="/menu/role" id="role-user-btn" class="btn btn-sm btn-outline-primary float-end mb-2 me-1">
                     <i class="fas fa-user-shield"></i> 角色
                 </a>
                 <button type="button" id="add-user-btn" class="btn btn-sm btn-outline-primary float-end mb-2 me-1"

@@ -9,7 +9,7 @@
  */
 
 function loadMemu() {
-    $.getJSON('/user/permission', function (resdata) {
+    $.getJSON('/permission', function (resdata) {
         let menuHtml = '';
         if ('data' in resdata[0]) {
             const resobj = resdata[0].data;
@@ -29,7 +29,7 @@ function loadMemu() {
                 menuHtml += '<li><a href="/menu/crontab"><i class="fas fa-hourglass-half"></i> 定时任务</a></li>';
             }
             if (resobj.usermanage === true) {
-                menuHtml += '<li><a href="/user"><i class="fas fa-user"></i> 用户信息</a></li>';
+                menuHtml += '<li><a href="/menu/user"><i class="fas fa-user"></i> 用户信息</a></li>';
             }
             $('#menu-container').prepend(menuHtml);
         }
@@ -52,7 +52,7 @@ $(document).ready(function() {
         e.preventDefault();
         let clickedId = $(this).attr('id');
         if (clickedId === 'userinfo') {
-            $.getJSON('/user/info', function (resdata) {
+            $.getJSON('/userinfo', function (resdata) {
                 $('#loginname-self').val(resdata[0]);
                 $('#username-self').val(resdata[1]);
                 $('#email-self').val(resdata[2]);
@@ -88,7 +88,7 @@ $(document).ready(function() {
         };
         $.ajaxSetup({async:false});
         $.ajax({
-            url: '/user/edit/self',
+            url: '/useredit',
             type: 'POST',
             data: editParams,
             success: function (resdata) {
@@ -108,7 +108,7 @@ $(document).ready(function() {
         };
         if (passwordNew === passwordConfirm){
             $.ajax({
-                url: '/user/pwd',
+                url: '/userpwd',
                 type: 'POST',
                 data: paswordParams,
                 success: function (resdata) {

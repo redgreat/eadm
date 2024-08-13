@@ -20,7 +20,7 @@ function loadCronData(cronName) {
         cronName: cronName
     };
 
-    $.getJSON('/data/crontab/', searchParams, function (response) {
+    $.getJSON('/crontab', searchParams, function (response) {
 
         function buildDynamicData(response) {
             response.columns.forEach(function (column) {
@@ -129,12 +129,12 @@ function addCron() {
         cronType: $('#crontype').val(),
         cronExp: $('#cronexp').val(),
         cronModule: $('#cronmodule').val(),
-        startTime: $('#starttime').val(),
+        startTime: $('#starttime').val() || defaultEndTime,
         endTime: $('#endtime').val()
     };
     $.ajaxSetup({async:false});
     $.ajax({
-        url: '/data/crontab/add',
+        url: '/crontab/add',
         type: 'POST',
         data: AddParams,
         success: function (resdata) {
@@ -175,7 +175,7 @@ $(document).ready(function() {
 
     $('#cron-add-submit-btn').click(function () {
         addCron();
-        loadCronData();
+        loadCronData("");
         cleanAddTab();
     });
 
@@ -200,7 +200,7 @@ $(document).ready(function() {
         if (cronId !== "未查到数据" && typeof cronId !== 'undefined' && cronId !== null) {
             disableCron(cronId);
             setTimeout(function () {
-                loadCronData();
+                loadCronData("");
             }, 100);
         } else {
             showWarningToast("未查到需禁用任务，请刷新页面重试!");

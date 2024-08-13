@@ -257,7 +257,7 @@ drop table if exists eadm_role cascade;
 create table eadm_role (
   id char(12) not null default ('er' || lpad((nextval('er')::varchar), 10, '0')),
   rolename varchar(50) not null,
-  rolepermission json,
+  rolepermission json default '{"crontab":false,"dashboard":true,"finance":{"findel":false,"finimp":false,"finlist":false},"health":false,"locate":false,"usermanage":false}'::json,
   rolestatus smallint not null default 0,
   createduser varchar(50),
   createdat timestamptz default current_timestamp,

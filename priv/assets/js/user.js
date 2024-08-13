@@ -16,7 +16,7 @@ function translateColumnNames(columnName) {
 function loadUserData() {
     let dynamicColumns = []
     let dynamicDatas = []
-    $.getJSON('/user/list', function (resdata) {
+    $.getJSON('/user', function (resdata) {
         function buildDynamicData(resdata) {
             resdata.columns.forEach(function (column) {
                 let dynamicColumn = {};
@@ -120,10 +120,54 @@ function loadUserData() {
     })
 }
 
+function addUser() {
+    const AddParams = {
+        loginName: $('#loginname').val(),
+        email: $('#email').val(),
+        userName: $('#username').val(),
+        password: $('#password').val()
+    };
+    $.ajaxSetup({async:false});
+    $.ajax({
+        url: '/user/add',
+        type: 'POST',
+        data: AddParams,
+        success: function (resdata) {
+            if (resdata && resdata.length > 0 && resdata[0].Alert) {
+                showWarningToast(resdata[0].Alert);
+            } else {
+                showWarningToast("服务器运行错误，请联系管理员！");
+            }
+        }
+    });
+}
+
+function editUser(currentUserId) {
+    const AddParams = {
+        userId: currentUserId,
+        loginName: $('#loginname-edit').val(),
+        email: $('#email-edit').val(),
+        userName: $('#username-edit').val()
+    };
+    $.ajaxSetup({async:false});
+    $.ajax({
+        url: '/user/edit',
+        type: 'POST',
+        data: AddParams,
+        success: function (resdata) {
+            if (resdata && resdata.length > 0 && resdata[0].Alert) {
+                showWarningToast(resdata[0].Alert);
+            } else {
+                showWarningToast("服务器运行错误，请联系管理员！");
+            }
+        }
+    });
+}
+
 function deleteUser(userId) {
     if (typeof userId !== 'undefined' && userId !== null) {
         $.ajax({
-            url: '/user/' + userId,
+            url: '/user/delete/' + userId,
             type: 'DELETE',
             success: function (resdata) {
                 if (resdata && resdata.length > 0 && resdata[0].Alert) {
@@ -168,32 +212,10 @@ function resetUser(userId) {
     }
 }
 
-function addUser() {
-    const AddParams = {
-        loginName: $('#loginname').val(),
-        email: $('#email').val(),
-        userName: $('#username').val(),
-        password: $('#password').val()
-    };
-    $.ajaxSetup({async:false});
-    $.ajax({
-        url: '/user/add',
-        type: 'POST',
-        data: AddParams,
-        success: function (resdata) {
-            if (resdata && resdata.length > 0 && resdata[0].Alert) {
-                showWarningToast(resdata[0].Alert);
-            } else {
-                    showWarningToast("服务器运行错误，请联系管理员！");
-            }
-        }
-    });
-}
-
 function loadUserRole(userId) {
     let dynamicColumns = []
     let dynamicDatas = []
-    $.getJSON('/user/userrole/' + userId, function (resdata) {
+    $.getJSON('/userrole/' + userId, function (resdata) {
         function buildDynamicData(resdata) {
             resdata.columns.forEach(function (column) {
                 let dynamicColumn = {};
@@ -270,9 +292,25 @@ function loadUserRole(userId) {
     })
 }
 
+function addUserRole(userRoleIds) {
+    $.ajaxSetup({async:false});
+    $.ajax({
+        url: '/userrole/add',
+        type: 'POST',
+        data: userRoleIds,
+        success: function (resdata) {
+            if (resdata && resdata.length > 0 && resdata[0].Alert) {
+                showWarningToast(resdata[0].Alert);
+            } else {
+                showWarningToast("服务器运行错误，请联系管理员！");
+            }
+        }
+    });
+}
+
 function deleteUserRole(userRoleId) {
     $.ajax({
-        url: '/user/userrole/' + userRoleId,
+        url: '/userrole/delete/' + userRoleId,
         type: 'DELETE',
         success: function (resdata) {
             if (resdata && resdata.length > 0 && resdata[0].Alert) {
@@ -288,7 +326,7 @@ function loadRoleList(userId) {
     let dynamicColumns = []
     let dynamicDatas = []
     // $.ajaxSetup({async:false});
-    $.getJSON('/user/rolelist/' + userId, function (resdata) {
+    $.getJSON('/role/' + userId, function (resdata) {
         function buildDynamicData(resdata) {
             dynamicColumns.push({"data": "Action", "title": "选择"});
             resdata.columns.forEach(function (column) {
@@ -365,44 +403,6 @@ function loadRoleList(userId) {
             }
         });
     })
-}
-
-function addUserRole(userRoleIds) {
-    $.ajaxSetup({async:false});
-    $.ajax({
-        url: '/user/userrole/add',
-        type: 'POST',
-        data: userRoleIds,
-        success: function (resdata) {
-            if (resdata && resdata.length > 0 && resdata[0].Alert) {
-                showWarningToast(resdata[0].Alert);
-            } else {
-                showWarningToast("服务器运行错误，请联系管理员！");
-            }
-        }
-    });
-}
-
-function editUser(currentUserId) {
-    const AddParams = {
-        userId: currentUserId,
-        loginName: $('#loginname-edit').val(),
-        email: $('#email-edit').val(),
-        userName: $('#username-edit').val()
-    };
-    $.ajaxSetup({async:false});
-    $.ajax({
-        url: '/user/edit',
-        type: 'POST',
-        data: AddParams,
-        success: function (resdata) {
-            if (resdata && resdata.length > 0 && resdata[0].Alert) {
-                showWarningToast(resdata[0].Alert);
-            } else {
-                showWarningToast("服务器运行错误，请联系管理员！");
-            }
-        }
-    });
 }
 
 $(document).ready(function() {

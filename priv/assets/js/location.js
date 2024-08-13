@@ -50,7 +50,7 @@ AMapLoader.load({
             endTime: $('#endtime').val()
         };
         $.ajaxSetup({async:false});
-        $.getJSON('/data/location', searchParams, function (mapsData) {
+        $.getJSON('/location', searchParams, function (mapsData) {
             // console.log("mapsData: ", JSON.stringify(mapsData));
             if (mapsData && mapsData.length > 0 && mapsData[0].Alert) {
                 const toastElList = [].slice.call(document.querySelectorAll('.toast'));
