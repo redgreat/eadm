@@ -21,6 +21,8 @@ i18nCrontab.columnName = {
         "endtime": "结束时间",
         "cronstatus": "状态",
         "createdat": "创建时间",
+        "cronlog": "任务日志",
+        "exectime": "执行时间"
     },
     en: {
         "id": "CronId",
@@ -32,5 +34,7 @@ i18nCrontab.columnName = {
         "endtime": "EndTime",
         "cronstatus": "CronStatus",
         "createdat": "CreatedTime",
+        "cronlog": "CronLog",
+        "exectime": "ExecTime"
     }
 };

@@ -123,6 +123,79 @@ function loadCronData(cronName) {
     })
 }
 
+function loadCronDetail(cronId) {
+    let dynamicColumns = [];
+    let dynamicDatas = [];
+
+    $.getJSON('/crontab/detail/' + cronId, function (response) {
+
+        function buildDynamicData(response) {
+            response.columns.forEach(function (column) {
+                let dynamicColumn = {};
+                dynamicColumn['data'] = column;
+                dynamicColumn['title'] = translateColumnNames(column);
+                dynamicColumns.push(dynamicColumn);
+            });
+            dynamicDatas = response.data;
+        }
+
+        if (response && response.length > 0 && response[0].Alert) {
+            showWarningToast(response[0].Alert);
+        }
+        else if (response && response.data.length === 0) {
+            showWarningToast("未查询到任务！");
+            response.columns.forEach(function (column) {
+                let dynamicColumn = {};
+                dynamicColumn['data'] = column;
+                dynamicColumn['title'] = translateColumnNames(column);
+                dynamicColumns.push(dynamicColumn);
+            });
+        }
+        else {
+            buildDynamicData(response)
+        }
+
+        $('#table-cron-detail').DataTable().destroy();
+        $('#table-cron-detail').empty();
+        $('#table-cron-detail').DataTable({
+            destroy: true,
+            columns: dynamicColumns,
+            data: dynamicDatas,
+            responsive: true,
+            info: true,
+            processing: true,
+            orderMulti: true,
+            ordering: true,
+            paging: true,
+            pageLength: 10,
+            lengthChange: false,
+            pagingType: "full_numbers",
+            searching: false,
+            stateSave: true,
+            deferRender: true,
+            language: {
+                info: "当前 _START_ 条到 _END_ 条 共 _TOTAL_ 条",
+                infoEmpty: "无记录",
+                emptyTable: "未查到数据",
+                thousands: ",",
+                lengthMenu: "每页 _MENU_ 条记录",
+                loadingRecords: "加载中...",
+                processing: "处理中...",
+                paginate: {
+                    first: "首页",
+                    previous: "上一页",
+                    next: "下一页",
+                    last: "尾页"
+                },
+                aria: {
+                    sortAscending: "：激活以按升序排序此列",
+                    sortDescending: ": 激活以按降序排序此列"
+                }
+            }
+        });
+    })
+}
+
 function addCron() {
     const AddParams = {
         cronName: $('#cronname').val(),
@@ -164,13 +237,18 @@ $(document).ready(function() {
         loadCronData(cronName);
     });
 
+    $('#addCron').click(function() {
+        $('#starttime').val(defaultEndTime);
+        $('#endtime').val("");
+    });
+
     $('#cleanCron').click(function() {
         $('input[type="text"]').val('');
     });
 
-    $('#addCron').click(function() {
-        $('#starttime').val(defaultEndTime);
-        $('#endtime').val("");
+    $('#refreshCron').click(function() {
+        const cronName = $('#cronname').val();
+        loadCronData(cronName);
     });
 
     $('#cron-add-submit-btn').click(function () {
@@ -184,6 +262,19 @@ $(document).ready(function() {
     });
 
     let dataTableCron = $('#table-cron').DataTable();
+    dataTableCron.on('click', '.cron-detail-btn', function() {
+        let disableRow = $(this).closest('tr');
+        let cronId = disableRow.data('id');
+        if (cronId !== "未查到数据" && typeof cronId !== 'undefined' && cronId !== null) {
+            loadCronDetail(cronId);
+            setTimeout(function () {
+                loadCronDetail(cronId);
+            }, 100);
+        } else {
+            showWarningToast("任务暂无运行日志!");
+        }
+    });
+
     dataTableCron.on('click', '.cron-edit-btn', function() {
         let editRow = $(this).closest('tr');
         $('#cronname-edit').val(editRow.find('td')[1].innerText);

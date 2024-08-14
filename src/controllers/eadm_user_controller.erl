@@ -183,9 +183,9 @@ edit(#{auth_data := #{<<"authed">> := false}}) ->
 reset(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
       <<"permission">> := #{<<"usermanage">> := true}},
       bindings := #{<<"userId">> := UserId}}) ->
-    % 回去重置密码(123456)
+    % 重置密码(123456)
     CryptoGram = eadm_utils:pass_encrypt(<<"123456">>),
-    lager:info("用户~p设置了新密码：~p~n", [LoginName, CryptoGram]),
+    lager:info("用户~p重置了密码~n", [LoginName]),
     try
         eadm_pgpool:equery(pool_pg, "update eadm_user
                          set updateduser = $1,

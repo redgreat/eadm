@@ -80,9 +80,10 @@ routes(_Environment) ->
     security => {eadm_auth, auth},
     routes => [
         {"/:cronId", fun eadm_crontab_controller:delete/1, #{methods => [delete]}},
+        {"/detail/:cronId", fun eadm_crontab_controller:detail/1, #{methods => [get]}},
         {"/add", fun eadm_crontab_controller:add/1, #{methods => [post]}},
         {"/update", fun eadm_crontab_controller:update/1, #{methods => [post]}},
-        {"/activate/:cronId", fun eadm_crontab_controller:activate/1, #{methods => [post]}}
+        {"/activate/:cronId", fun eadm_crontab_controller:activate/1, #{methods => [get]}}
       ]
     },
     #{prefix => "user",
@@ -131,10 +132,10 @@ routes(_Environment) ->
         {"/tables", fun eadm_sys_tv_controller:index/1, #{methods => [get]}}
       ]
     },
-    #{prefix => "watch",
+    #{prefix => "api",
     security => false,
     routes => [
-        {"/receive", fun api_watch:index/1, #{methods => [post]}}
+        {"/watch", fun api_watch:index/1, #{methods => [post]}}
       ]
     }
     ].

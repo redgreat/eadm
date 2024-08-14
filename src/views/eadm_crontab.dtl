@@ -24,8 +24,11 @@
                           data-bs-toggle="modal" data-bs-target="#modal-cron-add">
                             <i class="fa-fw select-all fas"></i> 新增
                         </button>
+                        <button class="btn btn-outline-success me-1" id="refreshCron">
+                            <i class="fa-fw select-all fas"></i> 刷新
+                        </button>
                         <button class="btn btn-outline-success me-1" id="cleanCron">
-                            <i class="fa-fw select-all fas"></i> 清空
+                            <i class="fa-fw select-all fas"></i> 清空
                         </button>
                         <button class="btn btn-outline-success me-1" id="searchCron">
                             <i class="fa-fw select-all fas"></i> 查询

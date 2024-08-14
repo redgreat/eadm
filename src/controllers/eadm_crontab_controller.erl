@@ -14,7 +14,7 @@
 %%%===================================================================
 %%% 函数导出
 %%%===================================================================
--export([index/1, search/1, add/1, update/1, delete/1, activate/1]).
+-export([index/1, search/1, detail/1, add/1, update/1, delete/1, activate/1]).
 
 %%====================================================================
 %% API 函数
@@ -55,6 +55,33 @@ search(#{auth_data := #{<<"permission">> := #{<<"crontab">> := false}}}) ->
     {json, [#{<<"Alert">> => unicode:characters_to_binary("API鉴权失败！", utf8)}]};
 
 search(#{auth_data := #{<<"authed">> := false}}) ->
+    {redirect, "/login"}.
+
+%% @doc
+%% 查询任务运行日志
+%% @end
+detail(#{auth_data := #{<<"authed">> := true, <<"permission">> := #{<<"crontab">> := true}},
+    bindings := #{<<"cronId">> := CronId}}) ->
+    try
+        {ok, Res_Col, Res_Data} = eadm_pgpool:equery(pool_pg,
+            "select b.cronname, a.cronlog, a.exectime
+            from sys_cronlog a,
+                 eadm_crontab b
+            where a.cronid=b.id
+              and a.cronid = $1
+              and b.deleted is false
+            order by a.exectime desc;",[CronId]),
+        {json, eadm_utils:pg_as_json(Res_Col, Res_Data)}
+    catch
+        _:Error ->
+            lager:error("任务查询失败：~p~n", [Error]),
+            {json, [#{<<"Alert">> => unicode:characters_to_binary("任务查询失败！", utf8)}]}
+    end;
+
+detail(#{auth_data := #{<<"permission">> := #{<<"crontab">> := false}}}) ->
+    {json, [#{<<"Alert">> => unicode:characters_to_binary("API鉴权失败！", utf8)}]};
+
+detail(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 
 %% @doc
