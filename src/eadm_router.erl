@@ -79,11 +79,11 @@ routes(_Environment) ->
     #{prefix => "crontab",
     security => {eadm_auth, auth},
     routes => [
-        {"/:cronId", fun eadm_crontab_controller:delete/1, #{methods => [delete]}},
         {"/detail/:cronId", fun eadm_crontab_controller:detail/1, #{methods => [get]}},
         {"/add", fun eadm_crontab_controller:add/1, #{methods => [post]}},
-        {"/update", fun eadm_crontab_controller:update/1, #{methods => [post]}},
-        {"/activate/:cronId", fun eadm_crontab_controller:activate/1, #{methods => [get]}}
+        {"/edit", fun eadm_crontab_controller:edit/1, #{methods => [post]}},
+        {"/activate/:cronId", fun eadm_crontab_controller:activate/1, #{methods => [post]}},
+        {"/delete/:cronId", fun eadm_crontab_controller:delete/1, #{methods => [delete]}}
       ]
     },
     #{prefix => "user",

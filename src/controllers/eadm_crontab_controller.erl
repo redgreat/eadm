@@ -14,7 +14,7 @@
 %%%===================================================================
 %%% 函数导出
 %%%===================================================================
--export([index/1, search/1, detail/1, add/1, update/1, delete/1, activate/1]).
+-export([index/1, search/1, detail/1, add/1, edit/1, delete/1, activate/1]).
 
 %%====================================================================
 %% API 函数
@@ -38,13 +38,13 @@ index(#{auth_data := #{<<"authed">> := false}}) ->
 search(#{auth_data := #{<<"authed">> := true, <<"permission">> := #{<<"crontab">> := true}},
     parsed_qs := #{<<"cronName">> := CronName}}) ->
     try
-        {ok, Res_Col, Res_Data} = eadm_pgpool:equery(pool_pg,
+        {ok, ResCol, ResData} = eadm_pgpool:equery(pool_pg,
             "select id, cronname, crontype, cronexp, cronmfa,
             starttime, endtime, cronstatus, createdat
             from vi_crontab
             where cronname like $1
             order by createdat desc;",[<<"%", CronName/binary, "%">>]),
-        {json, eadm_utils:pg_as_json(Res_Col, Res_Data)}
+        {json, eadm_utils:pg_as_json(ResCol, ResData)}
     catch
         _:Error ->
             lager:error("任务查询失败：~p~n", [Error]),
@@ -63,15 +63,15 @@ search(#{auth_data := #{<<"authed">> := false}}) ->
 detail(#{auth_data := #{<<"authed">> := true, <<"permission">> := #{<<"crontab">> := true}},
     bindings := #{<<"cronId">> := CronId}}) ->
     try
-        {ok, Res_Col, Res_Data} = eadm_pgpool:equery(pool_pg,
-            "select b.cronname, a.cronlog, a.exectime
+        {ok, ResCol, ResData} = eadm_pgpool:equery(pool_pg,
+            "select b.cronname, a.cronlog, to_char(a.exectime, 'yyyy-mm-dd hh24:mi:ss') as exectime
             from sys_cronlog a,
                  eadm_crontab b
             where a.cronid=b.id
               and a.cronid = $1
               and b.deleted is false
             order by a.exectime desc;",[CronId]),
-        {json, eadm_utils:pg_as_json(Res_Col, Res_Data)}
+        {json, eadm_utils:pg_as_json(ResCol, ResData)}
     catch
         _:Error ->
             lager:error("任务查询失败：~p~n", [Error]),
@@ -93,7 +93,6 @@ add(#{auth_data := #{<<"authed">> := true, <<"loginname">> := CreatedUser,
         <<"cronExp">> := CronExp, <<"cronModule">> := CronModule,
         <<"startTime">> := StartTime, <<"endTime">> := EndTime}}) ->
     try
-        lager:info("EndTime：~p~n", [EndTime]),
         case EndTime of
             <<>> ->
                 eadm_pgpool:equery(pool_pg, "insert into eadm_crontab(cronname, crontype, cronexp, cronmfa,
@@ -123,38 +122,78 @@ add(#{auth_data := #{<<"authed">> := false}}) ->
 %% @doc
 %% 更新任务信息
 %% @end
-update(#{auth_data := #{<<"authed">> := true, <<"permission">> := #{<<"crontab">> := true}},
+edit(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
+    <<"permission">> := #{<<"crontab">> := true}},
     params := #{<<"cronId">> := CronId, <<"cronName">> := CronName, <<"cronType">> := CronType,
         <<"cronExp">> := CronExp, <<"cronModule">> := CronModule,
         <<"startTime">> := StartTime, <<"endTime">> := EndTime}}) ->
-    ParameterStartTime = eadm_utils:parse_date_time(StartTime),
-    ParameterEndTime = eadm_utils:parse_date_time(EndTime),
-    try
-        eadm_pgpool:equery(pool_pg,"update eadm_crontab set cronname=$1,crontype=2,cronexp=$3,
-          cronmfa=$4,starttime=$5,endtime=$6 where id=$7;",
-          [CronName, CronType, CronExp, CronModule, ParameterStartTime, ParameterEndTime, CronId])
-    catch
-        _:Error ->
-            lager:error("任务更新失败：~p~n", [Error]),
-            {json, [#{<<"Alert">> => unicode:characters_to_binary("任务更新失败！", utf8)}]}
+    case EndTime of
+        <<>> ->
+            ParameterStartTime = eadm_utils:parse_date_time(StartTime),
+            try
+                eadm_pgpool:equery(pool_pg,"update eadm_crontab set cronname=$1,crontype=$2,cronexp=$3,
+                  cronmfa=$4,starttime=$5,updateduser=$6 where id=$7;",
+                  [CronName, CronType, CronExp, CronModule, ParameterStartTime, LoginName, CronId])
+            catch
+                _:Error ->
+                    lager:error("任务更新失败：~p~n", [Error]),
+                    {json, [#{<<"Alert">> => unicode:characters_to_binary("任务更新失败！", utf8)}]}
+            end;
+        _ ->
+            ParameterStartTime = eadm_utils:parse_date_time(StartTime),
+            ParameterEndTime = eadm_utils:parse_date_time(EndTime),
+            try
+                eadm_pgpool:equery(pool_pg,"update eadm_crontab set cronname=$1,crontype=$2,cronexp=$3,
+                  cronmfa=$4,starttime=$5,endtime=$6,updateduser=$7 where id=$8;",
+                    [CronName, CronType, CronExp, CronModule, ParameterStartTime, ParameterEndTime, LoginName, CronId])
+            catch
+                _:Error ->
+                    lager:error("任务更新失败：~p~n", [Error]),
+                    {json, [#{<<"Alert">> => unicode:characters_to_binary("任务更新失败！", utf8)}]}
+            end
     end,
     A = unicode:characters_to_binary("任务【", utf8),
     B = unicode:characters_to_binary("】更新成功！", utf8),
     {json, [#{<<"Alert">> => <<A/binary, CronName/binary, B/binary>>}]};
 
-update(#{auth_data := #{<<"permission">> := #{<<"crontab">> := false}}}) ->
+edit(#{auth_data := #{<<"permission">> := #{<<"crontab">> := false}}}) ->
     {json, [#{<<"Alert">> => unicode:characters_to_binary("API鉴权失败！", utf8)}]};
 
-update(#{auth_data := #{<<"authed">> := false}}) ->
+edit(#{auth_data := #{<<"authed">> := false}}) ->
+    {redirect, "/login"}.
+
+%% @doc
+%% 启禁用任务信息
+%% @end
+activate(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
+    <<"permission">> := #{<<"crontab">> := true}},
+    bindings := #{<<"cronId">> := CronId}}) ->
+    try
+        eadm_pgpool:equery(pool_pg, "update eadm_crontab set cronstatus=abs(cronstatus-1), updateduser=$1
+        where id=$2;", [LoginName, CronId])
+    catch
+        _:Error ->
+            lager:error("任务启禁用失败：~p~n", [Error]),
+            {json, [#{<<"Alert">> => unicode:characters_to_binary("任务启禁用失败！", utf8)}]}
+    end,
+    {json, [#{<<"Alert">> => unicode:characters_to_binary("任务启禁用成功！", utf8)}]};
+
+activate(#{auth_data := #{<<"permission">> := #{<<"crontab">> := false}}}) ->
+    {json, [#{<<"Alert">> => unicode:characters_to_binary("API鉴权失败！", utf8)}]};
+
+activate(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 
 %% @doc
 %% 删除任务信息
 %% @end
-delete(#{auth_data := #{<<"authed">> := true, <<"permission">> := #{<<"crontab">> := true}},
-    bindings := #{<<"id">> := CronId}}) ->
+delete(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
+    <<"permission">> := #{<<"crontab">> := true}},
+    bindings := #{<<"cronId">> := CronId}}) ->
     try
-        eadm_pgpool:equery(pool_pg, "delete from eadm_crontab where id = $1;", [CronId])
+        eadm_pgpool:equery(pool_pg, "update eadm_crontab
+        set deleteduser=$1,deletedat=current_timestamp,deleted=true
+        where id=$2 and deleted is false;", [LoginName, CronId])
     catch
         _:Error ->
             lager:error("任务删除失败：~p~n", [Error]),
@@ -166,26 +205,6 @@ delete(#{auth_data := #{<<"permission">> := #{<<"crontab">> := false}}}) ->
     {json, [#{<<"Alert">> => unicode:characters_to_binary("API鉴权失败!", utf8)}]};
 
 delete(#{auth_data := #{<<"authed">> := false}}) ->
-    {redirect, "/login"}.
-
-%% @doc
-%% 启禁用任务信息
-%% @end
-activate(#{auth_data := #{<<"authed">> := true, <<"permission">> := #{<<"crontab">> := true}},
-    bindings := #{<<"id">> := CronId}}) ->
-    try
-        eadm_pgpool:equery(pool_pg, "update eadm_crontab set cornstatus=-1*cornstatus where id=$1;", [CronId])
-    catch
-        _:Error ->
-            lager:error("任务启禁用失败：~p~n", [Error]),
-            {json, [#{<<"Alert">> => unicode:characters_to_binary("任务启禁用失败！", utf8)}]}
-    end,
-    {json, [#{<<"Alert">> => unicode:characters_to_binary("任务删除成功！", utf8)}]};
-
-activate(#{auth_data := #{<<"permission">> := #{<<"crontab">> := false}}}) ->
-    {json, [#{<<"Alert">> => unicode:characters_to_binary("API鉴权失败！", utf8)}]};
-
-activate(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 
 %%====================================================================

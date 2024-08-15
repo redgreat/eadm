@@ -8,6 +8,9 @@
  *
  */
 
+jQuery('#starttime-edit').datetimepicker();
+jQuery('#endtime-edit').datetimepicker();
+
 function translateColumnNames(columnName) {
   const translations = i18nCrontab.columnName[defaultLanguage];
   return translations[columnName] || columnName;
@@ -220,6 +223,63 @@ function addCron() {
     });
 }
 
+function editCron(currentCronId) {
+    const editParams = {
+        cronId: currentCronId,
+        cronName: $('#cronname-edit').val(),
+        cronType: $('#crontype-edit').val(),
+        cronExp: $('#cronexp-edit').val(),
+        cronModule: $('#cronmodule-edit').val(),
+        startTime: $('#starttime-edit').val(),
+        endTime: $('#endtime-edit').val()
+    };
+    $.ajaxSetup({async:false});
+    $.ajax({
+        url: '/crontab/edit',
+        type: 'POST',
+        data: editParams,
+        success: function (resdata) {
+            if (resdata && resdata.length > 0 && resdata[0].Alert) {
+                showWarningToast(resdata[0].Alert);
+            } else {
+                showWarningToast("服务器运行错误，请联系管理员！");
+            }
+        }
+    });
+}
+
+function disableCron(cronId) {
+    if (typeof cronId !== 'undefined' && cronId !== null) {
+        $.ajax({
+            url: '/crontab/activate/' + cronId,
+            type: 'POST',
+            success: function (resdata) {
+                if (resdata && resdata.length > 0 && resdata[0].Alert) {
+                    showWarningToast(resdata[0].Alert);
+                } else {
+                    showWarningToast("服务器运行错误，请联系管理员！");
+                }
+            }
+        });
+    }
+}
+
+function deleteCron(cronId) {
+    if (typeof cronId !== 'undefined' && cronId !== null) {
+        $.ajax({
+            url: '/crontab/delete/' + cronId,
+            type: 'DELETE',
+            success: function (resdata) {
+                if (resdata && resdata.length > 0 && resdata[0].Alert) {
+                    showWarningToast(resdata[0].Alert);
+                } else {
+                    showWarningToast("数据删除成功！");
+                }
+            }
+        });
+    }
+}
+
 function cleanAddTab(){
     $('#cronname').val('');
     $('#crontype').val('');
@@ -229,7 +289,19 @@ function cleanAddTab(){
     $('#endtime').val('');
 }
 
+function cleanEditTab(){
+    $('#cronname-edit').val('');
+    $('#crontype-edit').val('');
+    $('#cronexp-edit').val('');
+    $('#cronmodule-edit').val('');
+    $('#starttime-edit').val('');
+    $('#endtime-edit').val('');
+}
+
 $(document).ready(function() {
+    let currentCronId;
+    let delCronRow;
+    let delCronId;
     loadCronData("");
 
     $('#searchCron').click(function() {
@@ -261,14 +333,36 @@ $(document).ready(function() {
         cleanAddTab();
     });
 
+    $('#cron-edit-submit-btn').click(function() {
+        editCron(currentCronId);
+        cleanEditTab();
+        setTimeout(function () {
+            loadCronData("");
+        }, 100);
+    });
+
+    $('#cron-del-confirm-btn').click(function () {
+        deleteCron(delCronId);
+        delCronRow.remove();
+        setTimeout(function () {
+            //dataTableCron.draw(false);
+            loadCronData("");
+        }, 100);
+    });
+
+    $('#cron-edit-cancel-btn').click(function () {
+        cleanEditTab();
+    });
+
     let dataTableCron = $('#table-cron').DataTable();
+
     dataTableCron.on('click', '.cron-detail-btn', function() {
         let disableRow = $(this).closest('tr');
         let cronId = disableRow.data('id');
         if (cronId !== "未查到数据" && typeof cronId !== 'undefined' && cronId !== null) {
             loadCronDetail(cronId);
             setTimeout(function () {
-                loadCronDetail(cronId);
+                loadCronData("");
             }, 100);
         } else {
             showWarningToast("任务暂无运行日志!");
@@ -277,12 +371,18 @@ $(document).ready(function() {
 
     dataTableCron.on('click', '.cron-edit-btn', function() {
         let editRow = $(this).closest('tr');
-        $('#cronname-edit').val(editRow.find('td')[1].innerText);
-        $('#crontype-edit').val(editRow.find('td')[2].innerText);
-        $('#cronexp-edit').val(editRow.find('td')[3].innerText);
-        $('#cronmodule-edit').val(editRow.find('td')[4].innerText);
-        $('#starttime-edit').val(editRow.find('td')[5].innerText);
-        $('#endtime-edit').val(editRow.find('td')[6].innerText);
+        let cronId = editRow.data('id');
+        $('#cronname-edit').val(editRow.find('td')[0].innerText);
+        $('#crontype-edit').val(editRow.find('td')[1].innerText);
+        $('#cronexp-edit').val(editRow.find('td')[2].innerText);
+        $('#cronmodule-edit').val(editRow.find('td')[3].innerText);
+        $('#starttime-edit').val(editRow.find('td')[4].innerText);
+        $('#endtime-edit').val(editRow.find('td')[5].innerText);
+        if (cronId !== "未查到数据" && typeof cronId !== 'undefined' && cronId !== null) {
+            currentCronId = cronId;
+        } else {
+            showWarningToast("未查到需编辑任务，请刷新页面重试!");
+        }
     });
 
     dataTableCron.on('click', '.cron-disable-btn', function() {
@@ -300,18 +400,14 @@ $(document).ready(function() {
 
     dataTableCron.on('click', '.cron-delete-btn', function() {
         let delRow = $(this).closest('tr');
+        let cronId = delRow.data('id');
         $('#cron-del-confirm').modal('show');
-        $('#cron-del-confirm-btn').click(function () {
-            let cronId = delRow.data('id');
-            if (cronId !== "未查到数据" && typeof cronId !== 'undefined' && cronId !== null) {
-                deleteCron(cronId);
-                delRow.remove();
-                setTimeout(function () {
-                    dataTableCron.draw(false);
-                }, 100);
-            } else {
-                showWarningToast("未查到需删除数据，请刷新页面重试!");
-            }
-        });
+        if (cronId !== "未查到数据" && typeof cronId !== 'undefined' && cronId !== null) {
+            delCronRow = delRow;
+            delCronId = cronId;
+        } else {
+            showWarningToast("未查到需删除数据，请刷新页面重试!");
+        }
     });
+
 });

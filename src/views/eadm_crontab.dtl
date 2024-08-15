@@ -159,39 +159,6 @@
     </div>
 </div>
 
-<div class="modal" id="modal-cron-edit" tabindex="-1" role="dialog">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h4 class="modal-title">任务信息编辑</h4>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="container">
-                    <form accept-charset="utf-8">
-                        <div class="row mb-3">
-                            <label class="form-label col-3" for="loginname-edit">登录名</label>
-                            <input class="col-6" id="loginname-edit" type="text">
-                        </div>
-                        <div class="row mb-3">
-                            <label class="form-label col-3" for="username-edit">显示姓名</label>
-                            <input class="col-6" id="username-edit" type="text">
-                        </div>
-                        <div class="row mb-3">
-                            <label class="form-label col-3" for="email-edit">邮箱</label>
-                            <input class="col-6" id="email-edit" type="email">
-                        </div>
-                    </form>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-primary" id="cron-edit-submit-btn" data-bs-dismiss="modal">提交</button>
-                <button type="button" class="btn btn-secondary" id="cron-edit-close-btn" data-bs-dismiss="modal">关闭</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <div class="modal" id="cron-del-confirm" tabindex="-1" role="dialog">
     <div class="modal-dialog">
         <div class="modal-content">
