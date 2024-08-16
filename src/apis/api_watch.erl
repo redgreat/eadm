@@ -203,6 +203,7 @@ index(#{params := Params}) ->
             end;
         <<"58">> ->
             % 睡眠
+            lager:info("睡眠原始数据：~p~n", [Params]),
             try
                 SleepType = maps:get(<<"sleepType">>, Params, null),
                 Minute = maps:get(<<"minute">>, Params, null),

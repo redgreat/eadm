@@ -138,4 +138,5 @@ routes(_Environment) ->
         {"/watch", fun api_watch:index/1, #{methods => [post]}}
       ]
     }
+    }
     ].
