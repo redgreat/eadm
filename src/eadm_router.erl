@@ -109,7 +109,6 @@ routes(_Environment) ->
     routes => [
         {"/:userId", fun eadm_role_controller:getrolelist/1, #{methods => [get]}},
         {"/add", fun eadm_role_controller:add/1, #{methods => [post]}},
-        % {"/delete/:roleId", fun eadm_role_controller:delete/1, #{methods => [delete]}},
         {"/disable/:roleId", fun eadm_role_controller:disable/1, #{methods => [post]}}
       ]
     },
