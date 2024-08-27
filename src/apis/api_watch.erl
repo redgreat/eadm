@@ -72,9 +72,11 @@ index(#{params := Params}) ->
             end;
         <<"6">> ->
             % 心率数据
+            lager:info("心率原始数据：~p~n", [Params]),
             try
                 Heartbeat = erlang:binary_to_integer(maps:get(<<"heartbeat">>, Params, null)),
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
+                lager:info("心率数据：~p~n", [Heartbeat]),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchhb(ptime, heartbeat)
                   values($1, $2) on conflict (ptime)
                   do update set heartbeat=excluded.heartbeat;", [BTUtcTime, Heartbeat]),
@@ -171,10 +173,13 @@ index(#{params := Params}) ->
             end;
         <<"30">> ->
             % 信号/电量
+            lager:info("信号/电量原始数据：~p~n", [Params]),
             try
                 Signal = erlang:binary_to_integer(maps:get(<<"signal">>, Params, null)),
                 Battery = erlang:binary_to_integer(maps:get(<<"battery">>, Params, null)),
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
+                lager:info("信号：~p~n", [Signal]),
+                lager:info("电量：~p~n", [Battery]),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchsb(ptime, signal, battery)
                   values($1, $2, $3) on conflict (ptime)
                   do update set signal=excluded.signal, battery=excluded.battery;",
