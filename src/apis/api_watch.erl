@@ -129,7 +129,7 @@ index(#{params := Params}) ->
         <<"12">> ->
             % 体温数据
             try
-                BodyTemperature = maps:get(<<"bodyTemperature">>, Params, <<"0">>),
+                BodyTemperature = bin_to_float(maps:get(<<"bodyTemperature">>, Params, <<"0">>)),
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, <<"1970/1/1 00:00:00">>)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchbt(ptime, bodytemperature)
                   values($1, $2::real) on conflict (ptime)
@@ -142,8 +142,8 @@ index(#{params := Params}) ->
         <<"14">> ->
             % 体温数据
             try
-                BodyTemperature = maps:get(<<"bodyTemperature">>, Params, <<"0">>),
-                WristTemperature = maps:get(<<"wristTemperature">>, Params, <<"0">>),
+                BodyTemperature = bin_to_float(maps:get(<<"bodyTemperature">>, Params, <<"0">>)),
+                WristTemperature = bin_to_float(maps:get(<<"wristTemperature">>, Params, <<"0">>)),
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, <<"1970/1/1 00:00:00">>)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchbt(ptime, bodytemperature, wristtemperature)
                   values($1, $2::real, $3::real) on conflict (ptime)
@@ -462,4 +462,34 @@ index(#{params := Params}) ->
         _ ->
             lager:info("编码未定义: ~p~n", [Params]),
             #{<<"success">> => false}
+    end.
+
+
+%%====================================================================
+%% 内部函数
+%%====================================================================
+%% @doc
+%% 将二进制表示的数字转换为浮点数
+%% @end
+bin_to_float(Binary) ->
+    case binary_to_list(Binary) of
+        List when erlang:is_list(List) ->
+            try
+                Float = list_to_float(add_decimal_point(List)),
+                Float
+            catch
+                error:badarg ->
+                    error({invalid_binary, Binary})
+            end;
+        _ ->
+            error({invalid_binary, Binary})
+    end.
+
+%% @doc
+%% 添加小数点以确保有效的浮点数表示
+%% @end
+add_decimal_point(List) when erlang:is_list(List) ->
+    case lists:last(List) of
+        X when X >= $0, X =< $9 -> lists:append(List, ".0");
+        _ -> List
     end.
