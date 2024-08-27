@@ -23,7 +23,7 @@
 %% 主函数
 %% @end
 index(#{params := Params}) ->
-    lager:info("传入参数：~p~n", [Params]),
+    % lager:info("传入参数：~p~n", [Params]),
     MsgType = maps:get(<<"type">>, Params, <<"0">>),
     case MsgType of
         %% 数据
