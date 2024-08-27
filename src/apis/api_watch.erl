@@ -489,7 +489,7 @@ bin_to_float(Binary) ->
 %% 添加小数点以确保有效的浮点数表示
 %% @end
 add_decimal_point(List) when erlang:is_list(List) ->
-    case lists:last(List) of
-        X when X >= $0, X =< $9 -> lists:append(List, ".0");
-        _ -> List
+    case lists:member($., List) of
+        true -> List;
+        _ -> lists:append(List, ".0")
     end.
