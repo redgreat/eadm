@@ -102,7 +102,8 @@ index(#{params := Params}) ->
         <<"10">> ->
             % 血糖
             try
-                BloodSugar = erlang:binary_to_float(maps:get(<<"bloodSugar">>, Params, <<"0">>)),
+                BloodSugar = erlang:list_to_float(erlang:binary_to_list(
+                    maps:get(<<"bloodSugar">>, Params, <<"0">>))),
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, <<"1970/1/1 00:00:00">>)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchbs(ptime, bloodsugar)
                   values($1, $2) on conflict (ptime)
@@ -128,10 +129,10 @@ index(#{params := Params}) ->
         <<"12">> ->
             % 体温数据
             try
-                BodyTemperature = erlang:binary_to_float(maps:get(<<"bodyTemperature">>, Params, <<"0">>)),
+                BodyTemperature = maps:get(<<"bodyTemperature">>, Params, <<"0">>),
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, <<"1970/1/1 00:00:00">>)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchbt(ptime, bodytemperature)
-                  values($1, $2) on conflict (ptime)
+                  values($1, $2::real) on conflict (ptime)
                   do update set bodytemperature=excluded.bodytemperature;", [BTUtcTime, BodyTemperature]),
                 #{<<"success">> => true}
             catch
@@ -141,11 +142,11 @@ index(#{params := Params}) ->
         <<"14">> ->
             % 体温数据
             try
-                BodyTemperature = erlang:binary_to_float(maps:get(<<"bodyTemperature">>, Params, <<"0">>)),
-                WristTemperature = erlang:binary_to_float(maps:get(<<"wristTemperature">>, Params, <<"0">>)),
+                BodyTemperature = maps:get(<<"bodyTemperature">>, Params, <<"0">>),
+                WristTemperature = maps:get(<<"wristTemperature">>, Params, <<"0">>),
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, <<"1970/1/1 00:00:00">>)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchbt(ptime, bodytemperature, wristtemperature)
-                  values($1, $2, $3) on conflict (ptime)
+                  values($1, $2::real, $3::real) on conflict (ptime)
                   do update set bodytemperature=excluded.bodytemperature,
                   wristtemperature=excluded.wristtemperature;",
                     [BTUtcTime, BodyTemperature, WristTemperature]),
@@ -180,7 +181,7 @@ index(#{params := Params}) ->
                   values($1, $2, $3) on conflict (ptime)
                   do update set signal=excluded.signal, battery=excluded.battery;",
                     [BTUtcTime, Signal, Battery]),
-                Steps = maps:get(<<"steps">>, Params, <<"0">>),
+                Steps = erlang:binary_to_integer(maps:get(<<"steps">>, Params, <<"0">>)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchstep(ptime, steps)
                   values($1, $2) on conflict (ptime)
                   do update set steps=excluded.steps;", [BTUtcTime, Steps]),
