@@ -777,9 +777,9 @@ comment on table lc_watchdaily is '手表日常数据';
 drop table if exists lc_watchcell;
 create table lc_watchcell (
   ptime timestamptz not null,
-  lac varchar(50),
-  cid varchar(50),
-  db varchar(50),
+  lac smallint,
+  cid smallint,
+  db smallint,
   inserttime timestamptz not null default current_timestamp
 );
 
@@ -798,7 +798,7 @@ comment on table lc_watchcell is '业务数据_手表基站信息';
 drop table if exists lc_watchstep;
 create table lc_watchstep (
   ptime timestamptz not null,
-  steps varchar(50),
+  steps smallint,
   inserttime timestamptz not null default current_timestamp
 );
 
@@ -815,9 +815,9 @@ comment on table lc_watchstep is '业务数据_手表计步信息';
 drop table if exists lc_watchlocation;
 create table lc_watchlocation (
   ptime timestamptz not null,
-  lat varchar(50),
-  lng varchar(50),
-  speed varchar(50),
+  lat decimal(10, 7),
+  lng decimal(10, 7),
+  speed smallint,
   inserttime timestamptz not null default current_timestamp
 );
 
@@ -836,7 +836,7 @@ comment on table lc_watchlocation is '业务数据_手表定位信息';
 drop table if exists lc_watchroll;
 create table lc_watchroll (
   ptime timestamptz not null,
-  roll varchar(50),
+  roll smallint,
   inserttime timestamptz not null default current_timestamp
 );
 
@@ -853,8 +853,8 @@ comment on table lc_watchroll is '业务数据_手表翻转信息';
 drop table if exists lc_watchbp;
 create table lc_watchbp (
   ptime timestamptz not null,
-  diastolic varchar(50),
-  shrink varchar(50),
+  diastolic smallint,
+  shrink smallint,
   inserttime timestamptz not null default current_timestamp
 );
 
@@ -872,7 +872,7 @@ comment on table lc_watchbp is '业务数据_手表血压信息';
 drop table if exists lc_watchbs;
 create table lc_watchbs (
   ptime timestamptz not null,
-  bloodsugar varchar(50),
+  bloodsugar real,
   inserttime timestamptz not null default current_timestamp
 );
 
@@ -889,7 +889,7 @@ comment on table lc_watchbs is '业务数据_手表血糖信息';
 drop table if exists lc_watchhb;
 create table lc_watchhb (
    ptime timestamptz not null,
-   heartbeat varchar(50),
+   heartbeat smallint,
    inserttime timestamptz not null default current_timestamp
 );
 
@@ -906,8 +906,8 @@ comment on table lc_watchhb is '业务数据_手表心率信息';
 drop table if exists lc_watchbt;
 create table lc_watchbt (
   ptime timestamptz not null,
-  bodytemperature varchar(50),
-  wristtemperature varchar(50),
+  bodytemperature real,
+  wristtemperature real,
   inserttime timestamptz not null default current_timestamp
 );
 
@@ -925,8 +925,8 @@ comment on table lc_watchbt is '业务数据_手表体温信息';
 drop table if exists lc_watchsb;
 create table lc_watchsb (
   ptime timestamptz not null,
-  signal varchar(50),
-  battery varchar(50),
+  signal smallint,
+  battery smallint,
   inserttime timestamptz not null default current_timestamp
 );
 
@@ -944,7 +944,7 @@ comment on table lc_watchsb is '业务数据_手表信号/电量信息';
 drop table if exists lc_watchbo;
 create table lc_watchbo (
   ptime timestamptz not null,
-  bloodoxygen varchar(50),
+  bloodoxygen smallint,
   inserttime timestamptz not null default current_timestamp
 );
 
@@ -961,10 +961,10 @@ comment on table lc_watchbo is '业务数据_手表血氧信息';
 drop table if exists lc_watchsleep;
 create table lc_watchsleep (
   ptime timestamptz not null,
-  sleeptype varchar(50),
-  starttime varchar(50),
-  endtime varchar(50),
-  minute varchar(50),
+  sleeptype smallint,
+  starttime timestamptz,
+  endtime timestamptz,
+  minute smallint,
   inserttime timestamptz not null default current_timestamp
 );
 
@@ -1001,7 +1001,7 @@ drop table if exists lc_watchalarm;
 create table lc_watchalarm (
   id serial,
   alarmtime timestamptz,
-  alarmtype varchar(10),
+  alarmtype smallint,
   alarminfo varchar(1000),
   inserttime timestamptz not null default current_timestamp
 );

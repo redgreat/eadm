@@ -30,9 +30,9 @@ index(#{params := Params}) ->
         <<"3">> ->
             % 基站数据
             try
-                Lac = maps:get(<<"Lac">>, Params, null),
-                Cid = maps:get(<<"cid">>, Params, null),
-                Db = maps:get(<<"Db">>, Params, null),
+                Lac = erlang:binary_to_integer(maps:get(<<"Lac">>, Params, null)),
+                Cid = erlang:binary_to_integer(maps:get(<<"cid">>, Params, null)),
+                Db = erlang:binary_to_integer(maps:get(<<"Db">>, Params, null)),
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchcell(ptime, lac, cid, db)
                   values($1, $2, $3, $4) on conflict (ptime)
@@ -46,7 +46,7 @@ index(#{params := Params}) ->
         <<"4">> ->
             % 每日累计步数
             try
-                Steps = maps:get(<<"steps">>, Params, null),
+                Steps = erlang:binary_to_integer(maps:get(<<"steps">>, Params, null)),
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchstep(ptime, steps)
                   values($1, $2) on conflict (ptime)
@@ -59,8 +59,8 @@ index(#{params := Params}) ->
         <<"5">> ->
             % WIFI 定位
             try
-                Latitude = maps:get(<<"Latitude">>, Params, null),
-                Longitude = maps:get(<<"Longitude">>, Params, null),
+                Latitude = erlang:binary_to_float(maps:get(<<"Latitude">>, Params, null)),
+                Longitude = erlang:binary_to_float(maps:get(<<"Longitude">>, Params, null)),
                 TimeStr = eadm_utils:parse_date_time(maps:get(<<"timeStr">>, Params, null)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchlocation(ptime, lat, lng)
                   values($1, $2, $3) on conflict (ptime)
@@ -73,7 +73,7 @@ index(#{params := Params}) ->
         <<"6">> ->
             % 心率数据
             try
-                Heartbeat = maps:get(<<"heartbeat">>, Params, null),
+                Heartbeat = erlang:binary_to_integer(maps:get(<<"heartbeat">>, Params, null)),
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchhb(ptime, heartbeat)
                   values($1, $2) on conflict (ptime)
@@ -86,8 +86,8 @@ index(#{params := Params}) ->
         <<"8">> ->
             % 血压
             try
-                Diastolic = maps:get(<<"diastolic">>, Params, null),
-                Shrink = maps:get(<<"shrink">>, Params, null),
+                Diastolic = erlang:binary_to_integer(maps:get(<<"diastolic">>, Params, null)),
+                Shrink = erlang:binary_to_integer(maps:get(<<"shrink">>, Params, null)),
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchbp(ptime, diastolic, shrink)
                   values($1, $2, $3) on conflict (ptime)
@@ -101,7 +101,7 @@ index(#{params := Params}) ->
         <<"10">> ->
             % 血糖
             try
-                BloodSugar = maps:get(<<"bloodSugar">>, Params, null),
+                BloodSugar = erlang:binary_to_float(maps:get(<<"bloodSugar">>, Params, null)),
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchbs(ptime, bloodsugar)
                   values($1, $2) on conflict (ptime)
@@ -114,7 +114,7 @@ index(#{params := Params}) ->
         <<"11">> ->
             % 翻转数据
             try
-                Roll = maps:get(<<"roll">>, Params, null),
+                Roll = erlang:binary_to_integer(maps:get(<<"roll">>, Params, null)),
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchroll(ptime, roll)
                   values($1, $2) on conflict (ptime)
@@ -127,7 +127,7 @@ index(#{params := Params}) ->
         <<"12">> ->
             % 体温数据
             try
-                BodyTemperature = maps:get(<<"bodyTemperature">>, Params, null),
+                BodyTemperature = erlang:binary_to_float(maps:get(<<"bodyTemperature">>, Params, null)),
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchbt(ptime, bodytemperature)
                   values($1, $2) on conflict (ptime)
@@ -140,8 +140,8 @@ index(#{params := Params}) ->
         <<"14">> ->
             % 体温数据
             try
-                BodyTemperature = maps:get(<<"bodyTemperature">>, Params, null),
-                WristTemperature = maps:get(<<"wristTemperature">>, Params, null),
+                BodyTemperature = erlang:binary_to_float(maps:get(<<"bodyTemperature">>, Params, null)),
+                WristTemperature = erlang:binary_to_float(maps:get(<<"wristTemperature">>, Params, null)),
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchbt(ptime, bodytemperature, wristtemperature)
                   values($1, $2, $3) on conflict (ptime)
@@ -156,9 +156,9 @@ index(#{params := Params}) ->
         <<"16">> ->
             % 定位数据
             try
-                LatStr = maps:get(<<"latStr">>, Params, null),
-                LngStr = maps:get(<<"lngStr">>, Params, null),
-                SpeedStr = maps:get(<<"speedStr">>, Params, null),
+                LatStr = erlang:binary_to_float(maps:get(<<"latStr">>, Params, null)),
+                LngStr = erlang:binary_to_float(maps:get(<<"lngStr">>, Params, null)),
+                SpeedStr = erlang:binary_to_integer(maps:get(<<"speedStr">>, Params, null)),
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchlocation(ptime, lat, lng, speed)
                   values($1, $2, $3, $4) on conflict (ptime)
@@ -172,8 +172,8 @@ index(#{params := Params}) ->
         <<"30">> ->
             % 信号/电量
             try
-                Signal = maps:get(<<"signal">>, Params, null),
-                Battery = maps:get(<<"battery">>, Params, null),
+                Signal = erlang:binary_to_integer(maps:get(<<"signal">>, Params, null)),
+                Battery = erlang:binary_to_integer(maps:get(<<"battery">>, Params, null)),
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchsb(ptime, signal, battery)
                   values($1, $2, $3) on conflict (ptime)
@@ -191,7 +191,7 @@ index(#{params := Params}) ->
         <<"31">> ->
             % 血氧
             try
-                BloodOxygen = maps:get(<<"BloodOxygen">>, Params, null),
+                BloodOxygen = erlang:binary_to_integer(maps:get(<<"BloodOxygen">>, Params, null)),
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchbo(ptime, bloodoxygen)
                   values($1, $2) on conflict (ptime)
@@ -203,10 +203,9 @@ index(#{params := Params}) ->
             end;
         <<"58">> ->
             % 睡眠
-            lager:info("睡眠原始数据：~p~n", [Params]),
             try
-                SleepType = maps:get(<<"sleepType">>, Params, null),
-                Minute = maps:get(<<"minute">>, Params, null),
+                SleepType = erlang:binary_to_integer(maps:get(<<"sleepType">>, Params, null)),
+                Minute = erlang:binary_to_integer(maps:get(<<"minute">>, Params, null)),
                 StartTime = eadm_utils:parse_date_time(maps:get(<<"startTime">>, Params, null)),
                 EndTime = eadm_utils:parse_date_time(maps:get(<<"endTime">>, Params, null)),
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
@@ -236,9 +235,9 @@ index(#{params := Params}) ->
         <<"100">> ->
             % 健康数据集合
             try
-                Diastolic = maps:get(<<"diastolic">>, Params, null),
-                Shrink = maps:get(<<"shrink">>, Params, null),
-                Heartbeat = maps:get(<<"heartbeat">>, Params, null),
+                Diastolic = erlang:binary_to_integer(maps:get(<<"diastolic">>, Params, null)),
+                Shrink = erlang:binary_to_integer(maps:get(<<"shrink">>, Params, null)),
+                Heartbeat = erlang:binary_to_integer(maps:get(<<"heartbeat">>, Params, null)),
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, null)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchbp(ptime, diastolic, shrink)
                                   values($1, $2, $3) on conflict (ptime)
