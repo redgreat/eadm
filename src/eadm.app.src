@@ -1,7 +1,7 @@
 %% -*- mode: erlang;erlang-indent-level: 4;indent-tabs-mode: nil -*-
 {application, eadm,
 [{description, "RG管理平台"},
-  {vsn, "0.1.43"},
+  {vsn, "0.1.44"},
   {registered, []},
   {mod, {eadm_app, []}},
   {included_applications, []},
