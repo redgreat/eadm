@@ -61,57 +61,64 @@ search(#{auth_data := #{<<"authed">> := true,
                     _ ->
                         case DataType of
                             <<"1">> ->
+                                % 步数
                                 {ok, ResCol, ResData} = eadm_pgpool:equery(pool_pg,
                                     "select to_char(ptime, 'yyyy-mm-dd hh24:mi:ss') as utctime, steps
-                                    from lc_watchdaily
+                                    from lc_watchstep
                                     where ptime >= $1
                                       and ptime < $2
                                       and steps is not null
                                     order by ptime desc;",
                                     [ParameterStartTime, ParameterEndTime]);
                             <<"2">> ->
+                                % 心率
                                 {ok, ResCol, ResData} = eadm_pgpool:equery(pool_pg,
                                     "select to_char(ptime, 'yyyy-mm-dd hh24:mi:ss') as utctime, heartbeat
-                                    from lc_watchdaily
+                                    from lc_watchhb
                                     where ptime >= $1
                                       and ptime < $2
                                       and heartbeat is not null
                                     order by ptime desc;",
                                     [ParameterStartTime, ParameterEndTime]);
                             <<"3">> ->
+                                % 体温
                                 {ok, ResCol, ResData} = eadm_pgpool:equery(pool_pg,
                                     "select to_char(ptime, 'yyyy-mm-dd hh24:mi:ss') as utctime,
                                     bodytemperature, wristtemperature
-                                    from lc_watchdaily
+                                    from lc_watchbt
                                     where ptime >= $1
                                       and ptime < $2
                                       and bodytemperature is not null
                                     order by ptime desc;",
                                     [ParameterStartTime, ParameterEndTime]);
                             <<"4">> ->
+                                % 血压
                                 {ok, ResCol, ResData} = eadm_pgpool:equery(pool_pg,
                                     "select to_char(ptime, 'yyyy-mm-dd hh24:mi:ss') as utctime,
                                     diastolic, shrink
-                                    from lc_watchdaily
+                                    from lc_watchbp
                                     where ptime >= $1
                                     and ptime < $2
                                     and diastolic is not null
                                     order by ptime desc;",
                                     [ParameterStartTime, ParameterEndTime]);
                             <<"5">> ->
+                                % 睡眠
                                 {ok, ResCol, ResData} = eadm_pgpool:equery(pool_pg,
                                     "select to_char(ptime, 'yyyy-mm-dd hh24:mi:ss') as utctime,
-                                    sleeptype, sleepstarttime, sleependtime, sleepminute
-                                    from lc_watchdaily
+                                    sleeptype, starttime, endtime, minute
+                                    from lc_watchsleep
                                     where ptime >= $1
                                     and ptime < $2
                                     and sleeptype is not null
                                     order by ptime desc;",
                                     [ParameterStartTime, ParameterEndTime]);
                             <<"6">> ->
+                                % 信号/电量
                                 {ok, ResCol, ResData} = eadm_pgpool:equery(pool_pg,
-                                    "select to_char(ptime, 'yyyy-mm-dd hh24:mi:ss') as utctime, battery
-                                    from lc_watchdaily
+                                    "select to_char(ptime, 'yyyy-mm-dd hh24:mi:ss') as utctime,
+                                     battery, signal
+                                    from lc_watchsb
                                     where ptime >= $1
                                     and ptime < $2
                                     and battery is not null

@@ -66,7 +66,7 @@ comment on column sys_dict.updatedat is '更新时间';
 comment on column sys_dict.deleteduser is '删除人';
 comment on column sys_dict.deletedat is '删除时间';
 comment on column sys_dict.deleted is '是否删除(0否1是)';
-comment on table sys_dict is '系统_字典信息表';
+comment on table sys_dict is '系统域_字典信息表';
 
 -- 表最后一次更新时间触发器
 drop trigger if exists dict_lastupdate on sys_dict cascade;

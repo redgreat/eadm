@@ -20,11 +20,11 @@ i18nHealth.columnName = {
         "diastolic": "舒张压",
         "shrink": "收缩压",
         "sleeptype": "睡眠类型",
-        "sleepstarttime": "入睡时间",
-        "sleependtime": "醒起时间",
-        "sleepwaketime": "醒起时间",
-        "sleepminute": "睡眠时长(分钟)",
-        "battery": "电池电量"
+        "starttime": "入睡时间",
+        "endtime": "醒起时间",
+        "minute": "睡眠时长(分钟)",
+        "battery": "电池电量",
+        "signal": "信号强度"
     }
 };
 
