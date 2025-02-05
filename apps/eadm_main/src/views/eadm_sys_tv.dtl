@@ -1,0 +1,37 @@
+{% extends "eadm_base.dtl" %}
+{% block title %}Tables{% endblock %}
+{% block pre_title %}Overview{% endblock %}
+{% block content %}
+            <div class="row">
+              <div class="col-sm-12 col-md-12 col-lg-12">
+                <div class="card">
+                  <div class="card-body">
+                    <div class="table-responsive">
+                      <table class="table table-striped">
+                        <thead>
+                          <th>Table Name</th>
+                          <th>Objects</th>
+                          <th>Size (kB)</th>
+                          <th>Owner Pid</th>
+                          <th>Owner Name</th>
+                          <th>Table Id</th>
+                        </thead>
+                        <tbody>
+                          {% for table in tables %}
+                          <tr>
+                            <td>{{table.name}}</td>
+                            <td>{{table.size}}</td>
+                            <td>{{table.memory|filesizeformat}}</td>
+                            <td>{{table.owner}}</td>
+                            <td>{{table.reg_name}}</td>
+                            <td>{{table.id}}</td>
+                          </tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+{% endblock %}

@@ -1,0 +1,207 @@
+{% extends "eadm_base.dtl" %}
+
+{% block title %}用户信息{% endblock %}
+
+{% block css %}
+    <link href="/assets/vendor/datatables/datatables.min.css" rel="stylesheet">
+{% endblock %}
+{% block content %}
+
+<div class="containter">
+    <div class="page-title">
+        <div class="row d-flex justify-content-end">
+            <div class="col-4">
+                <button type="button" id="refresh-user-btn" class="btn btn-sm btn-outline-primary float-end mb-2">
+                    <i class="fas fa-redo-alt"></i> 刷新
+                </button>
+                <a href="/menu/role" id="role-user-btn" class="btn btn-sm btn-outline-primary float-end mb-2 me-1">
+                    <i class="fas fa-user-shield"></i> 角色
+                </a>
+                <button type="button" id="add-user-btn" class="btn btn-sm btn-outline-primary float-end mb-2 me-1"
+                  data-bs-toggle="modal" data-bs-target="#modal-add-user">
+                    <i class="fas fa-plus-circle"></i> 新增
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body">
+            <table class="table table-hover" id="table-user" width="100%"></table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block html_top %}
+
+<div class="modal" id="modal-add-user" tabindex="-1" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">新增用户</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="container">
+                    <form accept-charset="utf-8">
+                        <div class="row mb-3">
+                            <label class="form-label col-3" for="loginname">登录名</label>
+                            <input class="col-6" id="loginname" type="text">
+                        </div>
+                        <div class="row mb-3">
+                            <label class="form-label col-3" for="email">邮箱</label>
+                            <input class="col-6" id="email" type="email">
+                        </div>
+                        <div class="row mb-3">
+                            <label class="form-label col-3" for="username">显示姓名</label>
+                            <input class="col-6" id="username" type="text">
+                        </div>
+                        <div class="row mb-3">
+                            <label class="form-label col-3" for="password">密码</label>
+                            <input class="col-6" id="password" type="password">
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="add-user-submit-btn" data-bs-dismiss="modal">提交</button>
+                <button type="button" class="btn btn-secondary" id="add-user-cancel-btn" data-bs-dismiss="modal">取消</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal modal-lg" id="modal-user-role" tabindex="-1" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">用户角色信息</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="rol-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <table class="table table-hover" id="table-user-role" width="100%"></table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="add-user-role-btn"
+                  data-bs-toggle="modal" data-bs-target="#modal-role-list">
+                    <i class="fas fa-plus-circle"></i> 新增
+                </button>
+                <button type="button" class="btn btn-secondary" id="user-role-close-btn" data-bs-dismiss="modal">关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal modal-lg" id="modal-role-list" tabindex="-1" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">角色信息列表</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="container">
+                    <div class="card">
+                        <div class="card-body">
+                            <table class="table table-hover" id="table-rolelist" width="100%"></table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="user-role-submit-btn" data-bs-dismiss="modal">提交</button>
+                <button type="button" class="btn btn-secondary" id="user-role-cancel-btn" data-bs-dismiss="modal">取消</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="modal-user-edit" tabindex="-1" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">用户信息编辑</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="container">
+                    <form accept-charset="utf-8">
+                        <div class="row mb-3">
+                            <label class="form-label col-3" for="loginname-edit">登录名</label>
+                            <input class="col-6" id="loginname-edit" type="text">
+                        </div>
+                        <div class="row mb-3">
+                            <label class="form-label col-3" for="username-edit">显示姓名</label>
+                            <input class="col-6" id="username-edit" type="text">
+                        </div>
+                        <div class="row mb-3">
+                            <label class="form-label col-3" for="email-edit">邮箱</label>
+                            <input class="col-6" id="email-edit" type="email">
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="user-edit-submit-btn" data-bs-dismiss="modal">提交</button>
+                <button type="button" class="btn btn-secondary" id="user-edit-close-btn" data-bs-dismiss="modal">关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="del-user-confirm" tabindex="-1" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="container">
+                    <div class="alert alert-danger">
+                        <h5 class="alert-title"><i class="fas fa-exclamation-triangle"></i> 是否确认删除用户？</h5>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" id="del-user-confirm-btn" data-bs-dismiss="modal">确认</button>
+                <button type="button" class="btn btn-secondary" id="del-user-cancel-btn" data-bs-dismiss="modal">取消</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="del-userrole-confirm" tabindex="-1" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="container">
+                    <div class="alert alert-danger">
+                        <h5 class="alert-title"><i class="fas fa-exclamation-triangle"></i> 是否确认删除用户角色？</h5>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" id="del-userrole-confirm-btn" data-bs-dismiss="modal">确认</button>
+                <button type="button" class="btn btn-secondary" id="del-userrole-cancel-btn" data-bs-dismiss="modal">取消</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block js_scripts %}
+    <script src="/assets/vendor/datatables/datatables.min.js"></script>
+    <script src="/assets/i18n/i18n-user.js"></script>
+    <script src="/assets/js/user.js"></script>
+{% endblock %}

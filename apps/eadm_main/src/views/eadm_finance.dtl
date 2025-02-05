@@ -1,0 +1,245 @@
+{% extends "eadm_base.dtl" %}
+
+{% block title %}我的财务{% endblock %}
+
+{% block css %}
+    <link href="/assets/vendor/datetimepicker/datetimepicker.min.css" rel="stylesheet">
+    <link href="/assets/vendor/datatables/datatables.min.css" rel="stylesheet">
+{% endblock %}
+{% block content %}
+
+<div class="containter">
+    <div class="card">
+        <div class="card-body">
+            <div class="row-12 d-flex justify-content-between">
+                <div class="flex-column">
+                    <div class="flex-row">
+                        <label for="sourceType">账单来源</label>
+                        <select id="sourceType">
+                            <option value="0" selected>全部来源</option>
+                            <option value="1">支付宝</option>
+                            <option value="2">微信</option>
+                            <option value="3">青岛银行</option>
+                            <option value="4">中国银行</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex-column">
+                    <div class="flex-row">
+                        <label for="inorOut">收支类型</label>
+                        <select id="inorOut">
+                            <option value="0" selected>全部类型</option>
+                            <option value="1">收入</option>
+                            <option value="2">支出</option>
+                            <option value="3">其他</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex-column">
+                    <div class="flex-row">
+                        <label for="starttime">开始时间</label>
+                        <input id="starttime" class="col-8" type="text">
+                    </div>
+                </div>
+                <div class="flex-column">
+                    <div class="flex-row">
+                        <label for="endtime">结束时间</label>
+                        <input id="endtime" class="col-8" type="text">
+                    </div>
+                </div>
+                <div class="flex-column">
+                    <div class="flex-row">
+                        <button class="btn btn-outline-success" id="importFinance">
+                        <i class="fa-fw select-all fas"></i> 账单导入
+                    </button>
+                        <button class="btn btn-outline-success" id="cleanFinance">
+                        <i class="fa-fw select-all fas"></i> 清空
+                    </button>
+                        <button class="btn btn-outline-success" id="searchFinance">
+                        <i class="fa-fw select-all fas"></i> 查询
+                    </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body">
+             <table class="table table-hover" id="table-finance" width="100%"></table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block html_top %}
+
+<div class="modal" id="finance-detail" tabindex="-1" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">账单详情</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col">
+                        <div class="card">
+                            <div class="card-body">
+                                <table class="table table-striped" id="mod-fin-detail">
+                                    <tr>
+                                      <th scope="row">来源人姓名:</th>
+                                      <td id="findetail-owner"></td>
+                                    </tr>
+                                    <tr>
+                                      <th scope="row">来源:</th>
+                                      <td id="findetail-source"></td>
+                                    </tr>
+                                    <tr>
+                                      <th scope="row">收/支:</th>
+                                      <td id="findetail-inorout"></td>
+                                    </tr>
+                                    <tr>
+                                      <th scope="row">交易对方:</th>
+                                      <td id="findetail-counterparty"></td>
+                                    </tr>
+                                    <tr>
+                                      <th scope="row">对方开户行:</th>
+                                      <td id="findetail-counterbank"></td>
+                                    </tr>
+                                    <tr>
+                                      <th scope="row">对方账号:</th>
+                                      <td id="findetail-counteraccount"></td>
+                                    </tr>
+                                    <tr>
+                                      <th scope="row">商品说明:</th>
+                                      <td id="findetail-goodscomment"></td>
+                                    </tr>
+                                    <tr>
+                                      <th scope="row">收/付款方式:</th>
+                                      <td id="findetail-paymethod"></td>
+                                    </tr>
+                                    <tr>
+                                      <th scope="row">金额:</th>
+                                      <td id="findetail-amount"></td>
+                                    </tr>
+                                    <tr>
+                                      <th scope="row">余额:</th>
+                                      <td id="findetail-balance"></td>
+                                    </tr>
+                                    <tr>
+                                      <th scope="row">币种:</th>
+                                      <td id="findetail-currency"></td>
+                                    </tr>
+                                    <tr>
+                                      <th scope="row">交易状态:</th>
+                                      <td id="findetail-paystatus"></td>
+                                    </tr>
+                                    <tr>
+                                      <th scope="row">交易分类:</th>
+                                      <td id="findetail-tradetype"></td>
+                                    </tr>
+                                    <tr>
+                                      <th scope="row">交易订单号:</th>
+                                      <td id="findetail-tradeorderno"></td>
+                                    </tr>
+                                    <tr>
+                                      <th scope="row">商家订单号:</th>
+                                      <td id="findetail-counterorderno"></td>
+                                    </tr>
+                                    <tr>
+                                      <th scope="row">交易时间:</th>
+                                      <td id="findetail-tradetime"></td>
+                                    </tr>
+                                    <tr>
+                                      <th scope="row">交易备注:</th>
+                                      <td id="findetail-billcomment"></td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="finance-import" tabindex="-1" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">账单导入</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="container">
+                    <p class="text-info">
+                        <a id="exampleLink" href="/assets/files/finance-import-sample-raw.xlsx">账单文件样例</a>
+                    </p>
+                    <p>
+                        <div class="row-12">
+                            <div class="flex-column">
+                                <div class="flex-row">
+                                    <label for="importType">导入类型</label>
+                                    <select id="importType">
+                                        <option value="0" selected>原始数据</option>
+                                        <option value="1">支付宝</option>
+                                        <option value="2">微信</option>
+                                        <option value="3">青岛银行</option>
+                                        <option value="4">中国银行</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="flex-column">
+                                <div class="flex-row">
+                                    <label for="finance-imp-file">账单文件：</label>
+                                    <input class="form-control" accept=".xls,.xlsx,.csv" id="finance-imp-file" type="file">
+                                </div>
+                            </div>
+                        </div>
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="submitFinance">提交</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="del-confirm" tabindex="-1" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="container">
+                    <div class="alert alert-danger">
+                        <h5 class="alert-title"><i class="fas fa-exclamation-triangle"></i> 是否确认删除？</h5>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" id="del-confirm-btn" data-bs-dismiss="modal">确认</button>
+                    <button type="button" class="btn btn-secondary" id="del-cancel-btn" data-bs-dismiss="modal">取消</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block js_scripts %}
+    <script src="/assets/vendor/datetimepicker/datetimepicker.full.min.js"></script>
+    <script src="/assets/vendor/datatables/datatables.min.js"></script>
+    <script src="/assets/vendor/xlsx/xlsx.full.min.js"></script>
+    <script src="/assets/i18n/i18n-finance.js"></script>
+    <script src="/assets/js/utils-datetime.js"></script>
+    <script src="/assets/js/finance.js"></script>
+{% endblock %}

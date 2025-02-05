@@ -1,0 +1,21 @@
+%%%-------------------------------------------------------------------
+%%% @author wangcw
+%%% @copyright (C) 2025, REDGREAT
+%%% @doc
+%%%
+%%%
+%%%
+%%% @end
+%%% Created : 2025-01-22 14:33
+%%%-------------------------------------------------------------------
+{application, eadm_api, [
+    {description, ""},
+    {vsn, "1"},
+    {registered, []},
+    {applications, [
+        kernel,
+        stdlib
+    ]},
+    {mod, {eadm_api, []}},
+    {env, []}
+]}.

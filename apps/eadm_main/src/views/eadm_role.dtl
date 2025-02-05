@@ -1,0 +1,140 @@
+{% extends "eadm_base.dtl" %}
+
+{% block title %}角色信息{% endblock %}
+
+{% block css %}
+    <link href="/assets/vendor/datatables/datatables.min.css" rel="stylesheet">
+{% endblock %}
+{% block content %}
+
+<div class="containter">
+    <div class="page-title">
+        <div class="row d-flex justify-content-end">
+            <div class="col-4">
+                <button type="button" id="refresh-role-btn" class="btn btn-sm btn-outline-primary float-end mb-2">
+                    <i class="fas fa-redo-alt"></i> 刷新
+                </button>
+                <button type="button" id="add-role-btn" class="btn btn-sm btn-outline-primary float-end mb-2 me-1"
+                  data-bs-toggle="modal" data-bs-target="#role-add">
+                    <i class="fas fa-plus-circle"></i> 新增
+                </button>
+                <a href="/menu/user" class="btn btn-sm btn-outline-primary float-end mb-2 me-1">
+                    <i class="fas fa-angle-left"></i> 返回
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body">
+            <table class="table table-hover" id="table-role" width="100%"></table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block html_top %}
+
+<div class="modal" id="role-add" tabindex="-1" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">新增角色</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="container">
+                    <form accept-charset="utf-8">
+                        <div class="row mb-3">
+                            <label class="form-label col-3" for="rolename">角色名</label>
+                            <input class="col-6" id="rolename" type="text">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" id="add-role-submit-btn" data-bs-dismiss="modal">提交</button>
+                    <button type="button" class="btn btn-secondary" id="add-role-cancel-btn" data-bs-dismiss="modal">取消</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="role-edit" tabindex="-1" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">权限编辑</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="container">
+                    <form accept-charset="utf-8">
+                        <div class="mb-3">
+                            <label for="email" class="form-label text-uppercase">信息看板</label>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="dashboard">
+                                <label class="form-check-label" for="dashboard"><small>是否启用</small></label>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="email" class="form-label text-uppercase">我的健康</label>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="health">
+                                <label class="form-check-label" for="health"><small>是否启用</small></label>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="email" class="form-label text-uppercase">轨迹回放</label>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="locate">
+                                <label class="form-check-label" for="locate"><small>是否启用</small></label>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="email" class="form-label text-uppercase">我的财务</label>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="finance">
+                                <label class="form-check-label" for="finance"><small>是否启用</small></label>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="finance-imp">
+                                <label class="form-check-label" for="finance-imp"><small>导入数据</small></label>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="finance-del">
+                                <label class="form-check-label" for="finance-del"><small>删除数据</small></label>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="email" class="form-label text-uppercase">定时任务</label>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="crontab">
+                                <label class="form-check-label" for="crontab"><small>是否启用</small></label>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="email" class="form-label text-uppercase">用户信息</label>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="usermanage">
+                                <label class="form-check-label" for="usermanage"><small>是否启用</small></label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" id="edit-role-submit-btn" data-bs-dismiss="modal">提交</button>
+                    <button type="button" class="btn btn-secondary" id="add-role-cancel-btn" data-bs-dismiss="modal">取消</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block js_scripts %}
+    <script src="/assets/vendor/datatables/datatables.min.js"></script>
+    <script src="/assets/i18n/i18n-role.js"></script>
+    <script src="/assets/js/role.js"></script>
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends "eadm_base.dtl" %}
+
+{% block title %}轨迹回放{% endblock %}
+
+{% block css %}
+    <link href="/assets/vendor/datetimepicker/datetimepicker.min.css" rel="stylesheet">
+    <link href="/assets/vendor/datatables/datatables.min.css" rel="stylesheet">
+{% endblock %}
+{% block content %}
+
+<div class="row">
+    <div class="col-md-12">
+        <!--地图-->
+        <div id="mapContainer">
+            <div id="mapCard" class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-3">
+                            <div class="row-3 mt-0 mb-0">
+                                <label for="starttime">开始时间</label>
+                                <input id="starttime" type="text">
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="row-3 mt-0 mb-0">
+                                <label for="endtime">结束时间</label>
+                                <input id="endtime" type="text">
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="row-6 d-flex justify-content-end">
+                                <button class="btn btn-outline-success" id="start">
+                                    <i class="fa-fw select-all fas"></i> 开始
+                                </button>
+                                <div class="col-1"></div>
+                                <button class="btn btn-outline-success" id="pause">
+                                    <i class="fa-fw select-all fas"></i> 暂停
+                                </button>
+                                <div class="col-1"></div>
+                                <button class="btn btn-outline-success" id="resume">
+                                    <i class="fa-fw select-all fas"></i> 继续
+                                </button>
+                                <div class="col-1"></div>
+                                <button class="btn btn-outline-success" id="stop">
+                                    <i class="fa-fw select-all fas"></i> 停止
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+{% block js_scripts %}
+    <script src="/assets/vendor/datetimepicker/datetimepicker.full.min.js"></script>
+    <script src="/assets/js/utils-datetime.js"></script>
+    <script src="https://webapi.amap.com/loader.js"></script>
+    <script src="/assets/js/location.js"></script>
+
+{% endblock %}
