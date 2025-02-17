@@ -25,7 +25,7 @@
 %%%===================================================================
 %%% Define
 %%%===================================================================
--define(SERVER, ?MODULE).
+% -define(SERVER, ?MODULE).
 
 %%====================================================================
 %% API 函数
@@ -36,7 +36,7 @@
 %% start_link.
 %% @end
 start_link() ->
-    supervisor:start_link({local, ?SERVER}, ?MODULE, []).
+    supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 
 %% @private
 %% @doc
