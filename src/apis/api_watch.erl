@@ -261,7 +261,7 @@ index(#{params := Params}) ->
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, <<"1970/1/1 00:00:00">>)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchalarm(alarmtime, alarmtype, alarminfo)
                   values($1, $2, $3);", [BTUtcTime, 18, MsgContent]),
-                eadm_wechat:send_msg(MsgContent),
+                % eadm_wechat:send_msg(MsgContent),
                 eadm_push:send_msg(MsgContent),
                 #{<<"success">> => true}
             catch
@@ -274,7 +274,6 @@ index(#{params := Params}) ->
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, <<"1970/1/1 00:00:00">>)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchalarm(alarmtime, alarmtype, alarminfo)
                   values($1, $2, $3);", [BTUtcTime, 19, MsgContent]),
-                eadm_wechat:send_msg(MsgContent),
                 eadm_push:send_msg(MsgContent),
                 #{<<"success">> => true}
             catch
@@ -287,7 +286,6 @@ index(#{params := Params}) ->
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, <<"1970/1/1 00:00:00">>)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchalarm(alarmtime, alarmtype, alarminfo)
                   values($1, $2, $3);", [BTUtcTime, 20, MsgContent]),
-                eadm_wechat:send_msg(MsgContent),
                 eadm_push:send_msg(MsgContent),
                 #{<<"success">> => true}
             catch
@@ -300,7 +298,6 @@ index(#{params := Params}) ->
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, <<"1970/1/1 00:00:00">>)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchalarm(alarmtime, alarmtype, alarminfo)
                   values($1, $2, $3);", [BTUtcTime, 21, MsgContent]),
-                eadm_wechat:send_msg(MsgContent),
                 eadm_push:send_msg(MsgContent),
                 #{<<"success">> => true}
             catch
@@ -313,7 +310,6 @@ index(#{params := Params}) ->
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, <<"1970/1/1 00:00:00">>)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchalarm(alarmtime, alarmtype, alarminfo)
                   values($1, $2, $3);", [BTUtcTime, 24, MsgContent]),
-                eadm_wechat:send_msg(MsgContent),
                 eadm_push:send_msg(MsgContent),
                 #{<<"success">> => true}
             catch
@@ -326,7 +322,6 @@ index(#{params := Params}) ->
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, <<"1970/1/1 00:00:00">>)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchalarm(alarmtime, alarmtype, alarminfo)
                   values($1, $2, $3);", [BTUtcTime, 25, MsgContent]),
-                eadm_wechat:send_msg(MsgContent),
                 eadm_push:send_msg(MsgContent),
                 #{<<"success">> => true}
             catch
@@ -339,7 +334,6 @@ index(#{params := Params}) ->
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, <<"1970/1/1 00:00:00">>)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchalarm(alarmtime, alarmtype, alarminfo)
                   values($1, $2, $3);", [BTUtcTime, 36, MsgContent]),
-                eadm_wechat:send_msg(MsgContent),
                 eadm_push:send_msg(MsgContent),
                 #{<<"success">> => true}
             catch
@@ -352,7 +346,6 @@ index(#{params := Params}) ->
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, <<"1970/1/1 00:00:00">>)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchalarm(alarmtime, alarmtype, alarminfo)
                   values($1, $2, $3);", [BTUtcTime, 38, MsgContent]),
-                eadm_wechat:send_msg(MsgContent),
                 eadm_push:send_msg(MsgContent),
                 #{<<"success">> => true}
             catch
@@ -365,7 +358,6 @@ index(#{params := Params}) ->
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, <<"1970/1/1 00:00:00">>)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchalarm(alarmtime, alarmtype, alarminfo)
                   values($1, $2, $3);", [BTUtcTime, 39, MsgContent]),
-                eadm_wechat:send_msg(MsgContent),
                 eadm_push:send_msg(MsgContent),
                 #{<<"success">> => true}
             catch
@@ -378,7 +370,6 @@ index(#{params := Params}) ->
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, <<"1970/1/1 00:00:00">>)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchalarm(alarmtime, alarmtype, alarminfo)
                   values($1, $2, $3);", [BTUtcTime, 51, MsgContent]),
-                eadm_wechat:send_msg(MsgContent),
                 eadm_push:send_msg(MsgContent),
                 #{<<"success">> => true}
             catch
@@ -391,7 +382,6 @@ index(#{params := Params}) ->
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, <<"1970/1/1 00:00:00">>)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchalarm(alarmtime, alarmtype, alarminfo)
                   values($1, $2, $3);", [BTUtcTime, 52, MsgContent]),
-                eadm_wechat:send_msg(MsgContent),
                 eadm_push:send_msg(MsgContent),
                 #{<<"success">> => true}
             catch
@@ -404,7 +394,6 @@ index(#{params := Params}) ->
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, <<"1970/1/1 00:00:00">>)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchalarm(alarmtime, alarmtype, alarminfo)
                   values($1, $2, $3);", [BTUtcTime, 39, MsgContent]),
-                eadm_wechat:send_msg(MsgContent),
                 eadm_push:send_msg(MsgContent),
                 #{<<"success">> => true}
             catch
@@ -417,7 +406,6 @@ index(#{params := Params}) ->
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, <<"1970/1/1 00:00:00">>)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchalarm(alarmtime, alarmtype, alarminfo)
                   values($1, $2, $3);", [BTUtcTime, 91, MsgContent]),
-                eadm_wechat:send_msg(MsgContent),
                 eadm_push:send_msg(MsgContent),
                 #{<<"success">> => true}
             catch
@@ -430,7 +418,6 @@ index(#{params := Params}) ->
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, <<"1970/1/1 00:00:00">>)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchalarm(alarmtime, alarmtype, alarminfo)
                   values($1, $2, $3);", [BTUtcTime, 110, MsgContent]),
-                eadm_wechat:send_msg(MsgContent),
                 eadm_push:send_msg(MsgContent),
                 #{<<"success">> => true}
             catch
@@ -443,7 +430,6 @@ index(#{params := Params}) ->
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, <<"1970/1/1 00:00:00">>)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchalarm(alarmtime, alarmtype, alarminfo)
                   values($1, $2, $3);", [BTUtcTime, 154, MsgContent]),
-                eadm_wechat:send_msg(MsgContent),
                 eadm_push:send_msg(MsgContent),
                 #{<<"success">> => true}
             catch
@@ -456,7 +442,6 @@ index(#{params := Params}) ->
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, <<"1970/1/1 00:00:00">>)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchalarm(alarmtime, alarmtype, alarminfo)
                   values($1, $2, $3);", [BTUtcTime, 155, MsgContent]),
-                eadm_wechat:send_msg(MsgContent),
                 eadm_push:send_msg(MsgContent),
                 #{<<"success">> => true}
             catch
@@ -469,7 +454,6 @@ index(#{params := Params}) ->
                 BTUtcTime = eadm_utils:parse_date_time(maps:get(<<"BTUtcTime">>, Params, <<"1970/1/1 00:00:00">>)),
                 eadm_pgpool:equery(pool_pg, "insert into lc_watchalarm(alarmtime, alarmtype, alarminfo)
                   values($1, $2, $3);", [BTUtcTime, 156, MsgContent]),
-                eadm_wechat:send_msg(MsgContent),
                 eadm_push:send_msg(MsgContent),
                 #{<<"success">> => true}
             catch

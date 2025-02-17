@@ -10,3 +10,8 @@ ALTER USER user_eadm CREATEDB;
 CREATE DATABASE eadm WITH OWNER = user_eadm ENCODING = 'UTF8';
 GRANT ALL ON DATABASE eadm TO user_eadm;
 
+-- 授予目标 Schema 的表读取权限
+GRANT SELECT ON ALL TABLES IN SCHEMA PUBLIC TO user_eadm;
+
+-- 授予目标 Schema 的 USAGE 权限
+GRANT USAGE ON SCHEMA PUBLIC TO user_eadm;
