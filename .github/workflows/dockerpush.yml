@@ -147,7 +147,7 @@ jobs:
           asset_content_type: application/octet-stream
 
       - name: setup QEMU
-        uses: docker/setup-qemu-action@v3.3.0s
+        uses: docker/setup-qemu-action@v3.3.0
         with:
           platforms: arm,arm64,ppc64le,mips64,s390x
 
