@@ -2,8 +2,8 @@
 # docker build script
 
 # 提前拉取镜像（反复打包测试时免除每次pull）
-docker pull alpine:3.20
-docker pull erlang:26.2.4-alpine
+docker pull alpine:3.21
+docker pull erlang:26.2.1-alpine
 
 # 清理镜像
 docker stop eadm

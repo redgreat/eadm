@@ -10,7 +10,7 @@ on:
       - 'v*'
 
 env:
-  OTP-VERSION: 27.2.1
+  OTP-VERSION: 26.2.5.8
   REBAR3-VERSION: 3.24.0
   DOCKER_IMAGE_NAME: redgreat/eadm
   ALIYUN_REGISTRY: registry.cn-hangzhou.aliyuncs.com
