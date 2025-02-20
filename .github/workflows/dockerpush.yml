@@ -193,7 +193,7 @@ jobs:
         if: ${{ steps.prep.outputs.is_release == 'yes' }}
         run: |
           docker buildx imagetools inspect ${{ env.DOCKER_IMAGE_NAME }}:${{ steps.prep.outputs.label_version }}
-          docker buildx imagetools inspect ghcr.io/${{ github.repository_owner }}/${{ env.DOCKER_IMAGE_NAME }}:${{ steps.prep.outputs.label_version }}
+          docker buildx imagetools inspect ghcr.io/${{ env.DOCKER_IMAGE_NAME }}:${{ steps.prep.outputs.label_version }}
           docker buildx imagetools inspect ${{ env.ALIYUN_REGISTRY }}/${{ env.DOCKER_IMAGE_NAME }}:${{ steps.prep.outputs.label_version }}
 
       - name: dockerhub description
