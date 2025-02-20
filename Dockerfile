@@ -1,4 +1,4 @@
-FROM --platform=$BUILDPLATFORM erlang:26.2.5-alpine AS builder
+FROM --platform=$BUILDPLATFORM erlang:27.2.3-alpine AS builder
 
 WORKDIR /eadmbuild
 
@@ -7,7 +7,7 @@ COPY . .
 RUN apk add --update git
 RUN rebar3 as prod release
 
-FROM --platform=$BUILDPLATFORM alpine:3.20
+FROM --platform=$BUILDPLATFORM alpine:3.21
 
 ARG DOCKER_IMAGE_VERSION
 
