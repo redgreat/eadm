@@ -86,8 +86,9 @@ jobs:
           # Determine the Docker container tags.
           TAGS="${{ env.DOCKER_IMAGE_NAME}}:${LABEL_VERSION}"
           TAGS="$TAGS,${{ env.ALIYUN_REGISTRY}}/${{ env.DOCKER_IMAGE_NAME}}:${LABEL_VERSION}"
+          TAGS="$TAGS,ghcr.io/${{ env.DOCKER_IMAGE_NAME}}:${LABEL_VERSION}"
           if [[ $GITHUB_REF =~ refs/tags/* ]]; then
-          TAGS="$TAGS,${{ env.DOCKER_IMAGE_NAME }}:latest,${{ env.ALIYUN_REGISTRY}}/${{ env.DOCKER_IMAGE_NAME }}:latest"
+          TAGS="$TAGS,${{ env.DOCKER_IMAGE_NAME }}:latest,${{ env.ALIYUN_REGISTRY}}/${{ env.DOCKER_IMAGE_NAME }}:latest,ghcr.io/${{ env.DOCKER_IMAGE_NAME}}:latest"
           fi
           # Determine the release type.
           if [[ $GITHUB_REF =~ refs/tags/* ]]; then
