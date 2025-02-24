@@ -81,8 +81,8 @@ userinfo(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName}}) 
             "select loginname, username, email
             from eadm_user
             where loginname = $1
-              and userstatus = 0
-              and deleted is false
+                and userstatus = 0
+                and deleted is false
             limit 1", [LoginName]),
         ResList = eadm_utils:pg_as_list(ResData),
         {json, ResList}
@@ -145,8 +145,8 @@ userpwd(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName},
                             updatedat = current_timestamp,
                             passwd = $2
                             where loginname = $3
-                              and userstatus = 0
-                              and deleted is false;",
+                                and userstatus = 0
+                                and deleted is false;",
                             [LoginName, CryptoGram, LoginName]),
                         {json, [#{<<"Alert">> => unicode:characters_to_binary("密码修改成功！", utf8)}]}
                     catch

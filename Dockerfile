@@ -31,11 +31,11 @@ VOLUME /opt/eadm
 EXPOSE 8090
 
 LABEL \
-      org.label-schema.name="eadm" \
-      org.label-schema.description="erlang书写自用管理，提供日常数据统计查询。" \
-      org.label-schema.version="${DOCKER_IMAGE_VERSION:-unknown}" \
-      org.label-schema.vcs-url="https://github.com/redgreat/eadm" \
-      org.label-schema.maintainer="wangcw <rubygreat@msn.com>" \
-      org.label-schema.schema-version="1.0"
+    org.label-schema.name="eadm" \
+    org.label-schema.description="erlang书写自用管理，提供日常数据统计查询。" \
+    org.label-schema.version="${DOCKER_IMAGE_VERSION:-unknown}" \
+    org.label-schema.vcs-url="https://github.com/redgreat/eadm" \
+    org.label-schema.maintainer="wangcw <rubygreat@msn.com>" \
+    org.label-schema.schema-version="1.0"
 
 ENTRYPOINT ["/usr/bin/dumb-init", "-c", "--", "/opt/eadm/docker/docker-entrypoint.sh"]

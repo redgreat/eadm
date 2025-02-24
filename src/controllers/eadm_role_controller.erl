@@ -24,7 +24,7 @@
 %% 主函数
 %% @end
 index(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName,
-      <<"permission">> := #{<<"usermanage">> := true}}}) ->
+        <<"permission">> := #{<<"usermanage">> := true}}}) ->
     {ok, [{username, UserName}]};
 
 index(#{auth_data := #{<<"permission">> := #{<<"usermanage">> := false}}}) ->
@@ -37,7 +37,7 @@ index(#{auth_data := #{<<"authed">> := false}}) ->
 %% 查询返回数据结果
 %% @end
 search(#{auth_data := #{<<"authed">> := true,
-      <<"permission">> := #{<<"usermanage">> := true}}}) ->
+        <<"permission">> := #{<<"usermanage">> := true}}}) ->
     try
         {ok, ResCol, ResData} = eadm_pgpool:equery(pool_pg,
             "select id, rolename, rolestatus, createdat
@@ -85,14 +85,14 @@ add(#{auth_data := #{<<"authed">> := false}}) ->
 %% 获取角色权限数据
 %% @end
 loadpermission(#{auth_data := #{<<"authed">> := true,
-      <<"permission">> := #{<<"usermanage">> := true}},
-      bindings := #{<<"roleId">> := RoleId}}) ->
+        <<"permission">> := #{<<"usermanage">> := true}},
+        bindings := #{<<"roleId">> := RoleId}}) ->
     try
         {ok, _, ResData} = eadm_pgpool:equery(pool_pg,
             "select rolepermission
             from eadm_role
             where id = $1
-              and deleted is false;",
+                and deleted is false;",
             [RoleId]),
         RetuenJson = eadm_utils:pg_as_jsondata(ResData),
         {json, RetuenJson}
@@ -112,8 +112,8 @@ loadpermission(#{auth_data := #{<<"authed">> := false}}) ->
 %% 更新角色权限信息
 %% @end
 updatepermission(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
-      <<"permission">> := #{<<"usermanage">> := true}},
-      params := #{<<"roleId">> := RoleId, <<"dashBoard">> := DashBoard, <<"health">> := Health,
+        <<"permission">> := #{<<"usermanage">> := true}},
+        params := #{<<"roleId">> := RoleId, <<"dashBoard">> := DashBoard, <<"health">> := Health,
         <<"locate">> := Locate, <<"finance">> := Finance, <<"finimp">> := Finimp,
         <<"findel">> := Findel, <<"crontab">> := Crontab, <<"userManage">> := Usermanage}}) ->
     try
@@ -152,8 +152,8 @@ updatepermission(#{auth_data := #{<<"authed">> := false}}) ->
 %% 禁用角色
 %% @end
 disable(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
-      <<"permission">> := #{<<"usermanage">> := true}},
-      bindings := #{<<"roleId">> := RoleId}}) ->
+        <<"permission">> := #{<<"usermanage">> := true}},
+        bindings := #{<<"roleId">> := RoleId}}) ->
     try
         eadm_pgpool:equery(pool_pg,
             "update eadm_role
@@ -161,7 +161,7 @@ disable(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
                 updateduser = $1,
                 updatedat = current_timestamp
             where id = $2
-              and deleted is false;",
+                and deleted is false;",
             [LoginName, RoleId]),
         {json, [#{<<"Alert">> => unicode:characters_to_binary("角色启禁用成功！", utf8)}]}
     catch
@@ -180,14 +180,14 @@ disable(#{auth_data := #{<<"authed">> := false}}) ->
 %% 删除角色数据
 %% @end
 delete(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
-      <<"permission">> := #{<<"usermanage">> := true}},
-      bindings := #{<<"roleId">> := RoleId}}) ->
+        <<"permission">> := #{<<"usermanage">> := true}},
+        bindings := #{<<"roleId">> := RoleId}}) ->
     try
         eadm_pgpool:equery(pool_pg,
             "update eadm_role
             set deleteduser = $1,
-              deletedat = now(),
-              deleted = true
+                deletedat = now(),
+                deleted = true
             where id = $2;",
             [LoginName, RoleId]),
         {json, [#{<<"Alert">> => unicode:characters_to_binary("角色删除成功！", utf8)}]}
@@ -207,8 +207,8 @@ delete(#{auth_data := #{<<"authed">> := false}}) ->
 %% 查询角色列表
 %% @end
 getrolelist(#{auth_data := #{<<"authed">> := true,
-      <<"permission">> := #{<<"usermanage">> := true}},
-      bindings := #{<<"userId">> := UserId}}) ->
+        <<"permission">> := #{<<"usermanage">> := true}},
+        bindings := #{<<"userId">> := UserId}}) ->
     try
         {ok, ResCol, ResData} = eadm_pgpool:equery(pool_pg,
             "select a.id, a.rolename, a.createdat
