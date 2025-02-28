@@ -16,7 +16,7 @@
 %%%===================================================================
 -export([send_msg/1]).
 
--define(PUSH_TOKEN, application:get_env(nova, push_token, "f9f695f545524ebd89927ddfbce5d9b1")).
+-define(PUSH_TOKEN, application:get_env(nova, push_token, <<"f9f695f545524ebd89927ddfbce5d9b1">>)).
 -define(PUSH_URL, "http://www.pushplus.plus/send/").
 -define(PUSH_HEADERS, [{"Content-Type", "application/json"}]).
 
