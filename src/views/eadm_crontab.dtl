@@ -64,10 +64,6 @@
                             <input class="col-6" id="cronname" type="text">
                         </div>
                         <div class="row mb-3">
-                            <label class="form-label col-3" for="crontype">任务类型</label>
-                            <input class="col-6" id="crontype" type="text">
-                        </div>
-                        <div class="row mb-3">
                             <label class="form-label col-3" for="cronexp">任务表达式</label>
                             <input class="col-6" id="cronexp" type="text">
                         </div>
@@ -127,10 +123,6 @@
                         <div class="row mb-3">
                             <label class="form-label col-3" for="cronname-edit">任务名称</label>
                             <input class="col-6" id="cronname-edit" type="text">
-                        </div>
-                        <div class="row mb-3">
-                            <label class="form-label col-3" for="crontype-edit">任务类型</label>
-                            <input class="col-6" id="crontype-edit" type="text">
                         </div>
                         <div class="row mb-3">
                             <label class="form-label col-3" for="cronexp-edit">任务执行频率</label>

@@ -38,7 +38,9 @@
 %%--------------------------------------------------------------------
 start(_StartType, _StartArgs) ->
     application:start(lager),
-    eadm_sup:start_link().
+    {ok, Pid} = eadm_sup:start_link(),
+    ok = eadm_crontab_controller:init(),
+    {ok, Pid}.
 
 %%--------------------------------------------------------------------
 %% @private

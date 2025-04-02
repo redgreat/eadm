@@ -202,7 +202,6 @@ function loadCronDetail(cronId) {
 function addCron() {
     const AddParams = {
         cronName: $('#cronname').val(),
-        cronType: $('#crontype').val(),
         cronExp: $('#cronexp').val(),
         cronModule: $('#cronmodule').val(),
         startTime: $('#starttime').val() || defaultEndTime,
@@ -214,10 +213,13 @@ function addCron() {
         type: 'POST',
         data: AddParams,
         success: function (resdata) {
-            if (resdata && resdata.length > 0 && resdata[0].Alert) {
-                showWarningToast(resdata[0].Alert);
+            if (resdata && resdata.status === true) {
+                showSuccessToast(resdata.message);
+                if (resdata.refresh) {
+                    loadCronData("");
+                }
             } else {
-                showWarningToast("服务器运行错误，请联系管理员！");
+                showWarningToast(resdata.message || "服务器运行错误，请联系管理员！");
             }
         }
     });
@@ -227,7 +229,6 @@ function editCron(currentCronId) {
     const editParams = {
         cronId: currentCronId,
         cronName: $('#cronname-edit').val(),
-        cronType: $('#crontype-edit').val(),
         cronExp: $('#cronexp-edit').val(),
         cronModule: $('#cronmodule-edit').val(),
         startTime: $('#starttime-edit').val(),
@@ -239,10 +240,13 @@ function editCron(currentCronId) {
         type: 'POST',
         data: editParams,
         success: function (resdata) {
-            if (resdata && resdata.length > 0 && resdata[0].Alert) {
-                showWarningToast(resdata[0].Alert);
+            if (resdata && resdata.status === true) {
+                showSuccessToast(resdata.message);
+                if (resdata.refresh) {
+                    loadCronData("");
+                }
             } else {
-                showWarningToast("服务器运行错误，请联系管理员！");
+                showWarningToast(resdata.message || "服务器运行错误，请联系管理员！");
             }
         }
     });
@@ -282,7 +286,6 @@ function deleteCron(cronId) {
 
 function cleanAddTab(){
     $('#cronname').val('');
-    $('#crontype').val('');
     $('#cronexp').val('');
     $('#cronmodule').val('');
     $('#starttime').val('');
@@ -291,7 +294,6 @@ function cleanAddTab(){
 
 function cleanEditTab(){
     $('#cronname-edit').val('');
-    $('#crontype-edit').val('');
     $('#cronexp-edit').val('');
     $('#cronmodule-edit').val('');
     $('#starttime-edit').val('');
@@ -373,11 +375,10 @@ $(document).ready(function() {
         let editRow = $(this).closest('tr');
         let cronId = editRow.data('id');
         $('#cronname-edit').val(editRow.find('td')[0].innerText);
-        $('#crontype-edit').val(editRow.find('td')[1].innerText);
-        $('#cronexp-edit').val(editRow.find('td')[2].innerText);
-        $('#cronmodule-edit').val(editRow.find('td')[3].innerText);
-        $('#starttime-edit').val(editRow.find('td')[4].innerText);
-        $('#endtime-edit').val(editRow.find('td')[5].innerText);
+        $('#cronexp-edit').val(editRow.find('td')[1].innerText);
+        $('#cronmodule-edit').val(editRow.find('td')[2].innerText);
+        $('#starttime-edit').val(editRow.find('td')[3].innerText);
+        $('#endtime-edit').val(editRow.find('td')[4].innerText);
         if (cronId !== "未查到数据" && typeof cronId !== 'undefined' && cronId !== null) {
             currentCronId = cronId;
         } else {

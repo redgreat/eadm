@@ -413,7 +413,6 @@ drop table if exists eadm_crontab cascade;
 create table eadm_crontab (
   id char(12) not null default ('cr' || lpad((nextval('cr')::varchar), 10, '0')),
   cronname varchar(50) not null,
-  crontype char(12),
   cronexp varchar(50),
   cronmfa varchar(50),
   starttime timestamptz default current_timestamp,
@@ -433,13 +432,10 @@ alter table eadm_crontab drop constraint if exists pk_crontab_id cascade;
 alter table eadm_crontab add constraint pk_crontab_id primary key (id);
 
 drop index if exists non_crontab_cronname;
-drop index if exists non_crontab_crontype;
 create index non_crontab_cronname on eadm_crontab using btree (cronname asc nulls last);
-create index non_crontab_crontype on eadm_crontab using btree (crontype asc nulls last);
 
 comment on column eadm_crontab.id is '自定义主键(cr)';
 comment on column eadm_crontab.cronname is '任务名称';
-comment on column eadm_crontab.crontype is '任务类型';
 comment on column eadm_crontab.cronexp is '定时表达式';
 comment on column eadm_crontab.cronmfa is '任务备注';
 comment on column eadm_crontab.starttime is '任务开始时间';
@@ -465,7 +461,7 @@ execute function lastupdate();
 -- 查询视图
 create or replace view vi_crontab
 as
-select id, cronname, crontype, cronexp, cronmfa,
+select id, cronname, cronexp, cronmfa,
        to_char(starttime, 'yyyy-mm-dd hh24:mi:ss') as starttime,
        to_char(endtime, 'yyyy-mm-dd hh24:mi:ss') as endtime,
        case cronstatus when 0 then '启用' else '禁用' end as cronstatus,

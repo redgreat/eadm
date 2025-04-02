@@ -36,6 +36,7 @@ LABEL \
     org.label-schema.version="${DOCKER_IMAGE_VERSION:-unknown}" \
     org.label-schema.vcs-url="https://github.com/redgreat/eadm" \
     org.label-schema.maintainer="wangcw <rubygreat@msn.com>" \
-    org.label-schema.schema-version="1.0"
+    org.label-schema.schema-version="1.0" \
+    org.opencontainers.image.source="https://github.com/redgreat/eadm"
 
 ENTRYPOINT ["/usr/bin/dumb-init", "-c", "--", "/opt/eadm/docker/docker-entrypoint.sh"]
