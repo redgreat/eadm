@@ -64,6 +64,7 @@ body {
     transition: all 0.3s;
     height:100%;
     position: relative;
+    margin-left: 250px;
 }
 
 #mapContainer {
@@ -89,13 +90,20 @@ body {
 /*------------------------------------------------------------------
 [2. Header / #header]
 */
-#body>.navbar {
+#body > .navbar {
     padding: 0 1.5rem;
     min-height: 60px;
-    box-shadow: none;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     border-bottom: 1px solid rgba(101, 109, 119, .16);
-    height: 100%;
+    height: 60px;
     margin: 0 auto;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    z-index: 1000;
+    background-color: #fff;
 }
 
 /*------------------------------------------------------------------
@@ -117,7 +125,7 @@ body {
 */
 #body>.content {
     position: relative;
-    padding: .5rem .5rem 114px;
+    padding: 70px .5rem 114px;
     margin: 0 auto;
 }
 
@@ -411,6 +419,10 @@ table.dataTable>tbody>tr.child ul.dtr-details {
     .display-absolute {
         position: relative;
     }
+}
+
+#body.active {
+    margin-left: 0;
 }
 
 @media (max-width: 680px) {

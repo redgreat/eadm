@@ -13,6 +13,10 @@
     color: #fff;
     transition: all 0.3s;
     border-right: 1px solid #e6ecf5;
+    position: fixed;
+    height: 100vh;
+    overflow-y: auto;
+    z-index: 999;
 }
 
 #sidebar.active {

@@ -45,6 +45,16 @@ $(document).ready(function() {
         $('#body').toggleClass('active');
     });
 
+    let lastScrollTop = 0;
+    $(window).scroll(function() {
+        const scrollTop = $(this).scrollTop();
+        if (scrollTop > lastScrollTop && scrollTop > 10 && !$('#sidebar').hasClass('active')) {
+            $('#sidebar').addClass('active');
+            $('#body').addClass('active');
+        }
+        lastScrollTop = scrollTop;
+    });
+
     let currentYear = new Date().getFullYear();
     $('.footer p').text("Copyright © wangcw 2020-" + currentYear + " All Rights Reserved");
 
