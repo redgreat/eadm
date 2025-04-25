@@ -114,11 +114,51 @@ function loadHealthData(dataType, startTime, endTime) {
 }
 
 
-$(document).ready(function() {
+// 导出健康数据为Excel文件
+function exportHealthData() {
+    const dataType = $('#datatype').val();
+    const startTime = $('#starttime').val();
+    const endTime = $('#endtime').val();
+    
+    if (!startTime || !endTime) {
+        showWarningToast("请选择开始和结束时间");
+        return;
+    }
+    
+    // 获取表格数据
+    const table = $('#table-health').DataTable();
+    const data = table.data().toArray();
+    const headers = [];
+    
+    // 获取表头
+    table.columns().every(function() {
+        headers.push(this.header().textContent);
+    });
+    
+    if (data.length === 0) {
+        showWarningToast("无数据可导出");
+        return;
+    }
+    
+    // 创建工作簿
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(data, {header: headers});
+    
+    // 添加工作表到工作簿
+    XLSX.utils.book_append_sheet(wb, ws, "健康数据");
+    
+    // 生成文件名
+    const fileName = `健康数据_${dataType}_${startTime.replace(/[\/:]/g, '')}_${endTime.replace(/[\/:]/g, '')}.xlsx`;
+    
+    // 导出Excel文件
+    XLSX.writeFile(wb, fileName);
+}
 
+$(document).ready(function() {
     const defaultDatatype = $('#datatype').val();
     loadHealthData(defaultDatatype, defaultStartTime, defaultEndTime);
 
+    // 查询按钮点击事件
     $('#searchHealth').click(function() {
         const dataType = $('#datatype').val();
         const startTime = $('#starttime').val();
@@ -126,8 +166,22 @@ $(document).ready(function() {
         loadHealthData(dataType, startTime, endTime);
     });
 
+    // 清空按钮点击事件
     $('#cleanHealth').click(function() {
         $('input[type="text"]').val('');
     });
-
+    
+    // 刷新按钮点击事件
+    $('#refresh-health-btn').click(function() {
+        const dataType = $('#datatype').val();
+        const startTime = $('#starttime').val() || defaultStartTime;
+        const endTime = $('#endtime').val() || defaultEndTime;
+        loadHealthData(dataType, startTime, endTime);
+        showSuccessToast("数据已刷新");
+    });
+    
+    // 导出按钮点击事件
+    $('#export-health-btn').click(function() {
+        exportHealthData();
+    });
 });

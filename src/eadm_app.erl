@@ -40,6 +40,7 @@ start(_StartType, _StartArgs) ->
     application:start(lager),
     {ok, Pid} = eadm_sup:start_link(),
     ok = eadm_crontab_controller:init(),
+    lager:info("EADM 启动成功，访问地址：http://127.0.0.1:8080"),
     {ok, Pid}.
 
 %%--------------------------------------------------------------------

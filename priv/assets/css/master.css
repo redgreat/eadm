@@ -93,8 +93,8 @@ body {
 #body > .navbar {
     padding: 0 1.5rem;
     min-height: 60px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    border-bottom: 1px solid rgba(101, 109, 119, .16);
+    box-shadow: 0 4px 16px rgba(33, 150, 243, 0.08);
+    border-bottom: 1px solid #e3e3e3;
     height: 60px;
     margin: 0 auto;
     position: fixed;
@@ -111,13 +111,16 @@ body {
 */
 .default-light-menu {
     border: none !important;
-    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.5) inset !important;
-    color: #fff;
+    box-shadow: 0 0 0 1px rgba(33, 150, 243, 0.5) inset !important;
+    color: #2196F3;
+    border-radius: 0.375rem;
+    transition: all 0.2s ease;
 }
 
 .default-light-menu:hover {
     background: #2196F3 !important;
     color: #fff;
+    box-shadow: 0 4px 16px rgba(33, 150, 243, 0.08);
 }
 
 /*------------------------------------------------------------------

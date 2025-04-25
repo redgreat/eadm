@@ -10,13 +10,14 @@
     min-width: 250px;
     max-width: 250px;
     background: #fff;
-    color: #fff;
+    color: #444;
     transition: all 0.3s;
-    border-right: 1px solid #e6ecf5;
+    border-right: 1px solid #e3e3e3;
     position: fixed;
     height: 100vh;
     overflow-y: auto;
     z-index: 999;
+    box-shadow: 0 4px 16px rgba(33, 150, 243, 0.08);
 }
 
 #sidebar.active {
@@ -25,8 +26,9 @@
 
 #sidebar .sidebar-header {
     padding: .4rem 1rem;
-    border-bottom: 1px solid rgba(101, 109, 119, .16);
+    border-bottom: 1px solid #e3e3e3;
     max-height: 55px;
+    background-color: #f7fbff;
 }
 
 #sidebar ul.components {
@@ -34,14 +36,19 @@
 }
 
 #sidebar ul p {
-    color: #fff;
+    color: #444;
     padding: 10px;
+    font-weight: 500;
 }
 
 #sidebar ul li a {
     padding: .8rem 1.5rem;
     font-size: 1rem;
     display: block;
+    color: #444;
+    border-radius: 0.375rem;
+    margin: 0.2rem 0.5rem;
+    transition: all 0.2s ease;
 }
 
 #sidebar ul li a .fas {
@@ -54,6 +61,7 @@
 #sidebar ul li a.active {
     color: #fff;
     background: #2196F3;
+    box-shadow: 0 4px 8px rgba(33, 150, 243, 0.15);
 }
 
 #sidebar ul li.active>a,
@@ -64,6 +72,12 @@ a[aria-expanded="true"] {
 #sidebar ul ul a {
     font-size: 1rem;
     background: #EEEEEE;
+    margin-left: 0.5rem;
+}
+
+#sidebar ul ul a:hover {
+    background: #EEEEEE;
+    color: #2196F3;
 }
 
 #sidebar a[data-toggle="collapse"] {

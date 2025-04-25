@@ -18,6 +18,58 @@ function translatesourceType(columnName) {
   return translations[columnName] || columnName;
 }
 
+// 导出财务数据为Excel文件
+function exportFinanceData() {
+    const sourceType = $('#sourceType').val();
+    const inorOut = $('#inorOut').val();
+    const startTime = $('#starttime').val();
+    const endTime = $('#endtime').val();
+    
+    if (!startTime || !endTime) {
+        showWarningToast("请选择开始和结束时间");
+        return;
+    }
+    
+    // 获取表格数据
+    const table = $('#table-finance').DataTable();
+    const data = table.data().toArray();
+    const headers = [];
+    
+    // 获取表头
+    table.columns().every(function() {
+        headers.push(this.header().textContent);
+    });
+    
+    if (data.length === 0) {
+        showWarningToast("无数据可导出");
+        return;
+    }
+    
+    // 创建工作簿
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(data, {header: headers});
+    
+    // 添加工作表到工作簿
+    XLSX.utils.book_append_sheet(wb, ws, "财务数据");
+    
+    // 生成文件名
+    let sourceTypeText = "全部";
+    if (sourceType === "1") sourceTypeText = "支付宝";
+    else if (sourceType === "2") sourceTypeText = "微信";
+    else if (sourceType === "3") sourceTypeText = "青岛银行";
+    else if (sourceType === "4") sourceTypeText = "中国银行";
+    
+    let inorOutText = "全部";
+    if (inorOut === "1") inorOutText = "收入";
+    else if (inorOut === "2") inorOutText = "支出";
+    else if (inorOut === "3") inorOutText = "其他";
+    
+    const fileName = `财务数据_${sourceTypeText}_${inorOutText}_${startTime.replace(/[\/:]/g, '')}_${endTime.replace(/[\/:]/g, '')}.xlsx`;
+    
+    // 导出Excel文件
+    XLSX.writeFile(wb, fileName);
+}
+
 function loadFinanceData(sourceType, inorOut, startTime, endTime) {
     const searchParams = {
         sourceType: sourceType,
@@ -232,6 +284,7 @@ $(document).ready(function() {
 
     loadFinanceData($('#sourceType').val(), $('#inorOut').val(), defaultStartTime, defaultEndTime);
 
+    // 查询按钮点击事件
     $('#searchFinance').click(function () {
         const sourceType = $('#sourceType').val();
         const inorOut = $('#inorOut').val();
@@ -240,8 +293,24 @@ $(document).ready(function() {
         loadFinanceData(sourceType, inorOut, startTime, endTime);
     });
 
+    // 清空按钮点击事件
     $('#cleanFinance').click(function () {
         $('input[type="text"]').val('');
+    });
+    
+    // 刷新按钮点击事件
+    $('#refresh-finance-btn').click(function() {
+        const sourceType = $('#sourceType').val();
+        const inorOut = $('#inorOut').val();
+        const startTime = $('#starttime').val() || defaultStartTime;
+        const endTime = $('#endtime').val() || defaultEndTime;
+        loadFinanceData(sourceType, inorOut, startTime, endTime);
+        showSuccessToast("数据已刷新");
+    });
+    
+    // 导出按钮点击事件
+    $('#export-finance-btn').click(function() {
+        exportFinanceData();
     });
 
     $('#importFinance').click(function () {
