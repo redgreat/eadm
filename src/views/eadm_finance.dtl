@@ -13,7 +13,6 @@
     <div class="page-title">
         <div class="row d-flex justify-content-between">
             <div class="col-8">
-                <h5 class="card-title mb-0">财务数据查询</h5>
             </div>
             <div class="col-4">
                 <button type="button" id="refresh-finance-btn" class="btn btn-sm btn-outline-primary float-end mb-2">
@@ -30,7 +29,6 @@
     </div>
     <div class="card query-panel">
         <div class="card-header">
-            <h5 class="card-title mb-0">查询条件</h5>
         </div>
         <div class="card-body">
             <form id="finance-search-form">

@@ -4,6 +4,7 @@
 
 {% block css %}
     <link href="/assets/vendor/datatables/datatables.min.css" rel="stylesheet">
+    <link href="/assets/css/common-panels.css" rel="stylesheet">
 {% endblock %}
 {% block content %}
 
@@ -24,7 +25,7 @@
             </div>
         </div>
     </div>
-    <div class="card">
+    <div class="card data-panel">
         <div class="card-body">
             <table class="table table-hover" id="table-user" width="100%"></table>
         </div>
