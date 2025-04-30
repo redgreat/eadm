@@ -84,11 +84,19 @@ search(#{auth_data := #{<<"authed">> := false}}) ->
 %%====================================================================
 %% 内部函数
 %%====================================================================
+%% @private
+%% @doc
+%% 获取月份标签列表
+%% @end
 get_hd(List) ->
     Mon = unicode:characters_to_binary("月", utf8),
     HdFun = fun({X, _}) -> Y = integer_to_binary(X), <<Y/binary, Mon/binary>> end,
     lists:map(HdFun, List).
 
+%% @private
+%% @doc
+%% 获取数据值列表
+%% @end
 get_tl(List) ->
     TlFun = fun({_, V}) -> V end,
     lists:map(TlFun, List).

@@ -28,11 +28,9 @@
 %%--------------------------------------------------------------------
 %% @private
 %% @doc
-%% This function is called whenever an application is started using
-%% application:start/[1,2], and should start the processes of the
-%% application. If the application is structured according to the OTP
-%% design principles as a supervision tree, this means starting the
-%% top supervisor of the tree.
+%% 应用程序启动函数，当使用application:start/[1,2]启动应用时调用
+%% 负责启动应用程序的进程。如果应用程序按照OTP设计原则构建为监督树，
+%% 则意味着启动树的顶级监督者。
 %%
 %% @end
 %%--------------------------------------------------------------------
@@ -46,9 +44,9 @@ start(_StartType, _StartArgs) ->
 %%--------------------------------------------------------------------
 %% @private
 %% @doc
-%% This function is called whenever an application has stopped. It
-%% is intended to be the opposite of Module:start/2 and should do
-%% any necessary cleaning up. The return value is ignored.
+%% 应用程序停止函数，当应用程序停止时调用
+%% 作为Module:start/2的反向操作，用于执行必要的清理工作
+%% 返回值将被忽略
 %%
 %% @end
 %%--------------------------------------------------------------------

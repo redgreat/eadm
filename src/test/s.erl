@@ -2,41 +2,39 @@
 %%% @author wangcw
 %%% @copyright (C) 2024, REDGREAT
 %%% @doc
-%%%
+%%% 编译并热更新
+%% 引用自 https://gitee.com/tercero/erlutils/blob/master/src/s.erl
 %%% @end
 %%% Created : 2024-03-19 09:20
 %%%-------------------------------------------------------------------
-
-%%%-------------------------------------------------------------------
-%% @doc s public API
-%% 编译并热更新
-%% 引用自 https://gitee.com/tercero/erlutils/blob/master/src/s.erl
-%% @end
-%%%-------------------------------------------------------------------
-
 -module(s).
 -author("wangcw").
 
--include_lib("kernel/include/logger.hrl").
+%%%===================================================================
+%%% 函数导出
+%%%===================================================================
+-export([ s/0, l/0, l/1, r/0]).
 
--export([ s/0
-        , l/0
-        , l/1
-        , r/0
-        ]).
-
-
-%% 研发中使用，先用 rebar3 编译，然后重新载入
+%%====================================================================
+%% API 函数
+%%====================================================================
+%% @doc
+%% 研发中使用，先用 rebar3 编译，然后重新载入模块
+%% @end
 s() ->
     % [?LOG_NOTICE(Info) || Info <- string:replace( os:cmd("rebar3 compile"), "\n", "", all ), Info =/= []],
     lager:info(string:replace( os:cmd("rebar3 compile"), "\n", "", all )),
     r().
 
-%% 重新载入默认 app
+%% @doc
+%% 重新载入所有已加载的应用模块
+%% @end
 l() ->
     [l(App) || {App, _Description, _Vsn} <- application:loaded_applications()].
 
-%% 重新载入，需要指定 app
+%% @doc
+%% 重新载入指定应用的模块
+%% @end
 l(LoadApps) when is_list(LoadApps) ->
     F = fun(App, List) ->
         {ok, MS} = application:get_key(App, modules),
@@ -48,16 +46,29 @@ l(LoadApps) when is_list(LoadApps) ->
 l(LoadApp) -> l([LoadApp]).
 
 
+%% @doc
 %% 重新载入所有已经载入过的模块
+%% @end
 r() ->
     Modules = erlang:loaded(),
     update(Modules),
     ok.
 
-%% internal functions
+%%====================================================================
+%% 内部函数
+%%====================================================================
+
+%% @private
+%% @doc
+%% 更新指定的模块列表
+%% @end
 update(Modules) ->
     update_loop(Modules, [], []).
 
+%% @private
+%% @doc
+%% 递归更新模块，并记录成功和失败的结果
+%% @end
 update_loop([Module | Modules], Succ, Fail) ->
     case do_update(Module) of
         ignore ->
@@ -68,15 +79,19 @@ update_loop([Module | Modules], Succ, Fail) ->
             update_loop(Modules, [Module | Succ], Fail)
     end;
 update_loop([], [], []) ->
-    ?LOG_NOTICE("nothing updated!!!");
+    lager:notice("nothing updated!!!");
 update_loop([], Succ, []) ->
-    ?LOG_NOTICE("succ: ~p", [Succ]);
+    lager:notice("succ: ~p", [Succ]);
 update_loop([], [], Fail) ->
-    ?LOG_NOTICE("fail: ~p", [Fail]);
+    lager:notice("fail: ~p", [Fail]);
 update_loop([], Succ, Fail) ->
-    ?LOG_NOTICE("succ: ~p", [Succ]),
-    ?LOG_NOTICE("fail: ~p", [Fail]).
+    lager:notice("succ: ~p", [Succ]),
+    lager:notice("fail: ~p", [Fail]).
 
+%% @private
+%% @doc
+%% 执行模块更新，根据模块状态决定是否需要更新
+%% @end
 do_update(Module) ->
     case code:module_status(Module) of
         modified ->
@@ -89,6 +104,10 @@ do_update(Module) ->
             {error, "file removed"}
     end.
 
+%% @private
+%% @doc
+%% 软更新模块，先尝试清除模块，然后重新加载
+%% @end
 soft_update(Module) ->
     case code:soft_purge(Module) of
         true ->
@@ -96,4 +115,3 @@ soft_update(Module) ->
         false ->
             {error, "not purge"}
     end.
-

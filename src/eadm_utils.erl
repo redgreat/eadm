@@ -29,7 +29,7 @@
 
 %% @private
 %% @doc
-%% to_json
+%% 将Erlang数据结构转换为JSON兼容格式
 %% @end
 to_json([Hd|Tl]) ->
     [to_json(Hd)|to_json(Tl)];
@@ -57,7 +57,7 @@ get_exp_bin() ->
     erlang:system_time(seconds) + ExpExtend.
 
 %% @doc
-%% mysql-otp result to map.
+%% 将MySQL查询结果转换为map格式
 %% @end
 as_map({ok, ColumnNames, Rows}) ->
     as_map(ColumnNames, Rows, []).
@@ -76,7 +76,7 @@ as_map(_ColumnNames, [], Acc) ->
     lists:reverse(Acc).
 
 %% @doc
-%% mysql-otp result to map for http return, add ReturnStatus.
+%% 将MySQL查询结果转换为HTTP返回的map格式，添加返回状态
 %% @end
 return_as_map({ok, Columns, Rows}) ->
     return_as_map(Columns, Rows).
@@ -140,7 +140,7 @@ validate_date_time(DateTimeBin) ->
     end.
 
 %% @doc
-%% 计算两二进制格式时间字符串(<<"2024-02-12 09:16:28">>)时间差(秒).
+%% 计算两二进制格式时间字符串(&lt;&lt;"2024-02-12 09:16:28"&gt;&gt;)时间差(秒).
 %% @end
 time_diff(DateTimeStrA, DateTimeStrB) ->
     ASeconds = calendar:datetime_to_gregorian_seconds(parse_date_time(DateTimeStrA)),
@@ -181,7 +181,7 @@ convert_to_array(Coords) ->
 
 %% @private
 %% @doc
-%% Time convertor, erl to ISO8601.
+%% 时间转换器，将Erlang时间格式转换为ISO8601格式
 %% @end
 transform_value(_, {{Year, Month, Day}, {Hour, Minute, Second}}) when
     erlang:is_integer(Year), erlang:is_integer(Month), erlang:is_integer(Day),
@@ -198,7 +198,7 @@ transform_value(_, Value) ->
 
 %% @private
 %% @doc
-%% 二进制时间格式(<<"YYYY-MM-DD HH:II:SS">>)转换为erl时间{{Year, Month, Day}, {Hour, Minute, Second}}.
+%% 二进制时间格式(&lt;&lt;"YYYY-MM-DD HH:II:SS"&gt;&gt;)转换为erl时间{{Year, Month, Day}, {Hour, Minute, Second}}.
 %% @end
 parse_date_time(DateTimeBin) ->
     [DateStr, TimeStr] = re:split(DateTimeBin, <<" ">>, [{return, binary}]),
@@ -208,7 +208,7 @@ parse_date_time(DateTimeBin) ->
 
 %% @private
 %% @doc
-%% 日期字符串(<<"YYYY-MM-DD">>或<<"YYYY/MM/DD">>)转换为erl日期{{Year, Month, Day}}.
+%% 日期字符串(&lt;&lt;"YYYY-MM-DD"&gt;&gt;或&lt;&lt;"YYYY/MM/DD"&gt;&gt;)转换为erl日期{{Year, Month, Day}}.
 %% @end
 date_from_binary(DateBin) ->
     case binary:split(DateBin, <<"-">>, [global]) of
@@ -222,7 +222,7 @@ date_from_binary(DateBin) ->
 
 %% @private
 %% @doc
-%% 时间字符串(<<"HH:II:SS">>)转换为erl时间{{Hour, Minute, Second}}.
+%% 时间字符串(&lt;&lt;"HH:II:SS"&gt;&gt;)转换为erl时间{{Hour, Minute, Second}}.
 %% @end
 time_from_binary(TimeBin) ->
     [Hour, Minute, Second] = binary:split(TimeBin, <<":">>, [global]),
@@ -230,7 +230,7 @@ time_from_binary(TimeBin) ->
 
 %% @private
 %% @doc
-%% erl时间{{Year, Month, Day}, {Hour, Minute, Second}}转换为时间字符串(<<"YYYY-MM-DD HH:II:SS">>).
+%% erl时间{{Year, Month, Day}, {Hour, Minute, Second}}转换为时间字符串(&lt;&lt;"YYYY-MM-DD HH:II:SS"&gt;&gt;).
 %% @end
 str_from_datetime(DateTime) ->
     {{Year, Month, Day}, {Hour, Minute, Second}} = DateTime,
@@ -239,7 +239,7 @@ str_from_datetime(DateTime) ->
 
 %% @private
 %% @doc
-%% 获取当前日期二进制字符串(<<"YYYY-MM-DD">>).
+%% 获取当前日期二进制字符串(&lt;&lt;"YYYY-MM-DD"&gt;&gt;).
 %% @end
 current_date_binary() ->
     {{Year, Month, Day}, _} = calendar:universal_time(),
@@ -248,7 +248,7 @@ current_date_binary() ->
 
 %% @private
 %% @doc
-%% 获取昨日日期二进制字符串(<<"YYYY-MM-DD">>).
+%% 获取昨日日期二进制字符串(&lt;&lt;"YYYY-MM-DD"&gt;&gt;).
 %% @end
 yesterday_date_binary() ->
     {{Year, Month, Day}, _} = calendar:universal_time(),
@@ -260,7 +260,7 @@ yesterday_date_binary() ->
 
 %% @private
 %% @doc
-%% 获取去年日期二进制字符串(<<"YYYY-MM-DD">>).
+%% 获取去年日期二进制字符串(&lt;&lt;"YYYY-MM-DD"&gt;&gt;).
 %% @end
 lastyear_date_binary() ->
     {{Year, Month, Day}, _} = calendar:universal_time(),

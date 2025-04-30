@@ -22,7 +22,7 @@
 %%====================================================================
 
 %% @doc
-%% index
+%% 主函数
 %% @end
 index(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName,
       <<"permission">> := #{<<"finance">> := #{<<"finlist">> := true}}}}) ->

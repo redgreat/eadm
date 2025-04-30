@@ -28,7 +28,8 @@
 %%--------------------------------------------------------------------
 %% @private
 %% @doc
-%% The Environment-variable is defined in your sys.config in {nova, [{environment, Value}]}
+%% 路由配置函数，定义系统的URL路由规则
+%% 环境变量在sys.config中定义：{nova, [{environment, Value}]}
 %%
 %% @end
 %%--------------------------------------------------------------------

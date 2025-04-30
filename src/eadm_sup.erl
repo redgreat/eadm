@@ -23,7 +23,7 @@
 -export([init/1]).
 
 %%%===================================================================
-%%% Define
+%%% 宏定义
 %%%===================================================================
 % -define(SERVER, ?MODULE).
 
@@ -33,14 +33,15 @@
 
 %% @private
 %% @doc
-%% start_link.
+%% 启动监督者进程
 %% @end
 start_link() ->
     supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 
 %% @private
 %% @doc
-%% Child :: {Id,StartFunc,Restart,Shutdown,Type,Modules}.
+%% 初始化监督者，配置子进程规范
+%% Child :: {Id,StartFunc,Restart,Shutdown,Type,Modules}
 %% @end
 init([]) ->
     Pools = application:get_env(epgsql, pools, []),
@@ -52,6 +53,9 @@ init([]) ->
                          end, Pools),
     {ok, { {one_for_one, 10, 10}, PoolSpec} }.
 
+%% @doc
+%% 添加数据库连接池
+%% @end
 add_pool(Name, PoolArgs, WorkerArgs) ->
     ChildSpec = poolboy:child_spec(Name, PoolArgs, WorkerArgs),
     supervisor:start_child(?MODULE, ChildSpec).

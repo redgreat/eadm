@@ -26,7 +26,7 @@
 %%%===================================================================
 
 %% @doc
-%% index
+%% 主函数
 %% @end
 index(#{auth_data := #{<<"authed">> := true, <<"username">> := Username}}) ->
     % SysInfo = observer_backend:sys_info(),

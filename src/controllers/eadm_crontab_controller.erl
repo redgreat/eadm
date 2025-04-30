@@ -170,7 +170,7 @@ detail(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 
 %% @doc
-%% 添加任务
+%% 添加定时任务
 %% @end
 add(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
     <<"permission">> := #{<<"crontab">> := true}},
@@ -233,12 +233,11 @@ add(#{auth_data := #{<<"authed">> := false}}) ->
 
 
 %% @doc
-%% 编辑任务
+%% 编辑定时任务
 %% @end
 edit(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
     <<"permission">> := #{<<"crontab">> := true}},
-    params := #{<<"cronId">> := CronId, <<"cronName">> := CronName,
-        <<"cronExp">> := CronExp, <<"cronModule">> := CronModule,
+    params := #{<<"cronId">> := CronId, <<"cronName">> := CronName, <<"cronExp">> := CronExp, <<"cronModule">> := CronModule,
         <<"startTime">> := StartTime, <<"endTime">> := EndTime}}) ->
     case EndTime of
         <<>> ->
@@ -284,7 +283,7 @@ edit(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 
 %% @doc
-%% 激活/停用任务
+%% 激活或停用定时任务
 %% @end
 activate(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
     <<"permission">> := #{<<"crontab">> := true}},
@@ -344,7 +343,7 @@ activate(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 
 %% @doc
-%% 删除任务信息
+%% 删除定时任务
 %% @end
 delete(#{auth_data := #{<<"authed">> := true, <<"loginname">> := UpdatedUser,
     <<"permission">> := #{<<"crontab">> := true}},
