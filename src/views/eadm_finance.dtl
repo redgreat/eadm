@@ -28,15 +28,13 @@
         </div>
     </div>
     <div class="card query-panel">
-        <div class="card-header">
-        </div>
         <div class="card-body">
             <form id="finance-search-form">
-                <div class="row align-items-end">
-                    <div class="col-md-3 col-sm-6 mb-3">
-                        <div class="form-group">
-                            <label for="sourceType" class="form-label">账单来源</label>
-                            <select id="sourceType" class="form-select">
+                <div class="row g-2">
+                    <div class="col-auto">
+                        <div class="d-flex align-items-center">
+                            <label for="sourceType" class="me-2">账单来源:</label>
+                            <select id="sourceType" class="form-select form-select-sm" style="width: 120px;">
                                 <option value="0" selected>全部来源</option>
                                 <option value="1">支付宝</option>
                                 <option value="2">微信</option>
@@ -45,10 +43,10 @@
                             </select>
                         </div>
                     </div>
-                    <div class="col-md-3 col-sm-6 mb-3">
-                        <div class="form-group">
-                            <label for="inorOut" class="form-label">收支类型</label>
-                            <select id="inorOut" class="form-select">
+                    <div class="col-auto">
+                        <div class="d-flex align-items-center">
+                            <label for="inorOut" class="me-2">收支类型:</label>
+                            <select id="inorOut" class="form-select form-select-sm" style="width: 120px;">
                                 <option value="0" selected>全部类型</option>
                                 <option value="1">收入</option>
                                 <option value="2">支出</option>
@@ -56,26 +54,24 @@
                             </select>
                         </div>
                     </div>
-                    <div class="col-md-3 col-sm-6 mb-3">
-                        <div class="form-group">
-                            <label for="starttime" class="form-label">开始时间</label>
-                            <input id="starttime" type="text" class="form-control" placeholder="选择开始时间">
+                    <div class="col-auto">
+                        <div class="d-flex align-items-center">
+                            <label for="starttime" class="me-2">开始时间:</label>
+                            <input id="starttime" type="text" class="form-control form-control-sm" style="width: 150px;" placeholder="选择开始时间">
                         </div>
                     </div>
-                    <div class="col-md-3 col-sm-6 mb-3">
-                        <div class="form-group">
-                            <label for="endtime" class="form-label">结束时间</label>
-                            <input id="endtime" type="text" class="form-control" placeholder="选择结束时间">
+                    <div class="col-auto">
+                        <div class="d-flex align-items-center">
+                            <label for="endtime" class="me-2">结束时间:</label>
+                            <input id="endtime" type="text" class="form-control form-control-sm" style="width: 150px;" placeholder="选择结束时间">
                         </div>
                     </div>
-                </div>
-                <div class="row mt-2">
-                    <div class="col-12 text-end">
-                        <div class="form-group button-group">
-                            <button type="button" class="btn btn-light" id="cleanFinance">
+                    <div class="col-auto ms-auto">
+                        <div class="d-flex align-items-center">
+                            <button type="button" class="btn btn-sm btn-light me-2" id="cleanFinance">
                                 <i class="fas fa-eraser"></i> 清空
                             </button>
-                            <button type="button" class="btn btn-primary" id="searchFinance">
+                            <button type="button" class="btn btn-sm btn-primary" id="searchFinance">
                                 <i class="fas fa-search"></i> 查询
                             </button>
                         </div>

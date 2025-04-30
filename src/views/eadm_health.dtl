@@ -24,15 +24,13 @@
     </div>
 </div>
 <div class="card query-panel">
-    <div class="card-header">
-    </div>
     <div class="card-body">
         <form id="health-search-form">
-            <div class="row align-items-end">
-                <div class="col-md-3 col-sm-6 mb-3">
-                    <div class="form-group">
-                        <label for="datatype" class="form-label">查询类型</label>
-                        <select id="datatype" class="form-select" required>
+            <div class="row g-2">
+                <div class="col-auto">
+                    <div class="d-flex align-items-center">
+                        <label for="datatype" class="me-2">查询类型:</label>
+                        <select id="datatype" class="form-select form-select-sm" style="width: 100px;" required>
                             <option value="1" selected>步数</option>
                             <option value="2">心率</option>
                             <option value="3">体温</option>
@@ -42,24 +40,24 @@
                         </select>
                     </div>
                 </div>
-                <div class="col-md-3 col-sm-6 mb-3">
-                    <div class="form-group">
-                        <label for="starttime" class="form-label">开始时间</label>
-                        <input id="starttime" type="text" class="form-control" placeholder="选择开始时间">
+                <div class="col-auto">
+                    <div class="d-flex align-items-center">
+                        <label for="starttime" class="me-2">开始时间:</label>
+                        <input id="starttime" type="text" class="form-control form-control-sm" style="width: 150px;" placeholder="选择开始时间">
                     </div>
                 </div>
-                <div class="col-md-3 col-sm-6 mb-3">
-                    <div class="form-group">
-                        <label for="endtime" class="form-label">结束时间</label>
-                        <input id="endtime" type="text" class="form-control" placeholder="选择结束时间">
+                <div class="col-auto">
+                    <div class="d-flex align-items-center">
+                        <label for="endtime" class="me-2">结束时间:</label>
+                        <input id="endtime" type="text" class="form-control form-control-sm" style="width: 150px;" placeholder="选择结束时间">
                     </div>
                 </div>
-                <div class="col-md-3 col-sm-6 mb-3 text-end">
-                    <div class="form-group button-group">
-                        <button type="button" class="btn btn-light" id="cleanHealth">
+                <div class="col-auto ms-auto">
+                    <div class="d-flex align-items-center">
+                        <button type="button" class="btn btn-sm btn-light me-2" id="cleanHealth">
                             <i class="fas fa-eraser"></i> 清空
                         </button>
-                        <button type="button" class="btn btn-primary" id="searchHealth">
+                        <button type="button" class="btn btn-sm btn-primary" id="searchHealth">
                             <i class="fas fa-search"></i> 查询
                         </button>
                     </div>

@@ -25,23 +25,21 @@
         </div>
     </div>
     <div class="card query-panel">
-        <div class="card-header">
-        </div>
         <div class="card-body">
             <form id="crontab-search-form">
-                <div class="row align-items-end">
-                    <div class="col-md-6 col-sm-6 mb-3">
-                        <div class="form-group">
-                            <label for="cronname" class="form-label">任务名称</label>
-                            <input id="cronname" type="text" class="form-control" placeholder="输入任务名称">
+                <div class="row g-2">
+                    <div class="col-auto">
+                        <div class="d-flex align-items-center">
+                            <label for="cronname" class="me-2">任务名称:</label>
+                            <input id="cronname" type="text" class="form-control form-control-sm" style="width: 250px;" placeholder="输入任务名称">
                         </div>
                     </div>
-                    <div class="col-md-6 col-sm-6 mb-3 text-end">
-                        <div class="form-group button-group">
-                            <button type="button" class="btn btn-light" id="cleanCron">
+                    <div class="col-auto ms-auto">
+                        <div class="d-flex align-items-center">
+                            <button type="button" class="btn btn-sm btn-light me-2" id="cleanCron">
                                 <i class="fas fa-eraser"></i> 清空
                             </button>
-                            <button type="button" class="btn btn-primary" id="searchCron">
+                            <button type="button" class="btn btn-sm btn-primary" id="searchCron">
                                 <i class="fas fa-search"></i> 查询
                             </button>
                         </div>

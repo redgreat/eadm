@@ -1,0 +1,101 @@
+/* 表格标题美化样式 */
+.table thead th {
+    background-color: #f8f9fa;
+    color: #495057;
+    font-weight: 600;
+    text-transform: none;
+    border-bottom: 2px solid #dee2e6;
+    padding: 12px 8px;
+    vertical-align: middle;
+    position: relative;
+    text-align: center;
+}
+
+/* 表格标题悬停效果 */
+.table thead th:hover {
+    background-color: #e9ecef;
+}
+
+/* 表格标题排序图标样式 */
+.table thead .sorting:before,
+.table thead .sorting:after,
+.table thead .sorting_asc:before,
+.table thead .sorting_asc:after,
+.table thead .sorting_desc:before,
+.table thead .sorting_desc:after {
+    color: #6c757d;
+}
+
+/* 表格标题边框样式 */
+.table thead th:not(:last-child) {
+    border-right: 1px solid #e9ecef;
+}
+
+/* 表格行悬停效果 */
+.table tbody tr:hover {
+    background-color: rgba(33, 150, 243, 0.05);
+}
+
+/* 表格单元格样式 */
+.table td {
+    vertical-align: middle;
+    padding: 8px;
+}
+
+/* 斑马纹表格 */
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+/* 紧凑型表格 */
+.table-sm thead th {
+    padding: 8px 6px;
+}
+
+/* 表格容器样式 */
+.dataTables_wrapper {
+    padding: 0;
+    margin-top: 10px;
+}
+
+/* 分页按钮样式 */
+.dataTables_paginate .paginate_button {
+    border-radius: 4px;
+    margin: 0 2px;
+}
+
+.dataTables_paginate .paginate_button.current {
+    background: #2196F3 !important;
+    border-color: #2196F3 !important;
+    color: white !important;
+}
+
+.dataTables_paginate .paginate_button:hover {
+    background: #e9ecef !important;
+    border-color: #dee2e6 !important;
+    color: #212529 !important;
+}
+
+/* 表格信息样式 */
+.dataTables_info {
+    visibility: visible !important;
+    padding-top: 10px;
+    color: #6c757d;
+    font-size: 0.875rem;
+}
+
+/* 表格搜索框样式 */
+.dataTables_filter input {
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    padding: 6px 12px;
+    margin-left: 8px;
+}
+
+/* 表格长度选择器样式 */
+.dataTables_length select {
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    padding: 6px 12px;
+    margin: 0 4px;
+}
