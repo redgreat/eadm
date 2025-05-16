@@ -66,15 +66,6 @@ routes(_Environment) ->
         {"/location", fun eadm_location_controller:search/1, #{methods => [get]}},
         {"/finance", fun eadm_finance_controller:search/1, #{methods => [get]}},
         {"/crontab", fun eadm_crontab_controller:search/1, #{methods => [get]}},
-        {"/device", fun eadm_device_controller:search/1, #{methods => [get]}},
-        {"/device/add", fun eadm_device_controller:add/1, #{methods => [post]}},
-        {"/device/edit", fun eadm_device_controller:edit/1, #{methods => [post]}},
-        {"/device/delete/:deviceNo", fun eadm_device_controller:delete/1, #{methods => [delete]}},
-        {"/device/toggle", fun eadm_device_controller:toggle_status/1, #{methods => [post]}},
-        {"/device/assign", fun eadm_device_controller:assign/1, #{methods => [post]}},
-        {"/device/unassign/:id", fun eadm_device_controller:unassign/1, #{methods => [delete]}},
-        {"/device/users/:deviceNo", fun eadm_device_controller:device_users/1, #{methods => [get]}},
-        {"/device/user_devices", fun eadm_device_controller:user_devices/1, #{methods => [get]}},
         {"/user", fun eadm_user_controller:search/1, #{methods => [get]}},
         {"/role", fun eadm_role_controller:search/1, #{methods => [get]}}
       ]
@@ -87,13 +78,27 @@ routes(_Environment) ->
         {"/upload", fun eadm_finance_controller:upload/1, #{methods => [post]}}
       ]
     },
+    #{prefix => "device",
+    security => {eadm_auth, auth},
+    routes => [
+        {"/", fun eadm_device_controller:search/1, #{methods => [get]}},
+        {"/add", fun eadm_device_controller:add/1, #{methods => [post]}},
+        {"/edit", fun eadm_device_controller:edit/1, #{methods => [post]}},
+        {"/delete/:deviceNo", fun eadm_device_controller:delete/1, #{methods => [delete]}},
+        {"/toggle", fun eadm_device_controller:toggle_status/1, #{methods => [post]}},
+        {"/assign", fun eadm_device_controller:assign/1, #{methods => [post]}},
+        {"/unassign/:id", fun eadm_device_controller:unassign/1, #{methods => [delete]}},
+        {"/users/:deviceNo", fun eadm_device_controller:device_users/1, #{methods => [get]}},
+        {"/user_devices", fun eadm_device_controller:user_devices/1, #{methods => [get]}}
+      ]
+    },
     #{prefix => "crontab",
     security => {eadm_auth, auth},
     routes => [
         {"/detail/:cronId", fun eadm_crontab_controller:detail/1, #{methods => [get]}},
         {"/add", fun eadm_crontab_controller:add/1, #{methods => [post]}},
         {"/edit", fun eadm_crontab_controller:edit/1, #{methods => [post]}},
-        {"/activate/:cronId", fun eadm_crontab_controller:activate/1, #{methods => [post]}},
+        {"/toggle", fun eadm_crontab_controller:toggle/1, #{methods => [post]}},
         {"/delete/:cronId", fun eadm_crontab_controller:delete/1, #{methods => [delete]}}
       ]
     },

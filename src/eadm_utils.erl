@@ -21,7 +21,7 @@
 -export([as_map/1, as_map/3, return_as_map/1, return_as_map/2, return_as_json/1, return_as_json/2,
     validate_date_time/1, time_diff/2, utc_to_cts/1, cts_to_utc/1, pass_encrypt/1, validate_login/2, verify_password/2,
     current_date_binary/0, yesterday_date_binary/0, lastyear_date_binary/0, parse_date_time/1, pg_as_map/2, pg_as_json/2,
-    convert_to_array/1, pg_as_jsonmap/1, pg_as_jsondata/1, pg_as_list/1, binary_to_float/1]).
+    convert_to_array/1, pg_as_jsonmap/1, pg_as_jsondata/1, pg_as_list/1, binary_to_float/1, log_info/1]).
 
 %%====================================================================
 %% API 函数
@@ -326,3 +326,38 @@ binary_to_float(Binary) ->
     ResList = binary_to_list(Binary),
     ResFloat = list_to_float(ResList),
     ResFloat.
+
+%% @doc
+%% 记录信息日志，用于定时任务
+%% @end
+log_info(Message) when is_list(Message) ->
+    % 获取当前执行的任务ID
+    JobId = case erlang:get(current_job_id) of
+        undefined -> <<"unknown">>;
+        Id -> Id
+    end,
+
+    % 记录到日志文件
+    lager:info("Crontab Task [~s]: ~s", [JobId, Message]),
+
+    % 记录到数据库
+    try
+        % 将消息转换为二进制格式
+        MessageBin = if
+            is_list(Message) -> list_to_binary(Message);
+            true -> Message
+        end,
+
+        % 插入到数据库
+        eadm_pgpool:equery(pool_pg,
+            "insert into sys_cronlog(cronid, cronlog) values($1, $2);",
+            [JobId, MessageBin])
+    catch
+        ErrorType:ErrorReason:Stacktrace ->
+            lager:error("任务日志记录失败: ~p:~p~n~p", [ErrorType, ErrorReason, Stacktrace])
+    end,
+    ok;
+log_info(Message) when is_binary(Message) ->
+    log_info(binary_to_list(Message));
+log_info(Message) ->
+    log_info(io_lib:format("~p", [Message])).

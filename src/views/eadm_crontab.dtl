@@ -60,10 +60,10 @@
 {% block html_top %}
 
 <div class="modal" id="modal-cron-add" tabindex="-1" role="dialog">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title">新增任务</h4>
+                <h4 class="modal-title">新增定时任务</h4>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -71,23 +71,50 @@
                     <form accept-charset="utf-8">
                         <div class="row mb-3">
                             <label class="form-label col-3" for="cronname">任务名称</label>
-                            <input class="col-6" id="cronname" type="text">
+                            <div class="col-9">
+                                <input class="form-control" id="cronname" type="text" placeholder="输入任务名称">
+                                <small class="form-text text-muted">任务的描述性名称，如"每日数据备份"</small>
+                            </div>
                         </div>
                         <div class="row mb-3">
                             <label class="form-label col-3" for="cronexp">任务表达式</label>
-                            <input class="col-6" id="cronexp" type="text">
+                            <div class="col-9">
+                                <input class="form-control" id="cronexp" type="text" placeholder="例如: */5 * * * *">
+                                <small class="form-text text-muted">
+                                    Cron 表达式格式: 分 时 日 月 星期<br>
+                                    示例: <code>*/5 * * * *</code> (每5分钟执行一次)<br>
+                                    <code>0 */1 * * *</code> (每小时执行一次)<br>
+                                    <code>0 0 * * *</code> (每天午夜执行一次)
+                                </small>
+                            </div>
                         </div>
                         <div class="row mb-3">
                             <label class="form-label col-3" for="cronmodule">任务模块</label>
-                            <input class="col-6" id="cronmodule" type="text">
+                            <div class="col-9">
+                                <input class="form-control" id="cronmodule" type="text" placeholder="例如: eadm_utils:log_info/1">
+                                <small class="form-text text-muted">
+                                    Erlang 模块:函数/参数个数 格式<br>
+                                    示例: <code>eadm_utils:log_info/1</code><br>
+                                    参数示例: <code>["这是一条日志"]</code>
+                                </small>
+                            </div>
                         </div>
                         <div class="row mb-3">
                             <label class="form-label col-3" for="starttime">开始时间</label>
-                            <input class="col-6" id="starttime" type="text">
+                            <div class="col-9">
+                                <input class="form-control" id="starttime" type="text" placeholder="YYYY-MM-DD HH:MM:SS">
+                                <small class="form-text text-muted">任务开始执行的时间，留空表示立即开始</small>
+                            </div>
                         </div>
                         <div class="row mb-3">
                             <label class="form-label col-3" for="endtime">结束时间</label>
-                            <input class="col-6" id="endtime" type="text">
+                            <div class="col-9">
+                                <input class="form-control" id="endtime" type="text" placeholder="YYYY-MM-DD HH:MM:SS">
+                                <small class="form-text text-muted">任务结束执行的时间，留空表示永不结束</small>
+                            </div>
+                        </div>
+                        <div class="alert alert-info">
+                            <strong>提示：</strong> 新增任务默认为未激活状态，需要在列表中手动激活。
                         </div>
                     </form>
                 </div>
@@ -132,23 +159,44 @@
                     <form accept-charset="utf-8">
                         <div class="row mb-3">
                             <label class="form-label col-3" for="cronname-edit">任务名称</label>
-                            <input class="col-6" id="cronname-edit" type="text">
+                            <div class="col-9">
+                                <input class="form-control" id="cronname-edit" type="text">
+                                <small class="form-text text-muted">任务的描述性名称，如"每日数据备份"</small>
+                            </div>
                         </div>
                         <div class="row mb-3">
-                            <label class="form-label col-3" for="cronexp-edit">任务执行频率</label>
-                            <input class="col-6" id="cronexp-edit" type="text">
+                            <label class="form-label col-3" for="cronexp-edit">任务表达式</label>
+                            <div class="col-9">
+                                <input class="form-control" id="cronexp-edit" type="text">
+                                <small class="form-text text-muted">
+                                    Cron 表达式格式: 分 时 日 月 星期<br>
+                                    示例: <code>*/5 * * * *</code> (每5分钟执行一次)
+                                </small>
+                            </div>
                         </div>
                         <div class="row mb-3">
-                            <label class="form-label col-3" for="cronmodule-edit">任务详情模块</label>
-                            <input class="col-6" id="cronmodule-edit" type="text">
+                            <label class="form-label col-3" for="cronmodule-edit">任务模块</label>
+                            <div class="col-9">
+                                <input class="form-control" id="cronmodule-edit" type="text">
+                                <small class="form-text text-muted">
+                                    Erlang 模块:函数/参数个数 格式<br>
+                                    示例: <code>eadm_utils:log_info/1</code>
+                                </small>
+                            </div>
                         </div>
                         <div class="row mb-3">
                             <label class="form-label col-3" for="starttime-edit">开始时间</label>
-                            <input class="col-6" id="starttime-edit" type="text">
+                            <div class="col-9">
+                                <input class="form-control" id="starttime-edit" type="text">
+                                <small class="form-text text-muted">任务开始执行的时间，留空表示立即开始</small>
+                            </div>
                         </div>
                         <div class="row mb-3">
                             <label class="form-label col-3" for="endtime-edit">结束时间</label>
-                            <input class="col-6" id="endtime-edit" type="text">
+                            <div class="col-9">
+                                <input class="form-control" id="endtime-edit" type="text">
+                                <small class="form-text text-muted">任务结束执行的时间，留空表示永不结束</small>
+                            </div>
                         </div>
                     </form>
                 </div>
@@ -161,21 +209,19 @@
     </div>
 </div>
 
+<!-- 删除确认模态框 -->
 <div class="modal" id="cron-del-confirm" tabindex="-1" role="dialog">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
+                <h4 class="modal-title">确认删除</h4>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <div class="container">
-                    <div class="alert alert-danger">
-                        <h5 class="alert-title"><i class="fas fa-exclamation-triangle"></i> 是否确认删除任务？</h5>
-                    </div>
-                </div>
+                <p>确定要删除这条任务吗？此操作不可恢复。</p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-danger" id="cron-del-confirm-btn" data-bs-dismiss="modal">确认</button>
+                <button type="button" class="btn btn-danger" id="cron-del-confirm-btn" data-bs-dismiss="modal">删除</button>
                 <button type="button" class="btn btn-secondary" id="cron-del-cancel-btn" data-bs-dismiss="modal">取消</button>
             </div>
         </div>
@@ -189,5 +235,6 @@
     <script src="/assets/vendor/datatables/datatables.min.js"></script>
     <script src="/assets/i18n/i18n-crontab.js"></script>
     <script src="/assets/js/utils-datetime.js"></script>
+    <script src="/assets/js/utils.js"></script>
     <script src="/assets/js/crontab.js"></script>
 {% endblock %}

@@ -1,0 +1,37 @@
+/* 设备管理页面样式 */
+.device-status-badge {
+    display: inline-block;
+    padding: 0.25em 0.6em;
+    font-size: 75%;
+    font-weight: 700;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: 0.25rem;
+}
+
+.device-status-enabled {
+    color: #fff;
+    background-color: #28a745;
+}
+
+.device-status-disabled {
+    color: #fff;
+    background-color: #dc3545;
+}
+
+/* 操作列样式 */
+.action-column {
+    white-space: nowrap;
+    text-align: center;
+}
+
+.action-column .btn {
+    margin: 0 2px;
+    padding: 0.25rem 0.5rem;
+}
+
+.action-column .btn i {
+    font-size: 0.875rem;
+}
