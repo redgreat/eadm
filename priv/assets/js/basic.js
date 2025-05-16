@@ -31,6 +31,9 @@ function loadMemu() {
             if (resobj.usermanage === true) {
                 menuHtml += '<li><a href="/menu/user"><i class="fas fa-user"></i> 用户信息</a></li>';
             }
+            if (resobj.device && resobj.device.devlist === true) {
+                menuHtml += '<li><a href="/menu/device"><i class="fas fa-mobile-alt"></i> 设备管理</a></li>';
+            }
             $('#menu-container').prepend(menuHtml);
         }
     });

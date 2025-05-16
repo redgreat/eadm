@@ -1,0 +1,230 @@
+{% extends "eadm_base.dtl" %}
+
+{% block title %}设备管理{% endblock %}
+
+{% block css %}
+    <link href="/assets/vendor/datatables/datatables.min.css" rel="stylesheet">
+    <link href="/assets/css/common-panels.css" rel="stylesheet">
+{% endblock %}
+{% block content %}
+
+<div class="container">
+    <div class="page-title">
+        <div class="row d-flex justify-content-between">
+            <div class="col-8">
+            </div>
+            <div class="col-4">
+                <button type="button" id="refresh-device-btn" class="btn btn-sm btn-outline-primary float-end mb-2">
+                    <i class="fas fa-redo-alt"></i> 刷新
+                </button>
+                <button type="button" id="add-device-btn" class="btn btn-sm btn-outline-primary float-end mb-2 me-1" data-bs-toggle="modal" data-bs-target="#modal-device-add">
+                    <i class="fas fa-plus-circle"></i> 新增
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="card query-panel">
+        <div class="card-body">
+            <form id="device-search-form">
+                <div class="row g-2">
+                    <div class="col-auto">
+                        <div class="d-flex align-items-center">
+                            <label for="deviceNo" class="me-2">设备号:</label>
+                            <input type="text" class="form-control form-control-sm" id="deviceNo" placeholder="设备号">
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <button type="button" id="searchDevice" class="btn btn-sm btn-primary">
+                            <i class="fas fa-search"></i> 查询
+                        </button>
+                    </div>
+                    <div class="col-auto">
+                        <button type="button" id="cleanDevice" class="btn btn-sm btn-secondary">
+                            <i class="fas fa-eraser"></i> 清空
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="card data-panel">
+        <div class="card-body">
+            <table class="table table-hover" id="table-device" width="100%"></table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block html_top %}
+
+<!-- 新增设备模态框 -->
+<div class="modal" id="modal-device-add" tabindex="-1" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">新增设备</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="device-add-form">
+                    <div class="mb-3">
+                        <label for="add-deviceNo" class="form-label">设备号</label>
+                        <input type="text" class="form-control" id="add-deviceNo" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="add-imei" class="form-label">IMEI</label>
+                        <input type="text" class="form-control" id="add-imei">
+                    </div>
+                    <div class="mb-3">
+                        <label for="add-simNo" class="form-label">SIM卡号</label>
+                        <input type="text" class="form-control" id="add-simNo">
+                    </div>
+                    <div class="mb-3">
+                        <label for="add-remark" class="form-label">备注</label>
+                        <textarea class="form-control" id="add-remark" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="submit-device-add">提交</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 编辑设备模态框 -->
+<div class="modal" id="modal-device-edit" tabindex="-1" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">编辑设备</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="device-edit-form">
+                    <div class="mb-3">
+                        <label for="edit-deviceNo" class="form-label">设备号</label>
+                        <input type="text" class="form-control" id="edit-deviceNo" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit-imei" class="form-label">IMEI</label>
+                        <input type="text" class="form-control" id="edit-imei">
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit-simNo" class="form-label">SIM卡号</label>
+                        <input type="text" class="form-control" id="edit-simNo">
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit-remark" class="form-label">备注</label>
+                        <textarea class="form-control" id="edit-remark" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="edit-enable" checked>
+                        <label class="form-check-label" for="edit-enable">启用</label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="submit-device-edit">提交</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 设备用户管理模态框 -->
+<div class="modal" id="modal-device-users" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">设备用户管理</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <h5>设备号: <span id="device-users-deviceNo"></span></h5>
+                </div>
+                <div class="mb-3">
+                    <button type="button" class="btn btn-sm btn-primary" id="add-device-user-btn" data-bs-toggle="modal" data-bs-target="#modal-add-device-user">
+                        <i class="fas fa-user-plus"></i> 添加用户
+                    </button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover" id="table-device-users" width="100%">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>用户ID</th>
+                                <th>登录名</th>
+                                <th>用户名</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="device-users-body">
+                            <!-- 用户列表将在这里动态加载 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 添加设备用户模态框 -->
+<div class="modal" id="modal-add-device-user" tabindex="-1" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">添加设备用户</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="add-device-user-form">
+                    <div class="mb-3">
+                        <label for="user-select" class="form-label">选择用户</label>
+                        <select class="form-select" id="user-select" required>
+                            <option value="" selected disabled>请选择用户</option>
+                            <!-- 用户选项将在这里动态加载 -->
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="submit-add-device-user">提交</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 删除确认模态框 -->
+<div class="modal" id="del-confirm" tabindex="-1" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">确认删除</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>确定要删除这条记录吗？此操作不可恢复。</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" id="del-confirm-btn">删除</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block js_scripts %}
+    <script src="/assets/vendor/datatables/datatables.min.js"></script>
+    <script src="/assets/js/utils.js"></script>
+    <script src="/assets/js/device.js"></script>
+{% endblock %}

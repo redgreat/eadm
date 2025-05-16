@@ -22,7 +22,10 @@
                     <i class="fas fa-file-export"></i> 导出
                 </button>
                 <button type="button" id="importFinance" class="btn btn-sm btn-outline-primary float-end mb-2 me-1">
-                    <i class="fas fa-file-import"></i> 导入
+                    <i class="fas fa-file-import"></i> 文件导入
+                </button>
+                <button type="button" id="apiImportFinance" class="btn btn-sm btn-outline-primary float-end mb-2 me-1">
+                    <i class="fas fa-cloud-download-alt"></i> API导入
                 </button>
             </div>
         </div>
@@ -189,7 +192,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title">账单导入</h4>
+                <h4 class="modal-title">账单文件导入</h4>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -199,10 +202,10 @@
                     </p>
                     <p>
                         <div class="row-12">
-                            <div class="flex-column">
+                            <div class="flex-column mb-3">
                                 <div class="flex-row">
-                                    <label for="importType">导入类型</label>
-                                    <select id="importType">
+                                    <label for="importType" class="form-label">导入类型</label>
+                                    <select id="importType" class="form-select">
                                         <option value="0" selected>原始数据</option>
                                         <option value="1">支付宝</option>
                                         <option value="2">微信</option>
@@ -213,7 +216,7 @@
                             </div>
                             <div class="flex-column">
                                 <div class="flex-row">
-                                    <label for="finance-imp-file">账单文件：</label>
+                                    <label for="finance-imp-file" class="form-label">账单文件：</label>
                                     <input class="form-control" accept=".xls,.xlsx,.csv" id="finance-imp-file" type="file">
                                 </div>
                             </div>
@@ -223,6 +226,105 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-primary" id="submitFinance">提交</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="finance-api-import" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">账单API导入</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="container">
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="apiImportType" class="form-label">API类型</label>
+                            <select id="apiImportType" class="form-select">
+                                <option value="1" selected>支付宝</option>
+                                <option value="2">微信支付</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="apiStartDate" class="form-label">开始日期</label>
+                            <input type="date" class="form-control" id="apiStartDate">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="apiEndDate" class="form-label">结束日期</label>
+                            <input type="date" class="form-control" id="apiEndDate">
+                        </div>
+                    </div>
+
+                    <ul class="nav nav-tabs" id="apiConfigTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="import-tab" data-bs-toggle="tab" data-bs-target="#import-tab-pane" type="button" role="tab" aria-controls="import-tab-pane" aria-selected="true">导入数据</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="config-tab" data-bs-toggle="tab" data-bs-target="#config-tab-pane" type="button" role="tab" aria-controls="config-tab-pane" aria-selected="false">API配置</button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content" id="apiConfigTabContent">
+                        <div class="tab-pane fade show active p-3" id="import-tab-pane" role="tabpanel" aria-labelledby="import-tab" tabindex="0">
+                            <p class="text-muted">选择日期范围，点击"获取数据"按钮从API获取交易数据。</p>
+                        </div>
+
+                        <div class="tab-pane fade p-3" id="config-tab-pane" role="tabpanel" aria-labelledby="config-tab" tabindex="0">
+                            <div id="alipayConfigSection">
+                                <h5>支付宝API配置</h5>
+                                <div class="mb-3">
+                                    <label for="alipayAppId" class="form-label">App ID</label>
+                                    <input type="text" class="form-control" id="alipayAppId" placeholder="支付宝应用ID">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="alipayPrivateKey" class="form-label">应用私钥</label>
+                                    <textarea class="form-control" id="alipayPrivateKey" rows="3" placeholder="应用私钥，用于签名"></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="alipayPublicKey" class="form-label">支付宝公钥</label>
+                                    <textarea class="form-control" id="alipayPublicKey" rows="3" placeholder="支付宝公钥，用于验签"></textarea>
+                                </div>
+                            </div>
+
+                            <div id="wechatConfigSection" style="display: none;">
+                                <h5>微信支付API配置</h5>
+                                <div class="mb-3">
+                                    <label for="wechatAppId" class="form-label">App ID</label>
+                                    <input type="text" class="form-control" id="wechatAppId" placeholder="微信应用ID">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="wechatMchId" class="form-label">商户号</label>
+                                    <input type="text" class="form-control" id="wechatMchId" placeholder="微信支付商户号">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="wechatApiKey" class="form-label">API密钥</label>
+                                    <input type="text" class="form-control" id="wechatApiKey" placeholder="微信支付API密钥">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="wechatApiV3Key" class="form-label">APIv3密钥</label>
+                                    <input type="text" class="form-control" id="wechatApiV3Key" placeholder="微信支付APIv3密钥">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="wechatSerialNo" class="form-label">证书序列号</label>
+                                    <input type="text" class="form-control" id="wechatSerialNo" placeholder="微信支付证书序列号">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="wechatPrivateKey" class="form-label">商户私钥</label>
+                                    <textarea class="form-control" id="wechatPrivateKey" rows="3" placeholder="商户私钥，用于签名"></textarea>
+                                </div>
+                            </div>
+
+                            <button type="button" class="btn btn-primary" id="saveApiConfig">保存配置</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="submitApiImport">获取数据</button>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
             </div>
         </div>

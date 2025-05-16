@@ -115,7 +115,9 @@ updatepermission(#{auth_data := #{<<"authed">> := true, <<"loginname">> := Login
         <<"permission">> := #{<<"usermanage">> := true}},
         params := #{<<"roleId">> := RoleId, <<"dashBoard">> := DashBoard, <<"health">> := Health,
         <<"locate">> := Locate, <<"finance">> := Finance, <<"finimp">> := Finimp,
-        <<"findel">> := Findel, <<"crontab">> := Crontab, <<"userManage">> := Usermanage}}) ->
+        <<"findel">> := Findel, <<"crontab">> := Crontab, <<"userManage">> := Usermanage,
+        <<"devlist">> := Devlist, <<"devadd">> := Devadd, <<"devedit">> := Devedit,
+        <<"devdel">> := Devdel, <<"devassign">> := Devassign}}) ->
     try
         RolePermissionMap = #{<<"dashboard">> => erlang:binary_to_atom(DashBoard),
             <<"health">> => erlang:binary_to_atom(Health),
@@ -124,6 +126,13 @@ updatepermission(#{auth_data := #{<<"authed">> := true, <<"loginname">> := Login
                 <<"finlist">> => erlang:binary_to_atom(Finance),
                 <<"finimp">> => erlang:binary_to_atom(Finimp),
                 <<"findel">> => erlang:binary_to_atom(Findel)
+            },
+            <<"device">> =>  #{
+                <<"devlist">> => erlang:binary_to_atom(Devlist),
+                <<"devadd">> => erlang:binary_to_atom(Devadd),
+                <<"devedit">> => erlang:binary_to_atom(Devedit),
+                <<"devdel">> => erlang:binary_to_atom(Devdel),
+                <<"devassign">> => erlang:binary_to_atom(Devassign)
             },
             <<"crontab">> => erlang:binary_to_atom(Crontab),
             <<"usermanage">> => erlang:binary_to_atom(Usermanage)

@@ -43,23 +43,57 @@ AMapLoader.load({
 .then((AMap) => {
     const carSpeed=100;
 
+    /**
+     * 加载用户设备列表
+     */
+    function loadUserDevices() {
+        $.ajax({
+            url: '/device/user_devices',
+            type: 'GET',
+            success: function(response) {
+                if (response && response.length > 0 && response[0].Alert) {
+                    showWarningToast(response[0].Alert);
+                } else {
+                    let html = '<option value="" selected>全部设备</option>';
+                    response.forEach(function(device) {
+                        let deviceName = device.remark ? device.remark : device.deviceno;
+                        html += '<option value="' + device.deviceno + '">' + deviceName + '</option>';
+                    });
+                    $('#deviceSelect').html(html);
+                }
+            },
+            error: function() {
+                showWarningToast("加载设备列表失败！");
+            }
+        });
+    }
+
+    /**
+     * 显示警告提示
+     * @param {string} message - 提示信息
+     */
+    function showWarningToast(message) {
+        const toastElList = [].slice.call(document.querySelectorAll('.toast'));
+        const toastList = toastElList.map(function (toastEl) {
+            const toastBodyEl = toastEl.querySelector('.toast-body');
+            toastBodyEl.textContent = message;
+            return new bootstrap.Toast(toastEl);
+        });
+        toastList.forEach(toast => toast.show());
+    }
+
     function loadLocationData(callback) {
         // API获取定位信息
         const searchParams = {
             startTime: $('#starttime').val(),
-            endTime: $('#endtime').val()
+            endTime: $('#endtime').val(),
+            deviceNo: $('#deviceSelect').val() || ''
         };
         $.ajaxSetup({async:false});
         $.getJSON('/location', searchParams, function (mapsData) {
             // console.log("mapsData: ", JSON.stringify(mapsData));
             if (mapsData && mapsData.length > 0 && mapsData[0].Alert) {
-                const toastElList = [].slice.call(document.querySelectorAll('.toast'));
-                const toastList = toastElList.map(function (toastEl) {
-                    const toastBodyEl = toastEl.querySelector('.toast-body');
-                    toastBodyEl.textContent = mapsData[0].Alert;
-                    return new bootstrap.Toast(toastEl);
-                });
-                toastList.forEach(toast => toast.show());
+                showWarningToast(mapsData[0].Alert);
                 callback([]); // 如果有警报，回调函数返回空数组
             } else {
                 callback(mapsData); // 否则，回调函数返回地图数据
@@ -181,14 +215,39 @@ AMapLoader.load({
 }
 
     $(document).ready(function() {
+        // 初始化日期时间选择器
+        $('#starttime').datetimepicker({
+            format: 'Y-m-d H:i:s',
+            step: 10
+        });
+        $('#endtime').datetimepicker({
+            format: 'Y-m-d H:i:s',
+            step: 10
+        });
 
+        // 加载用户设备列表
+        loadUserDevices();
+
+        // 开始回放按钮点击事件
         $('#start').click(function() {
             loadLocationData(function (data){
                 reloadCarReplay(data);
             });
-
         });
 
+        // 查询按钮点击事件
+        $('#searchLocation').click(function() {
+            loadLocationData(function (data){
+                reloadCarReplay(data);
+            });
+        });
+
+        // 清空按钮点击事件
+        $('#cleanLocation').click(function() {
+            $('#starttime').val('');
+            $('#endtime').val('');
+            $('#deviceSelect').val('');
+        });
     })
 
 })

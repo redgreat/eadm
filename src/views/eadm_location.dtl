@@ -9,38 +9,43 @@
 {% endblock %}
 {% block content %}
 
-
-
 <div class="container-fluid p-0" style="height: 100%; position: relative;">
     <!-- 地图容器 -->
     <div id="mapContainer" style="width: 100%; height: 100%; position: relative;">
         <!-- 地图将在这里显示 -->
-    </div>
-    
-    <!-- 查询卡片 -->
-    <div class="card location-query-panel">
-        <div class="card-body p-2">
-            <div class="mb-2">
-                <label for="starttime" class="form-label small mb-1">开始时间</label>
-                <input id="starttime" type="text" class="form-control form-control-sm" placeholder="选择开始时间">
-            </div>
-            <div class="mb-2">
-                <label for="endtime" class="form-label small mb-1">结束时间</label>
-                <input id="endtime" type="text" class="form-control form-control-sm" placeholder="选择结束时间">
-            </div>
-            <div class="button-group">
-                <button type="button" class="btn btn-sm btn-outline-primary" id="start">
-                    <i class="fas fa-play"></i> 开始
-                </button>
-                <button type="button" class="btn btn-sm btn-outline-secondary" id="pause">
-                    <i class="fas fa-pause"></i> 暂停
-                </button>
-                <button type="button" class="btn btn-sm btn-outline-info" id="resume">
-                    <i class="fas fa-step-forward"></i> 继续
-                </button>
-                <button type="button" class="btn btn-sm btn-outline-dark" id="stop">
-                    <i class="fas fa-stop"></i> 停止
-                </button>
+
+        <!-- 查询面板 -->
+        <div class="card location-query-panel">
+            <div class="card-body p-2">
+                <div class="mb-2">
+                    <label for="deviceSelect" class="form-label small mb-1">选择设备</label>
+                    <select class="form-select form-select-sm" id="deviceSelect">
+                        <option value="" selected>全部设备</option>
+                        <!-- 设备选项将在这里动态加载 -->
+                    </select>
+                </div>
+                <div class="mb-2">
+                    <label for="starttime" class="form-label small mb-1">开始时间</label>
+                    <input id="starttime" type="text" class="form-control form-control-sm" placeholder="选择开始时间">
+                </div>
+                <div class="mb-2">
+                    <label for="endtime" class="form-label small mb-1">结束时间</label>
+                    <input id="endtime" type="text" class="form-control form-control-sm" placeholder="选择结束时间">
+                </div>
+                <div class="button-group">
+                    <button type="button" class="btn btn-sm btn-outline-primary" id="start">
+                        <i class="fas fa-play"></i> 开始
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="pause">
+                        <i class="fas fa-pause"></i> 暂停
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-info" id="resume">
+                        <i class="fas fa-step-forward"></i> 继续
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-dark" id="stop">
+                        <i class="fas fa-stop"></i> 停止
+                    </button>
+                </div>
             </div>
         </div>
     </div>

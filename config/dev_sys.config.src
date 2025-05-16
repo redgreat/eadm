@@ -17,9 +17,16 @@
                                            parse_bindings => true,
                                            read_urlencoded_body=>true,
                                            parse_qs=>true}},
-      {pre_request, nova_cors_plugin, #{allow_origins => [<<"*">>]}}
-      ]}
+      {pre_request, nova_cors_plugin, #{
+                allow_origins => [<<"http://localhost:3000">>],
+                allow_credentials => true,
+                allow_methods => <<"*">>,
+                allow_headers => <<"*">>,
+                expose_headers => <<"*">>,
+                max_age => 3600
+      }}
     ]}
+  ]}
   %% Lager Bein %%%
   , {lager, [
       {log_root, "logs"}

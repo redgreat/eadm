@@ -1,8 +1,7 @@
 ["config/prod_db",
   {nova, [
-    {environment, prod},
-    {cowboy_configuration, #{port => 8090}},
-    {dev_mode, false},
+    {environment, prod},    {cowboy_configuration, #{port => 8080}},
+    {dev_mode, true},
     {bootstrap_application, eadm}, %% Bootstraps the application
     {use_sessions, true},
     {session_expire, 3600},
@@ -19,7 +18,14 @@
                                            parse_bindings => true,
                                            read_urlencoded_body=>true,
                                            parse_qs=>true}},
-      {pre_request, nova_cors_plugin, #{allow_origins => [<<"*">>]}}
+      {pre_request, nova_cors_plugin, #{
+          allow_origins => [<<"http://localhost:3000">>],
+          allow_methods => [<<"GET">>, <<"POST">>, <<"OPTIONS">>, <<"DELETE">>, <<"PUT">>],
+          allow_headers => [<<"content-type">>, <<"x-requested-with">>, <<"authorization">>],
+          allow_credentials => true,
+          max_age => 3600,
+          expose_headers => [<<"content-type">>, <<"x-requested-with">>]
+      }}
       ]}
     ]},
   {lager, [

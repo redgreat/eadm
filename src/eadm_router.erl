@@ -37,7 +37,7 @@ routes(_Environment) ->
     [#{prefix => "",
     security => false,
     routes => [
-        {"/login", fun eadm_login_controller:login/1, #{methods => [get, post]}},
+        {"/login", fun eadm_login_controller:login/1, #{methods => [get, post, options]}},
         {"/logout", fun eadm_login_controller:logout/1, #{methods => [post]}},
         {"/assets/[...]", "assets"}
       ]
@@ -50,7 +50,8 @@ routes(_Environment) ->
         {"/finance", fun eadm_finance_controller:index/1, #{methods => [get]}},
         {"/crontab", fun eadm_crontab_controller:index/1, #{methods => [get]}},
         {"/user", fun eadm_user_controller:index/1, #{methods => [get]}},
-        {"/role", fun eadm_role_controller:index/1, #{methods => [get]}}
+        {"/role", fun eadm_role_controller:index/1, #{methods => [get]}},
+        {"/device", fun eadm_device_controller:index/1, #{methods => [get]}}
       ]
     },
     #{prefix => "",
@@ -65,6 +66,14 @@ routes(_Environment) ->
         {"/location", fun eadm_location_controller:search/1, #{methods => [get]}},
         {"/finance", fun eadm_finance_controller:search/1, #{methods => [get]}},
         {"/crontab", fun eadm_crontab_controller:search/1, #{methods => [get]}},
+        {"/device", fun eadm_device_controller:search/1, #{methods => [get]}},
+        {"/device/add", fun eadm_device_controller:add/1, #{methods => [post]}},
+        {"/device/edit", fun eadm_device_controller:edit/1, #{methods => [post]}},
+        {"/device/delete/:deviceNo", fun eadm_device_controller:delete/1, #{methods => [delete]}},
+        {"/device/assign", fun eadm_device_controller:assign/1, #{methods => [post]}},
+        {"/device/unassign/:id", fun eadm_device_controller:unassign/1, #{methods => [delete]}},
+        {"/device/users/:deviceNo", fun eadm_device_controller:device_users/1, #{methods => [get]}},
+        {"/device/user_devices", fun eadm_device_controller:user_devices/1, #{methods => [get]}},
         {"/user", fun eadm_user_controller:search/1, #{methods => [get]}},
         {"/role", fun eadm_role_controller:search/1, #{methods => [get]}}
       ]
@@ -136,6 +145,14 @@ routes(_Environment) ->
     security => false,
     routes => [
         {"/watch", fun api_watch:index/1, #{methods => [post]}}
+      ]
+    },
+    #{prefix => "api/finance",
+    security => {eadm_auth, auth},
+    routes => [
+        {"/alipay", fun eadm_payment_controller:alipay/1, #{methods => [get]}},
+        {"/wechat", fun eadm_payment_controller:wechat/1, #{methods => [get]}},
+        {"/config", fun eadm_payment_controller:config/1, #{methods => [post]}}
       ]
     }
     ].

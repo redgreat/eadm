@@ -152,6 +152,21 @@ function loadPermission(roleId) {
             $('#finance-del').prop('checked', resdata.finance.findel);
             $('#crontab').prop('checked', resdata.crontab);
             $('#usermanage').prop('checked', resdata.usermanage);
+
+            // 设备管理权限
+            if (resdata.device) {
+                $('#device').prop('checked', resdata.device.devlist);
+                $('#device-add').prop('checked', resdata.device.devadd);
+                $('#device-edit').prop('checked', resdata.device.devedit);
+                $('#device-del').prop('checked', resdata.device.devdel);
+                $('#device-assign').prop('checked', resdata.device.devassign);
+            } else {
+                $('#device').prop('checked', false);
+                $('#device-add').prop('checked', false);
+                $('#device-edit').prop('checked', false);
+                $('#device-del').prop('checked', false);
+                $('#device-assign').prop('checked', false);
+            }
         });
     }
 }
@@ -167,7 +182,13 @@ function editPermission(roleId) {
             finimp: $('#finance-imp').is(':checked'),
             findel: $('#finance-del').is(':checked'),
             crontab: $('#crontab').is(':checked'),
-            userManage: $('#usermanage').is(':checked')
+            userManage: $('#usermanage').is(':checked'),
+            // 设备管理权限
+            devlist: $('#device').is(':checked'),
+            devadd: $('#device-add').is(':checked'),
+            devedit: $('#device-edit').is(':checked'),
+            devdel: $('#device-del').is(':checked'),
+            devassign: $('#device-assign').is(':checked')
         }
         $.ajax({
             url: '/permission/edit',

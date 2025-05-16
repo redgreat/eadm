@@ -24,48 +24,48 @@ function exportFinanceData() {
     const inorOut = $('#inorOut').val();
     const startTime = $('#starttime').val();
     const endTime = $('#endtime').val();
-    
+
     if (!startTime || !endTime) {
         showWarningToast("请选择开始和结束时间");
         return;
     }
-    
+
     // 获取表格数据
     const table = $('#table-finance').DataTable();
     const data = table.data().toArray();
     const headers = [];
-    
+
     // 获取表头
     table.columns().every(function() {
         headers.push(this.header().textContent);
     });
-    
+
     if (data.length === 0) {
         showWarningToast("无数据可导出");
         return;
     }
-    
+
     // 创建工作簿
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.json_to_sheet(data, {header: headers});
-    
+
     // 添加工作表到工作簿
     XLSX.utils.book_append_sheet(wb, ws, "财务数据");
-    
+
     // 生成文件名
     let sourceTypeText = "全部";
     if (sourceType === "1") sourceTypeText = "支付宝";
     else if (sourceType === "2") sourceTypeText = "微信";
     else if (sourceType === "3") sourceTypeText = "青岛银行";
     else if (sourceType === "4") sourceTypeText = "中国银行";
-    
+
     let inorOutText = "全部";
     if (inorOut === "1") inorOutText = "收入";
     else if (inorOut === "2") inorOutText = "支出";
     else if (inorOut === "3") inorOutText = "其他";
-    
+
     const fileName = `财务数据_${sourceTypeText}_${inorOutText}_${startTime.replace(/[\/:]/g, '')}_${endTime.replace(/[\/:]/g, '')}.xlsx`;
-    
+
     // 导出Excel文件
     XLSX.writeFile(wb, fileName);
 }
@@ -221,47 +221,90 @@ function loadFinanceDetail(detailId) {
     }
 }
 
+/**
+ * 读取并处理Excel/CSV文件
+ * @param {File} file - 上传的文件对象
+ * @param {string} importType - 导入类型
+ * @param {Function} processCallback - 处理数据的回调函数
+ */
 function readAndProcessWorkbook(file, importType, processCallback) {
     const fileExtension = file.name.split('.').pop().toLowerCase();
+
+    if (!['csv', 'xlsx', 'xls'].includes(fileExtension)) {
+        showWarningToast(`不支持的文件格式: ${fileExtension}`);
+        return;
+    }
+
     const reader = new FileReader();
     reader.onload = function(e) {
-        let data;
-        if (fileExtension === 'csv') {
-            const decoder = new TextDecoder('utf-8');
-            data = decoder.decode(new Uint8Array(e.target.result));
-            let workbook = XLSX.read(data, {type: 'binary'});
-        } else if (['xlsx', 'xls'].includes(fileExtension)) {
-            data = new Uint8Array(e.target.result);
-            let workbook = XLSX.read(data, {type: 'array'});
-        } else {
-            throw new Error(`Unsupported file extension: ${fileExtension}`);
-        }
-        const firstSheetName = workbook.SheetNames[0];
-        if (!firstSheetName) {
-            throw new Error("Excel file has no worksheets");
-        }
-        const worksheet = workbook.Sheets[firstSheetName];
-        const jsonData = XLSX.utils.sheet_to_json(worksheet, {raw: false});
-        const cleanedData = jsonData.map(item => {
-            Object.keys(item).forEach(key => {
-                if (item[key] !== undefined && item[key] !== null) {
-                    item[key] = String(item[key]).trim();
-                }
+        try {
+            let workbook;
+            if (fileExtension === 'csv') {
+                const decoder = new TextDecoder('utf-8');
+                const data = decoder.decode(new Uint8Array(e.target.result));
+                workbook = XLSX.read(data, {type: 'binary'});
+            } else {
+                const data = new Uint8Array(e.target.result);
+                workbook = XLSX.read(data, {type: 'array'});
+            }
+
+            if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
+                showWarningToast("Excel文件没有工作表!");
+                return;
+            }
+
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+
+            // 转换为JSON并清理数据
+            const jsonData = XLSX.utils.sheet_to_json(worksheet, {raw: false});
+            const cleanedData = jsonData.map(item => {
+                const cleanedItem = {};
+                Object.keys(item).forEach(key => {
+                    if (item[key] !== undefined && item[key] !== null) {
+                        cleanedItem[key] = String(item[key]).trim();
+                    } else {
+                        cleanedItem[key] = '';
+                    }
+                });
+                return cleanedItem;
             });
-            return item;
-        });
-        processCallback(importType, cleanedData);
+
+            processCallback(importType, cleanedData);
+        } catch (error) {
+            console.error("处理文件时出错:", error);
+            showWarningToast("处理文件时出错: " + error.message);
+        }
     };
+
+    reader.onerror = function() {
+        showWarningToast("读取文件时出错");
+    };
+
     reader.readAsArrayBuffer(file);
 }
 
+/**
+ * 处理并上传财务数据
+ * @param {string} importType - 导入类型
+ * @param {Array} uploadJson - 要上传的JSON数据
+ */
 function processFile(importType, uploadJson) {
+    if (!uploadJson || uploadJson.length === 0) {
+        showWarningToast("没有可导入的数据!");
+        return;
+    }
+
+    // 显示加载中提示
+    showInfoToast("正在处理数据，请稍候...");
+
+    // 根据不同的导入类型进行数据预处理
+    let processedData = preprocessData(importType, uploadJson);
 
     const uploadParams = {
         importType: importType,
-        uploadJson: uploadJson
+        uploadJson: processedData
     };
-    // console.log("uploadParams: "+ JSON.stringify(uploadParams));
 
     // 发送AJAX请求
     $.ajax({
@@ -271,17 +314,406 @@ function processFile(importType, uploadJson) {
         data: JSON.stringify(uploadParams),
         success: function(response) {
             if (response && response.length > 0 && response[0].Alert) {
-                showWarningToast(response[0].Alert);
+                showSuccessToast(response[0].Alert);
+
+                // 导入成功后刷新数据
+                const sourceType = $('#sourceType').val();
+                const inorOut = $('#inorOut').val();
+                const startTime = $('#starttime').val() || defaultStartTime;
+                const endTime = $('#endtime').val() || defaultEndTime;
+                loadFinanceData(sourceType, inorOut, startTime, endTime);
             }
         },
         error: function(xhr, status, error) {
+            console.error("上传失败:", error);
             showWarningToast("服务器内部错误！");
         }
     });
 }
 
-$(document).ready(function() {
+/**
+ * 根据导入类型预处理数据
+ * @param {string} importType - 导入类型
+ * @param {Array} data - 原始数据
+ * @returns {Array} - 处理后的数据
+ */
+function preprocessData(importType, data) {
+    // 默认返回原始数据
+    if (importType === "0") {
+        return data;
+    }
 
+    // 根据不同的导入类型进行数据映射和转换
+    const processedData = data.map(item => {
+        const newItem = {};
+
+        // 设置默认值
+        newItem["Owner"] = $('#owner').val() || "系统导入";
+        newItem["Source"] = importType;
+
+        // 根据不同的导入类型进行字段映射
+        switch (importType) {
+            case "1": // 支付宝
+                mapAlipayFields(item, newItem);
+                break;
+            case "2": // 微信
+                mapWechatFields(item, newItem);
+                break;
+            case "3": // 青岛银行
+                mapQDBankFields(item, newItem);
+                break;
+            case "4": // 中国银行
+                mapBOCFields(item, newItem);
+                break;
+        }
+
+        return newItem;
+    });
+
+    return processedData;
+}
+
+/**
+ * 显示信息提示
+ * @param {string} message - 提示信息
+ */
+function showInfoToast(message) {
+    const toastElList = [].slice.call(document.querySelectorAll('.toast'));
+    const toastList = toastElList.map(function (toastEl) {
+        const toastBodyEl = toastEl.querySelector('.toast-body');
+        toastBodyEl.textContent = message;
+        return new bootstrap.Toast(toastEl);
+    });
+    toastList.forEach(toast => toast.show());
+}
+
+/**
+ * 映射支付宝字段
+ * @param {Object} source - 源数据
+ * @param {Object} target - 目标数据
+ */
+function mapAlipayFields(source, target) {
+    // 支付宝账单字段映射
+    // 交易时间
+    if (source["交易时间"] || source["交易创建时间"]) {
+        target["TradeTime"] = parseAlipayDate(source["交易时间"] || source["交易创建时间"]);
+    }
+
+    // 交易分类
+    target["TradeType"] = source["交易分类"] || source["交易类型"] || "";
+
+    // 交易对方
+    target["CounterParty"] = source["交易对方"] || source["对方"] || "";
+
+    // 商品说明
+    target["GoodsComment"] = source["商品说明"] || source["商品"] || "";
+
+    // 收/支
+    if (source["收/支"]) {
+        target["InOrOut"] = source["收/支"] === "收入" ? "收入" : "支出";
+    } else {
+        // 根据金额判断收支
+        const amount = parseFloat(source["金额"] || "0");
+        target["InOrOut"] = amount >= 0 ? "收入" : "支出";
+    }
+
+    // 金额
+    if (source["金额"]) {
+        target["Amount"] = parseFloat(source["金额"].replace(/[¥,]/g, ""));
+    }
+
+    // 收/付款方式
+    target["PayMethod"] = source["收/付款方式"] || source["支付方式"] || "";
+
+    // 交易状态
+    target["PayStatus"] = source["交易状态"] || source["状态"] || "";
+
+    // 交易订单号
+    target["TradeOrderNo"] = source["交易订单号"] || source["订单号"] || "";
+
+    // 商家订单号
+    target["CounterOrderNo"] = source["商家订单号"] || source["商户单号"] || "";
+
+    // 备注
+    target["BillComment"] = source["备注"] || "";
+}
+
+/**
+ * 映射微信字段
+ * @param {Object} source - 源数据
+ * @param {Object} target - 目标数据
+ */
+function mapWechatFields(source, target) {
+    // 微信账单字段映射
+    // 交易时间
+    if (source["交易时间"] || source["交易创建时间"]) {
+        target["TradeTime"] = parseWechatDate(source["交易时间"] || source["交易创建时间"]);
+    }
+
+    // 交易订单号
+    target["TradeOrderNo"] = source["交易单号"] || source["微信订单号"] || "";
+
+    // 商家订单号
+    target["CounterOrderNo"] = source["商户单号"] || source["商户订单号"] || "";
+
+    // 交易时间
+    if (source["交易时间"] || source["交易创建时间"]) {
+        target["TradeTime"] = parseWechatDate(source["交易时间"] || source["交易创建时间"]);
+    }
+
+    // 收/付款方式
+    target["PayMethod"] = source["支付方式"] || source["支付类型"] || "微信";
+
+    // 交易对方
+    target["CounterParty"] = source["交易对方"] || source["商户"] || "";
+
+    // 商品说明
+    target["GoodsComment"] = source["商品"] || source["商品说明"] || "";
+
+    // 金额
+    if (source["金额"] || source["收支金额"]) {
+        const amountStr = source["金额"] || source["收支金额"] || "0";
+        target["Amount"] = parseFloat(amountStr.replace(/[¥,]/g, ""));
+    }
+
+    // 收/支
+    if (source["收/支"] || source["收支类型"]) {
+        target["InOrOut"] = (source["收/支"] === "收入" || source["收支类型"] === "收入") ? "收入" : "支出";
+    } else {
+        // 根据金额判断收支
+        const amount = parseFloat(target["Amount"] || 0);
+        target["InOrOut"] = amount >= 0 ? "收入" : "支出";
+    }
+
+    // 交易状态
+    target["PayStatus"] = source["当前状态"] || source["交易状态"] || "";
+
+    // 备注
+    target["BillComment"] = source["备注"] || source["交易备注"] || "";
+}
+
+/**
+ * 映射青岛银行字段
+ * @param {Object} source - 源数据
+ * @param {Object} target - 目标数据
+ */
+function mapQDBankFields(source, target) {
+    // 青岛银行账单字段映射
+    // 交易时间
+    if (source["交易日期"] || source["交易时间"]) {
+        target["TradeTime"] = parseBankDate(source["交易日期"] || source["交易时间"]);
+    }
+
+    // 交易对方
+    target["CounterParty"] = source["对方户名"] || source["交易对方"] || "";
+
+    // 对方开户行
+    target["CounterBank"] = source["对方开户行"] || source["对方银行"] || "";
+
+    // 对方账号
+    target["CounterAccount"] = source["对方账号"] || "";
+
+    // 商品说明
+    target["GoodsComment"] = source["摘要"] || source["交易摘要"] || "";
+
+    // 金额
+    if (source["交易金额"] || source["金额"]) {
+        const amountStr = source["交易金额"] || source["金额"] || "0";
+        target["Amount"] = parseFloat(amountStr.replace(/[,]/g, ""));
+    }
+
+    // 余额
+    if (source["账户余额"] || source["余额"]) {
+        const balanceStr = source["账户余额"] || source["余额"] || "0";
+        target["Balance"] = parseFloat(balanceStr.replace(/[,]/g, ""));
+    }
+
+    // 收/支
+    if (source["借贷标志"]) {
+        target["InOrOut"] = source["借贷标志"] === "贷" ? "收入" : "支出";
+    } else {
+        // 根据金额判断收支
+        const amount = parseFloat(target["Amount"] || 0);
+        target["InOrOut"] = amount >= 0 ? "收入" : "支出";
+    }
+}
+
+/**
+ * 映射中国银行字段
+ * @param {Object} source - 源数据
+ * @param {Object} target - 目标数据
+ */
+function mapBOCFields(source, target) {
+    // 中国银行账单字段映射
+    // 交易时间
+    if (source["交易日期"] || source["交易时间"]) {
+        target["TradeTime"] = parseBankDate(source["交易日期"] || source["交易时间"]);
+    }
+
+    // 交易对方
+    target["CounterParty"] = source["对方户名"] || source["交易对方"] || "";
+
+    // 对方开户行
+    target["CounterBank"] = source["对方开户行"] || source["对方银行"] || "";
+
+    // 对方账号
+    target["CounterAccount"] = source["对方账号"] || "";
+
+    // 商品说明
+    target["GoodsComment"] = source["摘要"] || source["交易摘要"] || "";
+
+    // 金额
+    if (source["交易金额"] || source["金额"]) {
+        const amountStr = source["交易金额"] || source["金额"] || "0";
+        target["Amount"] = parseFloat(amountStr.replace(/[,]/g, ""));
+    }
+
+    // 余额
+    if (source["账户余额"] || source["余额"]) {
+        const balanceStr = source["账户余额"] || source["余额"] || "0";
+        target["Balance"] = parseFloat(balanceStr.replace(/[,]/g, ""));
+    }
+
+    // 收/支
+    if (source["借贷标志"]) {
+        target["InOrOut"] = source["借贷标志"] === "贷" ? "收入" : "支出";
+    } else {
+        // 根据金额判断收支
+        const amount = parseFloat(target["Amount"] || 0);
+        target["InOrOut"] = amount >= 0 ? "收入" : "支出";
+    }
+}
+
+/**
+ * 解析支付宝日期格式
+ * @param {string} dateStr - 日期字符串
+ * @returns {string} - 格式化后的日期
+ */
+function parseAlipayDate(dateStr) {
+    if (!dateStr) return null;
+
+    // 支付宝日期格式通常为: 2023-01-01 12:34:56
+    try {
+        const date = new Date(dateStr.replace(/-/g, '/'));
+        return date.toISOString();
+    } catch (e) {
+        console.error("解析支付宝日期出错:", e);
+        return dateStr;
+    }
+}
+
+/**
+ * 解析微信日期格式
+ * @param {string} dateStr - 日期字符串
+ * @returns {string} - 格式化后的日期
+ */
+function parseWechatDate(dateStr) {
+    if (!dateStr) return null;
+
+    // 微信日期格式通常为: 2023-01-01 12:34:56
+    try {
+        const date = new Date(dateStr.replace(/-/g, '/'));
+        return date.toISOString();
+    } catch (e) {
+        console.error("解析微信日期出错:", e);
+        return dateStr;
+    }
+}
+
+/**
+ * 解析银行日期格式
+ * @param {string} dateStr - 日期字符串
+ * @returns {string} - 格式化后的日期
+ */
+function parseBankDate(dateStr) {
+    if (!dateStr) return null;
+
+    // 银行日期格式可能为: 2023-01-01 或 2023/01/01 或 20230101
+    try {
+        let formattedDate = dateStr;
+
+        // 处理没有分隔符的日期格式 (20230101)
+        if (dateStr.length === 8 && !dateStr.includes('-') && !dateStr.includes('/')) {
+            formattedDate = `${dateStr.substring(0, 4)}-${dateStr.substring(4, 6)}-${dateStr.substring(6, 8)}`;
+        }
+
+        const date = new Date(formattedDate.replace(/-/g, '/'));
+        return date.toISOString();
+    } catch (e) {
+        console.error("解析银行日期出错:", e);
+        return dateStr;
+    }
+}
+
+/**
+ * 从支付宝API获取交易数据
+ * @param {string} startDate - 开始日期
+ * @param {string} endDate - 结束日期
+ */
+function fetchAlipayTransactions(startDate, endDate) {
+    showInfoToast("正在从支付宝获取交易数据...");
+
+    $.ajax({
+        url: '/api/finance/alipay',
+        type: 'GET',
+        data: {
+            startDate: startDate,
+            endDate: endDate
+        },
+        success: function(response) {
+            if (response && response.success) {
+                showSuccessToast("成功获取支付宝交易数据，共 " + response.count + " 条记录");
+
+                // 刷新数据
+                const sourceType = $('#sourceType').val();
+                const inorOut = $('#inorOut').val();
+                loadFinanceData(sourceType, inorOut, startDate, endDate);
+            } else {
+                showWarningToast(response.message || "获取支付宝交易数据失败");
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error("获取支付宝交易数据失败:", error);
+            showWarningToast("获取支付宝交易数据失败: " + error);
+        }
+    });
+}
+
+/**
+ * 从微信支付API获取交易数据
+ * @param {string} startDate - 开始日期
+ * @param {string} endDate - 结束日期
+ */
+function fetchWechatTransactions(startDate, endDate) {
+    showInfoToast("正在从微信支付获取交易数据...");
+
+    $.ajax({
+        url: '/api/finance/wechat',
+        type: 'GET',
+        data: {
+            startDate: startDate,
+            endDate: endDate
+        },
+        success: function(response) {
+            if (response && response.success) {
+                showSuccessToast("成功获取微信支付交易数据，共 " + response.count + " 条记录");
+
+                // 刷新数据
+                const sourceType = $('#sourceType').val();
+                const inorOut = $('#inorOut').val();
+                loadFinanceData(sourceType, inorOut, startDate, endDate);
+            } else {
+                showWarningToast(response.message || "获取微信支付交易数据失败");
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error("获取微信支付交易数据失败:", error);
+            showWarningToast("获取微信支付交易数据失败: " + error);
+        }
+    });
+}
+
+$(document).ready(function() {
     loadFinanceData($('#sourceType').val(), $('#inorOut').val(), defaultStartTime, defaultEndTime);
 
     // 查询按钮点击事件
@@ -297,7 +729,7 @@ $(document).ready(function() {
     $('#cleanFinance').click(function () {
         $('input[type="text"]').val('');
     });
-    
+
     // 刷新按钮点击事件
     $('#refresh-finance-btn').click(function() {
         const sourceType = $('#sourceType').val();
@@ -307,101 +739,59 @@ $(document).ready(function() {
         loadFinanceData(sourceType, inorOut, startTime, endTime);
         showSuccessToast("数据已刷新");
     });
-    
+
     // 导出按钮点击事件
     $('#export-finance-btn').click(function() {
         exportFinanceData();
     });
 
+    // 导入按钮点击事件
     $('#importFinance').click(function () {
         $('#finance-import').modal('show');
     });
 
+    // API导入按钮点击事件
+    $('#apiImportFinance').click(function () {
+        $('#finance-api-import').modal('show');
+    });
+
+    /**
+     * 提交财务导入表单
+     */
     $('#submitFinance').click(function (e) {
         e.preventDefault();
         const importType = $('#importType').val();
-        let fileInput = $('#finance-imp-file')[0];
-        let uploadFile = fileInput.files[0];
-        let workbook;
+        const fileInput = $('#finance-imp-file')[0];
+        const uploadFile = fileInput.files[0];
 
-        if (uploadFile) {
-            if (uploadFile.size <= 10 * 1024 * 1024) {
-                let fileExtension = uploadFile.name.split('.').pop().toLowerCase();
-                let validExtensions = ['xlsx', 'xls', 'csv'];
-
-                if ($.inArray(fileExtension, validExtensions) !== -1) {
-
-                    let reader = new FileReader();
-                    reader.onload = function(e) {
-                        if (fileExtension === 'csv') {
-                            const decoder = new TextDecoder('utf-8');
-                            let data = decoder.decode(new Uint8Array(e.target.result));
-                            let workbook = XLSX.read(data, {type: 'binary'});
-                            let firstSheetName = workbook.SheetNames[0];
-                            if (firstSheetName) {
-                                let worksheet = workbook.Sheets[firstSheetName];
-                                let jsonData = XLSX.utils.sheet_to_json(worksheet, {raw: false});
-                                let cleanedData = jsonData.map(item => {
-                                    Object.keys(item).forEach(key => {
-                                        if (item[key] !== undefined && item[key] !== null) {
-                                            item[key] = String(item[key]).trim();
-                                        }
-                                    });
-                                    return item;
-                                });
-                                processFile(importType, cleanedData);
-
-                            } else {
-                                const toastElList = [].slice.call(document.querySelectorAll('.toast'));
-                                const toastList = toastElList.map(function (toastEl) {
-                                    const toastBodyEl = toastEl.querySelector('.toast-body');
-                                    toastBodyEl.textContent = "Excel文件没有工作表!";
-                                    return new bootstrap.Toast(toastEl);
-                                });
-                                toastList.forEach(toast => toast.show());
-                            }
-                        } else {
-                            let data = new Uint8Array(e.target.result);
-                            let workbook = XLSX.read(data, {type: 'array'});
-                            let firstSheetName = workbook.SheetNames[0];
-                            if (firstSheetName) {
-                                let worksheet = workbook.Sheets[firstSheetName];
-                                let jsonData = XLSX.utils.sheet_to_json(worksheet, {raw: false});
-                                let cleanedData = jsonData.map(item => {
-                                    Object.keys(item).forEach(key => {
-                                        if (item[key] !== undefined && item[key] !== null) {
-                                            item[key] = String(item[key]).trim();
-                                        }
-                                    });
-                                    return item;
-                                });
-                                processFile(importType, cleanedData);
-
-                            } else {
-                                const toastElList = [].slice.call(document.querySelectorAll('.toast'));
-                                const toastList = toastElList.map(function (toastEl) {
-                                    const toastBodyEl = toastEl.querySelector('.toast-body');
-                                    toastBodyEl.textContent = "Excel文件没有工作表!";
-                                    return new bootstrap.Toast(toastEl);
-                                });
-                                toastList.forEach(toast => toast.show());
-                            }
-                        }
-
-                    };
-                    reader.readAsArrayBuffer(uploadFile);
-                } else {
-                    showWarningToast("文件类型不符合要求!");
-                }
-            } else {
-                showWarningToast("文件大小超过10MB!");
-            }
-        } else {
+        // 文件验证
+        if (!uploadFile) {
             showWarningToast("请选择一个文件!");
+            return;
         }
+
+        // 文件大小验证
+        if (uploadFile.size > 10 * 1024 * 1024) {
+            showWarningToast("文件大小超过10MB!");
+            return;
+        }
+
+        // 文件类型验证
+        const fileExtension = uploadFile.name.split('.').pop().toLowerCase();
+        const validExtensions = ['xlsx', 'xls', 'csv'];
+        if (!validExtensions.includes(fileExtension)) {
+            showWarningToast("文件类型不符合要求!");
+            return;
+        }
+
+        // 使用优化后的函数处理文件
+        readAndProcessWorkbook(uploadFile, importType, processFile);
+
+        // 隐藏模态框
         $('#finance-import').modal('hide');
     });
 
+    // 导入类型变更事件
     $('#importType').on('change', function() {
         let selectedValue = $(this).val();
         let exampleLink = $('#exampleLink');
@@ -426,6 +816,92 @@ $(document).ready(function() {
                 exampleLink.attr('href', '/assets/files/finance-import-sample-raw.xlsx');
                 break;
         }
+    });
+
+    // API导入类型变更事件
+    $('#apiImportType').on('change', function() {
+        const selectedValue = $(this).val();
+
+        // 根据选择的API类型显示或隐藏相应的配置选项
+        if (selectedValue === '1') {
+            $('#alipayConfigSection').show();
+            $('#wechatConfigSection').hide();
+        } else if (selectedValue === '2') {
+            $('#alipayConfigSection').hide();
+            $('#wechatConfigSection').show();
+        }
+    });
+
+    // 提交API导入表单
+    $('#submitApiImport').click(function(e) {
+        e.preventDefault();
+
+        const apiImportType = $('#apiImportType').val();
+        const startDate = $('#apiStartDate').val();
+        const endDate = $('#apiEndDate').val();
+
+        if (!startDate || !endDate) {
+            showWarningToast("请选择开始和结束日期");
+            return;
+        }
+
+        // 根据选择的API类型调用相应的函数
+        if (apiImportType === '1') {
+            fetchAlipayTransactions(startDate, endDate);
+        } else if (apiImportType === '2') {
+            fetchWechatTransactions(startDate, endDate);
+        }
+
+        // 隐藏模态框
+        $('#finance-api-import').modal('hide');
+    });
+
+    // 保存API配置
+    $('#saveApiConfig').click(function(e) {
+        e.preventDefault();
+
+        const apiImportType = $('#apiImportType').val();
+        let configData = {};
+
+        if (apiImportType === '1') {
+            // 支付宝配置
+            configData = {
+                type: 'alipay',
+                appId: $('#alipayAppId').val(),
+                privateKey: $('#alipayPrivateKey').val(),
+                publicKey: $('#alipayPublicKey').val()
+            };
+        } else if (apiImportType === '2') {
+            // 微信支付配置
+            configData = {
+                type: 'wechat',
+                appId: $('#wechatAppId').val(),
+                mchId: $('#wechatMchId').val(),
+                apiKey: $('#wechatApiKey').val(),
+                apiV3Key: $('#wechatApiV3Key').val(),
+                serialNo: $('#wechatSerialNo').val(),
+                privateKey: $('#wechatPrivateKey').val()
+            };
+        }
+
+        // 发送配置到服务器
+        $.ajax({
+            url: '/api/finance/config',
+            type: 'POST',
+            contentType: 'application/json; charset=utf-8',
+            data: JSON.stringify(configData),
+            success: function(response) {
+                if (response && response.success) {
+                    showSuccessToast("API配置保存成功");
+                } else {
+                    showWarningToast(response.message || "API配置保存失败");
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("API配置保存失败:", error);
+                showWarningToast("API配置保存失败: " + error);
+            }
+        });
     });
 
     let dataTableFinance = $('#table-finance').DataTable();

@@ -114,6 +114,29 @@
                             </div>
                         </div>
                         <div class="mb-3">
+                            <label for="email" class="form-label text-uppercase">设备管理</label>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="device">
+                                <label class="form-check-label" for="device"><small>查看设备</small></label>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="device-add">
+                                <label class="form-check-label" for="device-add"><small>添加设备</small></label>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="device-edit">
+                                <label class="form-check-label" for="device-edit"><small>编辑设备</small></label>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="device-del">
+                                <label class="form-check-label" for="device-del"><small>删除设备</small></label>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="device-assign">
+                                <label class="form-check-label" for="device-assign"><small>分配设备</small></label>
+                            </div>
+                        </div>
+                        <div class="mb-3">
                             <label for="email" class="form-label text-uppercase">用户信息</label>
                             <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" id="usermanage">
