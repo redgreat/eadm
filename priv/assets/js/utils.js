@@ -16,11 +16,11 @@
 function formatDateTime(dateTimeStr) {
     if (!dateTimeStr) return '';
     const date = new Date(dateTimeStr);
-    return date.getFullYear() + '-' + 
-           padZero(date.getMonth() + 1) + '-' + 
-           padZero(date.getDate()) + ' ' + 
-           padZero(date.getHours()) + ':' + 
-           padZero(date.getMinutes()) + ':' + 
+    return date.getFullYear() + '-' +
+           padZero(date.getMonth() + 1) + '-' +
+           padZero(date.getDate()) + ' ' +
+           padZero(date.getHours()) + ':' +
+           padZero(date.getMinutes()) + ':' +
            padZero(date.getSeconds());
 }
 
@@ -40,7 +40,14 @@ function padZero(num) {
 function showSuccessToast(message) {
     const toastElList = [].slice.call(document.querySelectorAll('.toast'));
     const toastList = toastElList.map(function (toastEl) {
+        const toastHeaderEl = toastEl.querySelector('.toast-header svg rect');
         const toastBodyEl = toastEl.querySelector('.toast-body');
+
+        // 设置成功颜色（绿色）
+        if (toastHeaderEl) {
+            toastHeaderEl.setAttribute('fill', '#28a745');
+        }
+
         toastBodyEl.textContent = message;
         return new bootstrap.Toast(toastEl);
     });
@@ -54,7 +61,56 @@ function showSuccessToast(message) {
 function showWarningToast(message) {
     const toastElList = [].slice.call(document.querySelectorAll('.toast'));
     const toastList = toastElList.map(function (toastEl) {
+        const toastHeaderEl = toastEl.querySelector('.toast-header svg rect');
         const toastBodyEl = toastEl.querySelector('.toast-body');
+
+        // 设置警告颜色（黄色）
+        if (toastHeaderEl) {
+            toastHeaderEl.setAttribute('fill', '#ffc107');
+        }
+
+        toastBodyEl.textContent = message;
+        return new bootstrap.Toast(toastEl);
+    });
+    toastList.forEach(toast => toast.show());
+}
+
+/**
+ * 显示错误提示
+ * @param {string} message - 提示信息
+ */
+function showErrorToast(message) {
+    const toastElList = [].slice.call(document.querySelectorAll('.toast'));
+    const toastList = toastElList.map(function (toastEl) {
+        const toastHeaderEl = toastEl.querySelector('.toast-header svg rect');
+        const toastBodyEl = toastEl.querySelector('.toast-body');
+
+        // 设置错误颜色（红色）
+        if (toastHeaderEl) {
+            toastHeaderEl.setAttribute('fill', '#dc3545');
+        }
+
+        toastBodyEl.textContent = message;
+        return new bootstrap.Toast(toastEl);
+    });
+    toastList.forEach(toast => toast.show());
+}
+
+/**
+ * 显示信息提示
+ * @param {string} message - 提示信息
+ */
+function showInfoToast(message) {
+    const toastElList = [].slice.call(document.querySelectorAll('.toast'));
+    const toastList = toastElList.map(function (toastEl) {
+        const toastHeaderEl = toastEl.querySelector('.toast-header svg rect');
+        const toastBodyEl = toastEl.querySelector('.toast-body');
+
+        // 设置信息颜色（蓝色）
+        if (toastHeaderEl) {
+            toastHeaderEl.setAttribute('fill', '#007aff');
+        }
+
         toastBodyEl.textContent = message;
         return new bootstrap.Toast(toastEl);
     });
@@ -67,9 +123,13 @@ window.utils.formatDateTime = formatDateTime;
 window.utils.padZero = padZero;
 window.utils.showSuccessToast = showSuccessToast;
 window.utils.showWarningToast = showWarningToast;
+window.utils.showErrorToast = showErrorToast;
+window.utils.showInfoToast = showInfoToast;
 
 // 为了兼容现有代码，将函数暴露到全局作用域
 window.formatDateTime = formatDateTime;
 window.padZero = padZero;
 window.showSuccessToast = showSuccessToast;
 window.showWarningToast = showWarningToast;
+window.showErrorToast = showErrorToast;
+window.showInfoToast = showInfoToast;

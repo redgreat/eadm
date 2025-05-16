@@ -41,6 +41,8 @@ function loadUserData() {
             // bStateSave: true,  //记录cookie
             columnDefs: [{
                 targets: -1, // 将按钮添加到最后一列
+                className: 'action-column', // 添加自定义类名，用于CSS样式
+                width: '220px', // 设置列宽
                 render: function (data, type, full, meta) {
                     return `
                         <button class="btn btn-outline-primary btn-rounded user-role-btn"
@@ -66,6 +68,13 @@ function loadUserData() {
                           <i class="fas fa-trash"></i>
                         </button>
                     `;
+                }
+            },{
+                targets: 5,
+                render: function(data) {
+                    return data === '启用' ?
+                        '<span class="badge bg-success">启用</span>' :
+                        '<span class="badge bg-danger">禁用</span>';
                 }
             },{
                 targets: 0,

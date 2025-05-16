@@ -30,18 +30,18 @@
                     <div class="col-auto">
                         <div class="d-flex align-items-center">
                             <label for="deviceNo" class="me-2">设备号:</label>
-                            <input type="text" class="form-control form-control-sm" id="deviceNo" placeholder="设备号">
+                            <input type="text" class="form-control form-control-sm" id="deviceNo" placeholder="设备号" style="width: 150px;">
                         </div>
                     </div>
-                    <div class="col-auto">
-                        <button type="button" id="searchDevice" class="btn btn-sm btn-primary">
-                            <i class="fas fa-search"></i> 查询
-                        </button>
-                    </div>
-                    <div class="col-auto">
-                        <button type="button" id="cleanDevice" class="btn btn-sm btn-secondary">
-                            <i class="fas fa-eraser"></i> 清空
-                        </button>
+                    <div class="col-auto ms-auto">
+                        <div class="d-flex align-items-center">
+                            <button type="button" class="btn btn-sm btn-light me-2" id="cleanDevice">
+                                <i class="fas fa-eraser"></i> 清空
+                            </button>
+                            <button type="button" class="btn btn-sm btn-primary" id="searchDevice">
+                                <i class="fas fa-search"></i> 查询
+                            </button>
+                        </div>
                     </div>
                 </div>
             </form>
@@ -49,7 +49,9 @@
     </div>
     <div class="card data-panel">
         <div class="card-body">
-            <table class="table table-hover" id="table-device" width="100%"></table>
+            <div class="table-responsive">
+                <table class="table table-hover" id="table-device" width="100%"></table>
+            </div>
         </div>
     </div>
 </div>

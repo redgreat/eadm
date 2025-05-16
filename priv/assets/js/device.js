@@ -6,7 +6,7 @@
 
 // 全局变量
 let deviceTable;
-let currentDeviceNo = '';
+let currentDeviceNo = ''; // 当前设备号
 let delType = ''; // 'device' 或 'user'
 let delId = '';
 
@@ -66,6 +66,21 @@ $(document).ready(function() {
  */
 function initDeviceTable() {
     deviceTable = $('#table-device').DataTable({
+        // 表格基本配置
+        responsive: true,
+        info: true, // 显示左下角分页信息
+        processing: true, // 显示处理状态
+        orderMulti: true, // 启用多列排序
+        ordering: true, // 使用排序
+        paging: true, // 是否分页
+        pageLength: 10, // 每页默认行数
+        lengthChange: false, // 禁止改变每页显示的记录数
+        pagingType: "full_numbers", // 分页按钮类型
+        searching: false, // 禁用本地搜索
+        stateSave: true, // 刷新时保存状态
+        deferRender: true, // 延迟渲染
+
+        // 语言配置
         language: {
             info: "当前 _START_ 条到 _END_ 条 共 _TOTAL_ 条",
             infoEmpty: "无记录",
@@ -85,6 +100,13 @@ function initDeviceTable() {
                 sortDescending: ": 激活以按降序排序此列"
             }
         },
+
+        // 将设备号存储在行元素的data-deviceno属性中
+        createdRow: function(row, data) {
+            $(row).attr('data-deviceno', data['deviceno']);
+        },
+
+        // 列定义
         columns: [
             { data: 'deviceno', title: '设备号' },
             { data: 'imei', title: 'IMEI' },
@@ -107,42 +129,122 @@ function initDeviceTable() {
             {
                 data: null,
                 title: '操作',
+                className: 'action-column', // 添加自定义类名，用于CSS样式
+                width: '220px', // 设置列宽
                 render: function(data) {
-                    return '<div class="btn-group" role="group">' +
-                        '<button type="button" class="btn btn-sm btn-outline-primary edit-device" data-deviceno="' + data.deviceno + '">' +
-                        '<i class="fas fa-edit"></i></button>' +
-                        '<button type="button" class="btn btn-sm btn-outline-danger delete-device" data-deviceno="' + data.deviceno + '">' +
-                        '<i class="fas fa-trash-alt"></i></button>' +
-                        '<button type="button" class="btn btn-sm btn-outline-info manage-users" data-deviceno="' + data.deviceno + '">' +
-                        '<i class="fas fa-users"></i></button>' +
-                        '</div>';
+                    return `
+                        <button class="btn btn-outline-primary btn-rounded edit-device"
+                          data-deviceno="${data.deviceno}"
+                          data-bs-toggle="tooltip" data-bs-placement="top" title="编辑设备">
+                          <i class="fas fa-pen"></i>
+                        </button>
+                        <button class="btn btn-outline-primary btn-rounded toggle-device"
+                          data-deviceno="${data.deviceno}"
+                          data-bs-toggle="tooltip" data-bs-placement="top" title="启禁设备">
+                          <i class="fas fa-toggle-on"></i>
+                        </button>
+                        <button class="btn btn-outline-primary btn-rounded manage-users"
+                          data-deviceno="${data.deviceno}"
+                          data-bs-toggle="tooltip" data-bs-placement="top" title="管理用户">
+                          <i class="fas fa-users"></i>
+                        </button>
+                        <button class="btn btn-outline-danger btn-rounded delete-device"
+                          data-deviceno="${data.deviceno}"
+                          data-bs-toggle="tooltip" data-bs-placement="top" title="删除设备">
+                          <i class="fas fa-trash"></i>
+                        </button>
+                    `;
                 }
             }
         ],
-        order: [[5, 'desc']]
+        order: [[5, 'desc']] // 按创建时间降序排序
     });
 
     // 编辑设备按钮点击事件
     $('#table-device').on('click', '.edit-device', function() {
-        const deviceNo = $(this).data('deviceno');
-        loadDeviceDetail(deviceNo);
+        // 获取当前行数据
+        const row = $(this).closest('tr');
+        const rowData = deviceTable.row(row).data();
+
+        if (rowData && rowData.deviceno) {
+            loadDeviceDetail(String(rowData.deviceno));
+        } else {
+            // 尝试从按钮的 data 属性获取
+            const deviceNo = $(this).data('deviceno');
+            if (deviceNo) {
+                loadDeviceDetail(String(deviceNo));
+            } else {
+                showWarningToast('无法获取设备信息！');
+            }
+        }
     });
 
     // 删除设备按钮点击事件
     $('#table-device').on('click', '.delete-device', function() {
-        const deviceNo = $(this).data('deviceno');
-        delType = 'device';
-        delId = deviceNo;
-        $('#del-confirm').modal('show');
+        // 获取当前行数据
+        const row = $(this).closest('tr');
+        const rowData = deviceTable.row(row).data();
+
+        if (rowData && rowData.deviceno) {
+            delType = 'device';
+            delId = String(rowData.deviceno);
+            $('#del-confirm').modal('show');
+        } else {
+            // 尝试从按钮的 data 属性获取
+            const deviceNo = $(this).data('deviceno');
+            if (deviceNo) {
+                delType = 'device';
+                delId = String(deviceNo);
+                $('#del-confirm').modal('show');
+            } else {
+                showWarningToast('无法获取设备信息！');
+            }
+        }
     });
 
     // 管理用户按钮点击事件
     $('#table-device').on('click', '.manage-users', function() {
-        const deviceNo = $(this).data('deviceno');
-        currentDeviceNo = deviceNo;
-        $('#device-users-deviceNo').text(deviceNo);
-        loadDeviceUsers(deviceNo);
-        $('#modal-device-users').modal('show');
+        // 获取当前行数据
+        const row = $(this).closest('tr');
+        const rowData = deviceTable.row(row).data();
+
+        if (rowData && rowData.deviceno) {
+            const deviceNo = String(rowData.deviceno);
+            currentDeviceNo = deviceNo;
+            $('#device-users-deviceNo').text(deviceNo);
+            loadDeviceUsers(deviceNo);
+            $('#modal-device-users').modal('show');
+        } else {
+            // 尝试从按钮的 data 属性获取
+            const deviceNo = $(this).data('deviceno');
+            if (deviceNo) {
+                currentDeviceNo = String(deviceNo);
+                $('#device-users-deviceNo').text(deviceNo);
+                loadDeviceUsers(String(deviceNo));
+                $('#modal-device-users').modal('show');
+            } else {
+                showWarningToast('无法获取设备信息！');
+            }
+        }
+    });
+
+    // 启用/禁用设备按钮点击事件
+    $('#table-device').on('click', '.toggle-device', function() {
+        // 获取当前行数据
+        const row = $(this).closest('tr');
+        const rowData = deviceTable.row(row).data();
+
+        if (rowData && rowData.deviceno) {
+            toggleDeviceStatus(String(rowData.deviceno));
+        } else {
+            // 尝试从按钮的 data 属性获取
+            const deviceNo = $(this).data('deviceno');
+            if (deviceNo) {
+                toggleDeviceStatus(String(deviceNo));
+            } else {
+                showWarningToast('无法获取设备信息！');
+            }
+        }
     });
 }
 
@@ -161,12 +263,48 @@ function loadDeviceData() {
         success: function(response) {
             if (response && response.length > 0 && response[0].Alert) {
                 showWarningToast(response[0].Alert);
+            } else if (response && response.data) {
+                if (response.data.length === 0) {
+                    showWarningToast('未查询到设备数据！');
+                } else {
+                    const processedData = response.data.map(item => {
+                        if (item.deviceno !== undefined) {
+                            item.deviceno = String(item.deviceno);
+                        }
+                        return item;
+                    });
+                    deviceTable.clear().rows.add(processedData).draw();
+                }
+            } else if (Array.isArray(response)) {
+                if (response.length === 0) {
+                    showWarningToast('未查询到设备数据！');
+                } else {
+                    const processedData = response.map(item => {
+                        if (item.deviceno !== undefined) {
+                            item.deviceno = String(item.deviceno);
+                        }
+                        return item;
+                    });
+                    deviceTable.clear().rows.add(processedData).draw();
+                }
             } else {
-                deviceTable.clear().rows.add(response).draw();
+                showWarningToast('数据格式错误！');
+                console.error('未知的响应格式:', response);
             }
         },
-        error: function() {
-            showWarningToast('加载设备数据失败！');
+        error: function(xhr, _, error) {
+            try {
+                const errorResponse = xhr.responseJSON || JSON.parse(xhr.responseText);
+                if (errorResponse && errorResponse.length > 0 && errorResponse[0].Alert) {
+                    showWarningToast(errorResponse[0].Alert);
+                } else if (errorResponse && errorResponse.message) {
+                    showWarningToast(errorResponse.message);
+                } else {
+                    showWarningToast('加载设备数据失败: ' + error);
+                }
+            } catch (e) {
+                showWarningToast('加载设备数据失败: ' + error);
+            }
         }
     });
 }
@@ -176,17 +314,60 @@ function loadDeviceData() {
  * @param {string} deviceNo - 设备号
  */
 function loadDeviceDetail(deviceNo) {
-    const devices = deviceTable.data().toArray();
-    const device = devices.find(d => d.deviceno === deviceNo);
+    try {
+        if (!deviceNo) {
+            showWarningToast('设备号不能为空！');
+            return;
+        }
 
-    if (device) {
-        $('#edit-deviceNo').val(device.deviceno);
-        $('#edit-imei').val(device.imei);
-        $('#edit-simNo').val(device.simno);
-        $('#edit-remark').val(device.remark);
-        $('#edit-enable').prop('checked', device.enable);
+        // 直接从服务器获取设备详情，而不是从表格中获取
+        $.ajax({
+            url: '/device',
+            type: 'GET',
+            data: {
+                deviceNo: deviceNo
+            },
+            success: function(response) {
+                let deviceData = null;
 
-        $('#modal-device-edit').modal('show');
+                // 处理不同格式的响应
+                if (response && response.data && Array.isArray(response.data) && response.data.length > 0) {
+                    deviceData = response.data[0];
+                } else if (Array.isArray(response) && response.length > 0) {
+                    deviceData = response[0];
+                }
+
+                if (deviceData) {
+                    // 设置编辑表单的值
+                    $('#edit-deviceNo').val(deviceData.deviceno);
+                    $('#edit-imei').val(deviceData.imei || '');
+                    $('#edit-simNo').val(deviceData.simno || '');
+                    $('#edit-remark').val(deviceData.remark || '');
+                    $('#edit-enable').prop('checked', deviceData.enable === true);
+
+                    // 显示编辑模态框
+                    $('#modal-device-edit').modal('show');
+                } else {
+                    showWarningToast('未找到设备详情！');
+                }
+            },
+            error: function(xhr, _, error) {
+                try {
+                    const errorResponse = xhr.responseJSON || JSON.parse(xhr.responseText);
+                    if (errorResponse && errorResponse.length > 0 && errorResponse[0].Alert) {
+                        showWarningToast(errorResponse[0].Alert);
+                    } else if (errorResponse && errorResponse.message) {
+                        showWarningToast(errorResponse.message);
+                    } else {
+                        showWarningToast('加载设备详情失败: ' + error);
+                    }
+                } catch (e) {
+                    showWarningToast('加载设备详情失败: ' + error);
+                }
+            }
+        });
+    } catch (error) {
+        showWarningToast('加载设备详情失败！');
     }
 }
 
@@ -229,8 +410,19 @@ function addDevice() {
                 }
             }
         },
-        error: function() {
-            showWarningToast('添加设备失败！');
+        error: function(xhr, _, error) {
+            try {
+                const errorResponse = xhr.responseJSON || JSON.parse(xhr.responseText);
+                if (errorResponse && errorResponse.length > 0 && errorResponse[0].Alert) {
+                    showWarningToast(errorResponse[0].Alert);
+                } else if (errorResponse && errorResponse.message) {
+                    showWarningToast(errorResponse.message);
+                } else {
+                    showWarningToast('添加设备失败: ' + error);
+                }
+            } catch (e) {
+                showWarningToast('添加设备失败: ' + error);
+            }
         }
     });
 }
@@ -267,8 +459,19 @@ function editDevice() {
                 }
             }
         },
-        error: function() {
-            showWarningToast('更新设备失败！');
+        error: function(xhr, _, error) {
+            try {
+                const errorResponse = xhr.responseJSON || JSON.parse(xhr.responseText);
+                if (errorResponse && errorResponse.length > 0 && errorResponse[0].Alert) {
+                    showWarningToast(errorResponse[0].Alert);
+                } else if (errorResponse && errorResponse.message) {
+                    showWarningToast(errorResponse.message);
+                } else {
+                    showWarningToast('更新设备失败: ' + error);
+                }
+            } catch (e) {
+                showWarningToast('更新设备失败: ' + error);
+            }
         }
     });
 }
@@ -291,8 +494,19 @@ function deleteDevice(deviceNo) {
                 }
             }
         },
-        error: function() {
-            showWarningToast('删除设备失败！');
+        error: function(xhr, _, error) {
+            try {
+                const errorResponse = xhr.responseJSON || JSON.parse(xhr.responseText);
+                if (errorResponse && errorResponse.length > 0 && errorResponse[0].Alert) {
+                    showWarningToast(errorResponse[0].Alert);
+                } else if (errorResponse && errorResponse.message) {
+                    showWarningToast(errorResponse.message);
+                } else {
+                    showWarningToast('删除设备失败: ' + error);
+                }
+            } catch (e) {
+                showWarningToast('删除设备失败: ' + error);
+            }
         }
     });
 }
@@ -310,23 +524,48 @@ function loadDeviceUsers(deviceNo) {
                 showWarningToast(response[0].Alert);
             } else {
                 let html = '';
-                response.forEach(function(user) {
-                    html += '<tr>' +
-                        '<td>' + user.id + '</td>' +
-                        '<td>' + user.userid + '</td>' +
-                        '<td>' + user.loginname + '</td>' +
-                        '<td>' + user.username + '</td>' +
-                        '<td>' +
-                        '<button type="button" class="btn btn-sm btn-outline-danger unassign-user" data-id="' + user.id + '">' +
-                        '<i class="fas fa-user-minus"></i></button>' +
-                        '</td>' +
-                        '</tr>';
-                });
-                $('#device-users-body').html(html);
+                try {
+                    let userData = Array.isArray(response) ? response :
+                                  (response && response.data && Array.isArray(response.data) ? response.data : []);
+
+                    if (userData.length === 0) {
+                        showWarningToast('该设备未分配用户！');
+                        $('#device-users-body').html('');
+                        return;
+                    }
+
+                    userData.forEach(function(user) {
+                        html += '<tr>' +
+                            '<td>' + user.id + '</td>' +
+                            '<td>' + user.userid + '</td>' +
+                            '<td>' + user.loginname + '</td>' +
+                            '<td>' + user.username + '</td>' +
+                            '<td>' +
+                            '<button type="button" class="btn btn-sm btn-outline-danger unassign-user" data-id="' + user.id + '">' +
+                            '<i class="fas fa-user-minus"></i></button>' +
+                            '</td>' +
+                            '</tr>';
+                    });
+                    $('#device-users-body').html(html);
+                } catch (error) {
+                    showWarningToast('处理设备用户数据失败！');
+                    $('#device-users-body').html('');
+                }
             }
         },
-        error: function() {
-            showWarningToast('加载设备用户失败！');
+        error: function(xhr, _, error) {
+            try {
+                const errorResponse = xhr.responseJSON || JSON.parse(xhr.responseText);
+                if (errorResponse && errorResponse.length > 0 && errorResponse[0].Alert) {
+                    showWarningToast(errorResponse[0].Alert);
+                } else if (errorResponse && errorResponse.message) {
+                    showWarningToast(errorResponse.message);
+                } else {
+                    showWarningToast('加载设备用户失败: ' + error);
+                }
+            } catch (e) {
+                showWarningToast('加载设备用户失败: ' + error);
+            }
         }
     });
 }
@@ -346,15 +585,29 @@ function loadUserList() {
                 showWarningToast(response[0].Alert);
             } else {
                 let html = '<option value="" selected disabled>请选择用户</option>';
-                response.forEach(function(user) {
+                let userData = Array.isArray(response) ? response :
+                              (response && response.data && Array.isArray(response.data) ? response.data : []);
+
+                userData.forEach(function(user) {
                     html += '<option value="' + user.id + '" data-loginname="' + user.loginname + '">' +
                         user.username + ' (' + user.loginname + ')</option>';
                 });
                 $('#user-select').html(html);
             }
         },
-        error: function() {
-            showWarningToast('加载用户列表失败！');
+        error: function(xhr, _, error) {
+            try {
+                const errorResponse = xhr.responseJSON || JSON.parse(xhr.responseText);
+                if (errorResponse && errorResponse.length > 0 && errorResponse[0].Alert) {
+                    showWarningToast(errorResponse[0].Alert);
+                } else if (errorResponse && errorResponse.message) {
+                    showWarningToast(errorResponse.message);
+                } else {
+                    showWarningToast('加载用户列表失败: ' + error);
+                }
+            } catch (e) {
+                showWarningToast('加载用户列表失败: ' + error);
+            }
         }
     });
 }
@@ -381,18 +634,45 @@ function addDeviceUser() {
             userLoginName: userLoginName
         }),
         success: function(response) {
+            // 关闭模态框
+            $('#modal-add-device-user').modal('hide');
+
+            // 根据返回信息显示不同的提示
             if (response && response.length > 0 && response[0].Alert) {
-                if (response[0].Alert === '设备分配成功！') {
-                    showSuccessToast(response[0].Alert);
-                    $('#modal-add-device-user').modal('hide');
-                    loadDeviceUsers(currentDeviceNo);
+                const alertMessage = response[0].Alert;
+
+                // 检查是否包含"成功"关键字
+                if (alertMessage.includes('成功')) {
+                    showSuccessToast(alertMessage);
                 } else {
-                    showWarningToast(response[0].Alert);
+                    // 显示API返回的错误信息
+                    showWarningToast(alertMessage);
                 }
+
+                // 无论成功还是失败，都刷新用户列表，因为操作可能已经成功
+                setTimeout(function() {
+                    loadDeviceUsers(currentDeviceNo);
+                }, 500);
+            } else {
+                // 没有明确的消息，显示通用成功信息
+                showSuccessToast('操作已完成');
+                loadDeviceUsers(currentDeviceNo);
             }
         },
-        error: function() {
-            showWarningToast('分配设备失败！');
+        error: function(xhr, _, error) {
+            // 尝试解析错误响应
+            try {
+                const errorResponse = xhr.responseJSON || JSON.parse(xhr.responseText);
+                if (errorResponse && errorResponse.length > 0 && errorResponse[0].Alert) {
+                    showWarningToast(errorResponse[0].Alert);
+                } else if (errorResponse && errorResponse.message) {
+                    showWarningToast(errorResponse.message);
+                } else {
+                    showWarningToast('分配设备失败: ' + error);
+                }
+            } catch (e) {
+                showWarningToast('分配设备失败: ' + error);
+            }
         }
     });
 }
@@ -407,16 +687,39 @@ function unassignDeviceUser(id) {
         type: 'DELETE',
         success: function(response) {
             if (response && response.length > 0 && response[0].Alert) {
-                if (response[0].Alert === '设备取消分配成功！') {
-                    showSuccessToast(response[0].Alert);
-                    loadDeviceUsers(currentDeviceNo);
+                const alertMessage = response[0].Alert;
+
+                // 检查是否包含"成功"关键字
+                if (alertMessage.includes('成功')) {
+                    showSuccessToast(alertMessage);
                 } else {
-                    showWarningToast(response[0].Alert);
+                    // 显示API返回的错误信息
+                    showWarningToast(alertMessage);
                 }
+
+                // 无论成功还是失败，都刷新用户列表，因为操作可能已经成功
+                setTimeout(function() {
+                    loadDeviceUsers(currentDeviceNo);
+                }, 500);
+            } else {
+                // 没有明确的消息，显示通用成功信息
+                showSuccessToast('操作已完成');
+                loadDeviceUsers(currentDeviceNo);
             }
         },
-        error: function() {
-            showWarningToast('取消分配设备失败！');
+        error: function(xhr, _, error) {
+            try {
+                const errorResponse = xhr.responseJSON || JSON.parse(xhr.responseText);
+                if (errorResponse && errorResponse.length > 0 && errorResponse[0].Alert) {
+                    showWarningToast(errorResponse[0].Alert);
+                } else if (errorResponse && errorResponse.message) {
+                    showWarningToast(errorResponse.message);
+                } else {
+                    showWarningToast('取消分配设备失败: ' + error);
+                }
+            } catch (e) {
+                showWarningToast('取消分配设备失败: ' + error);
+            }
         }
     });
 }
@@ -428,5 +731,78 @@ $(document).on('click', '.unassign-user', function() {
     delId = id;
     $('#del-confirm').modal('show');
 });
+
+/**
+ * 切换设备状态（启用/禁用）
+ * @param {string} deviceNo - 设备号
+ */
+function toggleDeviceStatus(deviceNo) {
+    // 显示加载中提示
+    showInfoToast('正在处理，请稍候...');
+
+    $.ajax({
+        url: '/device/toggle',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            deviceNo: deviceNo
+        }),
+        timeout: 10000, // 10秒超时
+        success: function(response) {
+            if (response && response.length > 0 && response[0].Alert) {
+                const alertMessage = response[0].Alert;
+
+                // 检查是否包含"成功"关键字
+                if (alertMessage.includes('成功')) {
+                    showSuccessToast(alertMessage);
+                } else {
+                    // 显示API返回的具体错误信息
+                    showErrorToast(alertMessage);
+                }
+
+                // 刷新设备列表
+                loadDeviceData();
+            } else {
+                // 没有明确的消息，显示通用成功信息
+                showSuccessToast('操作已完成');
+                loadDeviceData();
+            }
+        },
+        error: function(xhr, textStatus, error) {
+            try {
+                // 处理不同类型的错误
+                if (textStatus === 'timeout') {
+                    showErrorToast('请求超时，请检查网络连接后重试');
+                } else if (xhr.status === 0) {
+                    showErrorToast('无法连接到服务器，请检查网络连接');
+                } else if (xhr.status === 403) {
+                    showErrorToast('权限不足，无法执行此操作');
+                } else if (xhr.status === 404) {
+                    // 404错误特殊处理，提供更详细的信息
+                    showErrorToast('API路径错误，请联系管理员');
+                } else if (xhr.status === 400) {
+                    showErrorToast('请求参数错误，请检查设备号格式');
+                } else if (xhr.status === 500) {
+                    showErrorToast('服务器内部错误，请联系管理员');
+                } else {
+                    // 尝试解析错误响应
+                    const errorResponse = xhr.responseJSON || JSON.parse(xhr.responseText);
+                    if (errorResponse && errorResponse.length > 0 && errorResponse[0].Alert) {
+                        showErrorToast(errorResponse[0].Alert);
+                    } else if (errorResponse && errorResponse.message) {
+                        showErrorToast(errorResponse.message);
+                    } else {
+                        showErrorToast('切换设备状态失败: ' + error);
+                    }
+                }
+            } catch (e) {
+                showErrorToast('切换设备状态失败: ' + error);
+            } finally {
+                // 无论如何都刷新设备列表，确保显示最新状态
+                loadDeviceData();
+            }
+        }
+    });
+}
 
 // 这些函数已经在utils.js中定义，这里不再重复定义

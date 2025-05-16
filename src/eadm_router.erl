@@ -70,6 +70,7 @@ routes(_Environment) ->
         {"/device/add", fun eadm_device_controller:add/1, #{methods => [post]}},
         {"/device/edit", fun eadm_device_controller:edit/1, #{methods => [post]}},
         {"/device/delete/:deviceNo", fun eadm_device_controller:delete/1, #{methods => [delete]}},
+        {"/device/toggle", fun eadm_device_controller:toggle_status/1, #{methods => [post]}},
         {"/device/assign", fun eadm_device_controller:assign/1, #{methods => [post]}},
         {"/device/unassign/:id", fun eadm_device_controller:unassign/1, #{methods => [delete]}},
         {"/device/users/:deviceNo", fun eadm_device_controller:device_users/1, #{methods => [get]}},
