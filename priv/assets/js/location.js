@@ -45,6 +45,7 @@ AMapLoader.load({
 
     /**
      * 加载用户设备列表
+     * 只加载当前登录账号有权限的、状态为非禁用的设备
      */
     function loadUserDevices() {
         $.ajax({
@@ -55,15 +56,38 @@ AMapLoader.load({
                     showWarningToast(response[0].Alert);
                 } else {
                     let html = '<option value="" selected>全部设备</option>';
-                    response.forEach(function(device) {
-                        let deviceName = device.remark ? device.remark : device.deviceno;
-                        html += '<option value="' + device.deviceno + '">' + deviceName + '</option>';
+
+                    // 检查响应格式并提取设备数据
+                    let deviceData = [];
+                    if (Array.isArray(response)) {
+                        deviceData = response;
+                    } else if (response && response.data && Array.isArray(response.data)) {
+                        deviceData = response.data;
+                    }
+
+                    if (deviceData.length === 0) {
+                        showWarningToast("未找到可用设备！");
+                    }
+
+                    // 生成设备选项，只显示设备号
+                    deviceData.forEach(function(device) {
+                        html += '<option value="' + device.deviceno + '">' + device.deviceno + '</option>';
                     });
+
                     $('#deviceSelect').html(html);
                 }
             },
-            error: function() {
-                showWarningToast("加载设备列表失败！");
+            error: function(xhr, _, error) {
+                try {
+                    const errorResponse = xhr.responseJSON || JSON.parse(xhr.responseText);
+                    if (errorResponse && errorResponse.length > 0 && errorResponse[0].Alert) {
+                        showWarningToast(errorResponse[0].Alert);
+                    } else {
+                        showWarningToast("加载设备列表失败：" + error);
+                    }
+                } catch (e) {
+                    showWarningToast("加载设备列表失败！");
+                }
             }
         });
     }
@@ -82,22 +106,45 @@ AMapLoader.load({
         toastList.forEach(toast => toast.show());
     }
 
+    /**
+     * 加载位置数据
+     * @param {Function} callback - 回调函数，用于处理返回的位置数据
+     */
     function loadLocationData(callback) {
-        // API获取定位信息
+        // 获取查询参数
+        const startTime = $('#starttime').val();
+        const endTime = $('#endtime').val();
+        const deviceNo = $('#deviceSelect').val() || '';
+
+        // 验证参数
+        if (!startTime || !endTime) {
+            showWarningToast("请选择开始和结束时间！");
+            callback([]);
+            return;
+        }
+
+        // 构建查询参数
         const searchParams = {
-            startTime: $('#starttime').val(),
-            endTime: $('#endtime').val(),
-            deviceNo: $('#deviceSelect').val() || ''
+            startTime: startTime,
+            endTime: endTime,
+            deviceNo: deviceNo
         };
+
+        // 发送请求获取位置数据
         $.ajaxSetup({async:false});
         $.getJSON('/location', searchParams, function (mapsData) {
-            // console.log("mapsData: ", JSON.stringify(mapsData));
             if (mapsData && mapsData.length > 0 && mapsData[0].Alert) {
                 showWarningToast(mapsData[0].Alert);
                 callback([]); // 如果有警报，回调函数返回空数组
+            } else if (Array.isArray(mapsData) && mapsData.length > 0) {
+                callback(mapsData); // 回调函数返回地图数据
             } else {
-                callback(mapsData); // 否则，回调函数返回地图数据
+                showWarningToast("未查询到轨迹数据！");
+                callback([]);
             }
+        }).fail(function(_, _, error) {
+            showWarningToast("查询轨迹数据失败：" + error);
+            callback([]);
         });
     }
 
@@ -218,25 +265,39 @@ AMapLoader.load({
         // 初始化日期时间选择器
         $('#starttime').datetimepicker({
             format: 'Y-m-d H:i:s',
-            step: 10
+            step: 10,
+            defaultDate: new Date(new Date().setHours(0, 0, 0, 0)), // 默认为今天的开始时间
+            defaultTime: '00:00:00'
         });
         $('#endtime').datetimepicker({
             format: 'Y-m-d H:i:s',
-            step: 10
+            step: 10,
+            defaultDate: new Date(), // 默认为当前时间
+            defaultTime: new Date().toTimeString().slice(0, 8)
         });
+
+        // 设置默认时间值
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        $('#starttime').val(formatDateTime(today));
+        $('#endtime').val(formatDateTime(now));
 
         // 加载用户设备列表
         loadUserDevices();
 
         // 开始回放按钮点击事件
         $('#start').click(function() {
+            if (!validateInputs()) return;
+
             loadLocationData(function (data){
                 reloadCarReplay(data);
             });
         });
 
-        // 查询按钮点击事件
+        // 查询按钮点击事件（如果页面上有这个按钮）
         $('#searchLocation').click(function() {
+            if (!validateInputs()) return;
+
             loadLocationData(function (data){
                 reloadCarReplay(data);
             });
@@ -248,7 +309,53 @@ AMapLoader.load({
             $('#endtime').val('');
             $('#deviceSelect').val('');
         });
+
+        // 设备选择变更事件
+        $('#deviceSelect').change(function() {
+            // 如果有其他需要根据设备选择更新的UI元素，可以在这里处理
+        });
     })
+
+    /**
+     * 验证输入参数
+     * @returns {boolean} 验证结果
+     */
+    function validateInputs() {
+        const startTime = $('#starttime').val();
+        const endTime = $('#endtime').val();
+
+        if (!startTime || !endTime) {
+            showWarningToast("请选择开始和结束时间！");
+            return false;
+        }
+
+        // 可以添加更多验证逻辑，如时间范围检查等
+
+        return true;
+    }
+
+    /**
+     * 格式化日期时间
+     * @param {Date} date - 日期对象
+     * @returns {string} - 格式化后的日期时间字符串
+     */
+    function formatDateTime(date) {
+        return date.getFullYear() + '-' +
+               padZero(date.getMonth() + 1) + '-' +
+               padZero(date.getDate()) + ' ' +
+               padZero(date.getHours()) + ':' +
+               padZero(date.getMinutes()) + ':' +
+               padZero(date.getSeconds());
+    }
+
+    /**
+     * 数字补零
+     * @param {number} num - 数字
+     * @returns {string} - 补零后的字符串
+     */
+    function padZero(num) {
+        return num < 10 ? '0' + num : num;
+    }
 
 })
 .catch((e) => {
