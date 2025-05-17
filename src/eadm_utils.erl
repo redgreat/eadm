@@ -21,7 +21,7 @@
 -export([as_map/1, as_map/3, return_as_map/1, return_as_map/2, return_as_json/1, return_as_json/2,
     validate_date_time/1, time_diff/2, utc_to_cts/1, cts_to_utc/1, pass_encrypt/1, validate_login/2, verify_password/2,
     current_date_binary/0, yesterday_date_binary/0, lastyear_date_binary/0, parse_date_time/1, pg_as_map/2, pg_as_json/2,
-    convert_to_array/1, pg_as_jsonmap/1, pg_as_jsondata/1, pg_as_list/1, binary_to_float/1, log_info/1]).
+    convert_to_array/1, pg_as_jsonmap/1, pg_as_jsondata/1, pg_as_list/1, binary_to_float/1, log_info/1, parse_time/1]).
 
 %%====================================================================
 %% API 函数
@@ -361,3 +361,23 @@ log_info(Message) when is_binary(Message) ->
     log_info(binary_to_list(Message));
 log_info(Message) ->
     log_info(io_lib:format("~p", [Message])).
+
+%% @doc
+%% 解析时间字符串为 {Hour, Minute, Second} 格式或 unlimited
+%% 用于 ecron 任务的时间解析
+%% @end
+parse_time(null) -> unlimited;
+parse_time(undefined) -> unlimited;
+parse_time(<<>>) -> unlimited;
+parse_time(TimeBin) when is_binary(TimeBin) ->
+    try
+        % 尝试解析时间字符串，格式为 "YYYY-MM-DD HH:MM:SS"
+        [_DateStr, TimeStr] = binary:split(TimeBin, <<" ">>),
+        [HourStr, MinStr, SecStr] = binary:split(TimeStr, <<":">>, [global]),
+        {binary_to_integer(HourStr), binary_to_integer(MinStr), binary_to_integer(SecStr)}
+    catch
+        _:_ ->
+            lager:info("无法解析时间字符串: ~p，使用默认值 unlimited", [TimeBin]),
+            unlimited
+    end;
+parse_time(_) -> unlimited.

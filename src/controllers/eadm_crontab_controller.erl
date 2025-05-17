@@ -25,28 +25,83 @@
 %% 初始化函数，启动时调用
 %% @end
 init() ->
-    application:ensure_all_started(ecron),
+    % 确保 ecron 应用已启动
+    StartResult = application:ensure_all_started(ecron),
+    case StartResult of
+        {ok, _} ->
+            lager:info("ecron 应用启动成功");
+        {error, StartError} ->
+            lager:error("ecron 应用启动失败: ~p", [StartError]),
+            % 尝试直接启动 ecron
+            application:start(ecron)
+    end,
+
+    % 等待一段时间确保 ecron 完全初始化
+    timer:sleep(1000),
+
     try
         % 从数据库加载所有激活的定时任务
-        {ok, _, ResData} = eadm_pgpool:equery(pool_pg,
+        case eadm_pgpool:equery(pool_pg,
             "select id, cronname, cronexp, cronmfa, starttime, endtime
              from eadm_crontab
              where cronstatus = 0
-              and deleted = false;", []),
-        #{data := Jobs} = eadm_utils:pg_as_json([], ResData),
-        lists:foreach(fun(Job) ->
-            try
-                schedule_job(Job)
-            catch
-                _:ErrorReason:_ ->
-                    lager:error("初始化任务失败: ~p~n任务数据: ~p",
-                               [ErrorReason, Job])
-            end
-        end, Jobs),
+              and deleted is false;", []) of
+            {ok, Columns, ResData} ->
+                % 转换查询结果为 JSON 格式
+                JsonResult = eadm_utils:pg_as_json(Columns, ResData),
+                case JsonResult of
+                    #{data := Jobs} when is_list(Jobs), length(Jobs) > 0 ->
+                        lager:info("找到 ~p 个需要初始化的定时任务", [length(Jobs)]),
+                        lists:foreach(fun(Job) ->
+                            try
+                                % 先尝试删除可能存在的旧任务
+                                Id = maps:get(<<"id">>, Job, <<"">>),
+                                CronName = maps:get(<<"cronname">>, Job, <<"未知任务">>),
+                                lager:info("正在初始化任务: ~p (ID: ~p)", [CronName, Id]),
+
+                                JobId = try list_to_atom("job_" ++ binary_to_list(Id)) catch _:_ -> undefined end,
+                                if
+                                    JobId =/= undefined ->
+                                        try
+                                            ecron:delete(JobId),
+                                            lager:info("已删除可能存在的旧任务: ~p", [JobId])
+                                        catch
+                                            ErrorType:ErrorReason ->
+                                                lager:info("删除旧任务时出现异常(可忽略): ~p:~p", [ErrorType, ErrorReason])
+                                        end;
+                                    true -> ok
+                                end,
+
+                                % 调度新任务
+                                ScheduleResult = schedule_job(Job),
+                                case ScheduleResult of
+                                    {ok, _} ->
+                                        lager:info("任务 ~p 初始化成功", [CronName]);
+                                    {error, ScheduleError} ->
+                                        lager:error("任务 ~p 初始化失败: ~p", [CronName, ScheduleError]);
+                                    OtherResult ->
+                                        lager:info("任务 ~p 初始化结果: ~p", [CronName, OtherResult])
+                                end
+                            catch
+                                InitErrorType:InitErrorReason:InitStacktrace ->
+                                    lager:error("初始化任务失败: ~p:~p~n~p~n任务数据: ~p",
+                                               [InitErrorType, InitErrorReason, InitStacktrace, Job])
+                            end
+                        end, Jobs);
+                    #{data := []} ->
+                        lager:info("没有找到需要初始化的定时任务");
+                    _ ->
+                        lager:error("解析任务数据失败: ~p", [JsonResult])
+                end;
+            {error, Error} ->
+                lager:error("查询定时任务失败: ~p", [Error]);
+            Other ->
+                lager:error("查询定时任务返回未知结果: ~p", [Other])
+        end,
         ok
     catch
-        _:ErrorReason:_ ->
-            lager:error("从数据库加载任务失败: ~p", [ErrorReason]),
+        ErrorType:ErrorReason:Stacktrace ->
+            lager:error("从数据库加载任务失败: ~p:~p~n~p", [ErrorType, ErrorReason, Stacktrace]),
             ok
     end.
 
@@ -55,9 +110,12 @@ init() ->
 %% @end
 schedule_job(#{<<"id">> := Id, <<"cronexp">> := CronExp, <<"cronmfa">> := CronMFA} = Job) ->
     try
+        % 创建唯一的任务ID
         JobId = list_to_atom("job_" ++ binary_to_list(Id)),
-        StartTime = maps:get(<<"starttime">>, Job, undefined),
-        EndTime = maps:get(<<"endtime">>, Job, undefined),
+
+        % 获取开始和结束时间
+        StartTime = eadm_utils:parse_time(maps:get(<<"starttime">>, Job, undefined)),
+        EndTime = eadm_utils:parse_time(maps:get(<<"endtime">>, Job, undefined)),
 
         % 解析 Erlang M:F/A 格式的字符串
         [ModStr, FunStr, ArgsStr] = binary:split(CronMFA, [<<":">>, <<"/">>], [global]),
@@ -85,22 +143,18 @@ schedule_job(#{<<"id">> := Id, <<"cronexp">> := CronExp, <<"cronmfa">> := CronMF
                                     lager:error("任务执行失败: ~p:~p~n~p", [ErrorType, ErrorReason, Stacktrace])
                             end
                         end,
-                        Options = [{id, JobId}, {start_time, StartTime}, {end_time, EndTime}],
-                        try
-                            % 尝试使用 ecron:create 函数
-                            ecron:create(JobId, CronExp, JobFun, Options)
-                        catch
-                            _:_ ->
-                                % 如果 create 函数不存在，尝试使用 ecron:add 函数
-                                try
-                                    ecron:add(JobId, CronExp, JobFun, Options)
-                                catch
-                                    _:_ ->
-                                        % 如果 add 函数也不存在，记录错误
-                                        lager:error("无法添加任务，ecron 模块可能不支持 create 或 add 函数"),
-                                        {error, ecron_function_not_found}
-                                end
-                        end;
+
+                        % 使用 ecron 的最新 API
+                        Options = #{
+                            start_time => StartTime,
+                            end_time => EndTime,
+                            singleton => true  % 防止任务重复执行
+                        },
+
+                        % 尝试创建任务
+                        Result = ecron:create(JobId, binary_to_list(CronExp), {erlang, apply, [JobFun, []]}, Options),
+                        lager:info("任务 ~p 创建结果: ~p", [JobId, Result]),
+                        Result;
                     false ->
                         lager:error("函数不存在: ~p:~p/~p", [Mod, Fun, length(Args)]),
                         {error, function_not_found}
