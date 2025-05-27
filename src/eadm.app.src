@@ -11,7 +11,8 @@
     nova,
     epgsql,
     poolboy,
-    lager
+    lager,
+    ecron
    ]},
   {env,[]},
   {modules, []},
