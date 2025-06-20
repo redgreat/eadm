@@ -279,7 +279,7 @@ lastyear_date_binary() ->
 %% 密码加密.
 %% @end
 pass_encrypt(PassBin) ->
-    SecretKey = application:get_env(nova, secret_key, <<>>),
+    SecretKey = application:get_env(eadm, secret_key, <<>>),
     EncryptPwd = crypto:hash(sha256, <<SecretKey/binary, PassBin/binary>>),
     base64:encode(EncryptPwd).
 
@@ -314,7 +314,7 @@ validate_login(LoginName, Password) ->
 %% 密码加密解密-验证密码
 %% @end
 verify_password(Pwd, DbPwd) ->
-    SecretKey = application:get_env(nova, secret_key, <<>>),
+    SecretKey = application:get_env(eadm, secret_key, <<>>),
     HPwd = crypto:hash(sha256, <<SecretKey/binary, Pwd/binary>>),
     DbPwdBin = base64:decode(DbPwd),
     HPwd =:= DbPwdBin.

@@ -1,12 +1,11 @@
-%%%-------------------------------------------------------------------
 %%% @author wangcw
 %%% @copyright (C) 2024, REDGREAT
 %%% @doc
 %%%
-%%% 用户信息逻辑处理
+%%% 基于mnesia数据库的用户信息逻辑处理
 %%%
 %%% @end
-%%% Created : 2024-03-20 16:20:17
+%%% Created : 2024-12-19
 %%%-------------------------------------------------------------------
 -module(eadm_user_controller).
 -author("wangcw").
@@ -39,11 +38,14 @@ index(#{auth_data := #{<<"authed">> := false}}) ->
 %% @end
 search(#{auth_data := #{<<"authed">> := true, <<"permission">> := #{<<"usermanage">> := true}}}) ->
     try
-        {ok, Res_Col, Res_Data} = eadm_pgpool:equery(pool_pg,
-            "select id, tenantname, loginname, username, email, userstatus, createdat
-            from vi_user order by createdat;", []),
-        Response = eadm_utils:pg_as_json(Res_Col, Res_Data),
-        {json, Response}
+        case eadm_mnesia:list_users() of
+            {ok, Users} ->
+                Response = format_users_response(Users),
+                {json, Response};
+            {error, Reason} ->
+                lager:error("用户查询失败：~p~n", [Reason]),
+                {json, [#{<<"Alert">> => unicode:characters_to_binary("用户查询失败！", utf8)}]}
+        end
     catch
         _:Error ->
             lager:error("用户查询失败：~p~n", [Error]),
@@ -71,12 +73,16 @@ add(#{auth_data := #{<<"authed">> := true, <<"loginname">> := CreatedUser,
                         case re:run(Email, "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$") of
                             {match, _} ->
                                 CryptoGram = eadm_utils:pass_encrypt(PassWord),
-                                eadm_pgpool:equery(pool_pg, "insert into eadm_user(tenantid, loginname, username, email, passwd, createduser)
-                                                          values('et0000000002', $1, $2, $3, $4, $5);",
-                                                          [LoginName, UserName, Email, CryptoGram, CreatedUser]),
-                                A = unicode:characters_to_binary("用户【", utf8),
-                                B = unicode:characters_to_binary("】新增成功！", utf8),
-                                {json, [#{<<"Alert">> => <<A/binary, UserName/binary, B/binary>>}]};
+                                UserId = generate_user_id(),
+                                case eadm_mnesia:create_user(LoginName, CryptoGram, Email, UserId) of
+                                    {ok, _User} ->
+                                        A = unicode:characters_to_binary("用户【", utf8),
+                                        B = unicode:characters_to_binary("】新增成功！", utf8),
+                                        {json, [#{<<"Alert">> => <<A/binary, UserName/binary, B/binary>>}]};
+                                    {error, Reason} ->
+                                        lager:error("用户新增失败：~p~n", [Reason]),
+                                        {json, [#{<<"Alert">> => unicode:characters_to_binary("用户新增失败！", utf8)}]}
+                                end;
                             _ ->
                                 A = unicode:characters_to_binary("邮箱【", utf8),
                                 B = unicode:characters_to_binary("】格式错误！", utf8),
@@ -130,17 +136,16 @@ edit(#{auth_data := #{<<"authed">> := true, <<"loginname">> := CreatedUser,
               case re:run(Email, "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$") of
                   {match, _} ->
                       try
-                          eadm_pgpool:equery(pool_pg,
-                                "update eadm_user
-                                set loginname = $1,
-                                username = $2,
-                                email = $3,
-                                updateduser = $4
-                                where id = $5;",
-                              [LoginName, UserName, Email, CreatedUser, UserId]),
-                          A = unicode:characters_to_binary("用户【", utf8),
-                          B = unicode:characters_to_binary("】编辑成功！", utf8),
-                          {json, [#{<<"Alert">> => <<A/binary, UserName/binary, B/binary>>}]}
+                          UpdateFields = [{username, LoginName}, {email, Email}],
+                          case eadm_mnesia:update_user(UserId, UpdateFields) of
+                              {ok, _User} ->
+                                  A = unicode:characters_to_binary("用户【", utf8),
+                                  B = unicode:characters_to_binary("】编辑成功！", utf8),
+                                  {json, [#{<<"Alert">> => <<A/binary, UserName/binary, B/binary>>}]};
+                              {error, Reason} ->
+                                  lager:error("用户编辑失败：~p~n", [Reason]),
+                                  {json, [#{<<"Alert">> => unicode:characters_to_binary("用户编辑失败！", utf8)}]}
+                          end
                       catch
                           _:Error ->
                               lager:error("用户编辑失败：~p~n", [Error]),
@@ -183,17 +188,16 @@ edit(#{auth_data := #{<<"authed">> := false}}) ->
 reset(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
       <<"permission">> := #{<<"usermanage">> := true}},
       bindings := #{<<"userId">> := UserId}}) ->
-    % 重置密码(123456)
     CryptoGram = eadm_utils:pass_encrypt(<<"123456">>),
     lager:info("用户~p重置了密码~n", [LoginName]),
     try
-        eadm_pgpool:equery(pool_pg, "update eadm_user
-                         set updateduser = $1,
-                         updatedat = current_timestamp,
-                         passwd = $2
-                         where id = $3;",
-                         [LoginName, CryptoGram, UserId]),
-        {json, [#{<<"Alert">> => unicode:characters_to_binary("用户密码重置成功！", utf8)}]}
+        case eadm_mnesia:update_user(UserId, [{password, CryptoGram}]) of
+            {ok, _User} ->
+                {json, [#{<<"Alert">> => unicode:characters_to_binary("用户密码重置成功！", utf8)}]};
+            {error, Reason} ->
+                lager:error("用户密码重置失败：~p~n", [Reason]),
+                {json, [#{<<"Alert">> => unicode:characters_to_binary("用户密码重置失败！", utf8)}]}
+        end
     catch
         _:Error ->
             lager:error("用户密码重置失败：~p~n", [Error]),
@@ -207,46 +211,20 @@ reset(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 
 %% @doc
-%% 禁用用户
-%% @end
-disable(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
-      <<"permission">> := #{<<"usermanage">> := true}},
-     bindings := #{<<"userId">> := UserId}}) ->
-    try
-        eadm_pgpool:equery(pool_pg, "update eadm_user
-                                  set userstatus= 1 - userstatus,
-                                      updateduser = $1,
-                                      updatedat = current_timestamp
-                                  where id = $2
-                                    and deleted is false;",
-                                  [LoginName, UserId]),
-        {json, [#{<<"Alert">> => unicode:characters_to_binary("用户启禁用成功！", utf8)}]}
-    catch
-        _:Error ->
-            lager:error("用户操作失败：~p~n", [Error]),
-            {json, [#{<<"Alert">> => unicode:characters_to_binary("用户操作失败！", utf8)}]}
-    end;
-
-disable(#{auth_data := #{<<"permission">> := #{<<"usermanage">> := false}}}) ->
-    {json, [#{<<"Alert">> => unicode:characters_to_binary("API鉴权失败！", utf8)}]};
-
-disable(#{auth_data := #{<<"authed">> := false}}) ->
-    {redirect, "/login"}.
-
-%% @doc
-%% 删除用户数据
+%% 删除用户
 %% @end
 delete(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
-      <<"permission">> := #{<<"usermanage">> := true}},
-    bindings := #{<<"userId">> := UserId}}) ->
+       <<"permission">> := #{<<"usermanage">> := true}},
+       bindings := #{<<"userId">> := UserId}}) ->
+    lager:info("用户~p删除了用户~p~n", [LoginName, UserId]),
     try
-        eadm_pgpool:equery(pool_pg, "update eadm_user
-                                  set deleteduser = $1,
-                                  deletedat = current_timestamp,
-                                  deleted = true
-                                  where id = $2;",
-                                  [LoginName, UserId]),
-        {json, [#{<<"Alert">> => unicode:characters_to_binary("用户删除成功！", utf8)}]}
+        case eadm_mnesia:delete_user(UserId) of
+            ok ->
+                {json, [#{<<"Alert">> => unicode:characters_to_binary("用户删除成功！", utf8)}]};
+            {error, Reason} ->
+                lager:error("用户删除失败：~p~n", [Reason]),
+                {json, [#{<<"Alert">> => unicode:characters_to_binary("用户删除失败！", utf8)}]}
+        end
     catch
         _:Error ->
             lager:error("用户删除失败：~p~n", [Error]),
@@ -260,22 +238,43 @@ delete(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 
 %% @doc
-%% 获取用户角色
+%% 禁用用户
 %% @end
-userrole(#{auth_data := #{<<"authed">> := true,
-      <<"permission">> := #{<<"usermanage">> := true}},
-      bindings := #{<<"userId">> := UserId}}) ->
+disable(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
+        <<"permission">> := #{<<"usermanage">> := true}},
+        bindings := #{<<"userId">> := UserId}}) ->
+    lager:info("用户~p禁用了用户~p~n", [LoginName, UserId]),
     try
-        {ok, ResCol, ResData} = eadm_pgpool:equery(pool_pg,
-            "select id, rolename, updatedat
-            from vi_userrole
-            where userid = $1;",
-            [UserId]),
-        {json, eadm_utils:pg_as_json(ResCol, ResData)}
+        case eadm_mnesia:update_user(UserId, [{status, disabled}]) of
+            {ok, _User} ->
+                {json, [#{<<"Alert">> => unicode:characters_to_binary("用户禁用成功！", utf8)}]};
+            {error, Reason} ->
+                lager:error("用户禁用失败：~p~n", [Reason]),
+                {json, [#{<<"Alert">> => unicode:characters_to_binary("用户禁用失败！", utf8)}]}
+        end
     catch
         _:Error ->
-            lager:error("用户角色查询失败：~p~n", [Error]),
-            {json, [#{<<"Alert">> => unicode:characters_to_binary("用户角色查询失败！", utf8)}]}
+            lager:error("用户禁用失败：~p~n", [Error]),
+            {json, [#{<<"Alert">> => unicode:characters_to_binary("用户禁用失败！", utf8)}]}
+    end;
+
+disable(#{auth_data := #{<<"permission">> := #{<<"usermanage">> := false}}}) ->
+    {json, [#{<<"Alert">> => unicode:characters_to_binary("API鉴权失败！", utf8)}]};
+
+disable(#{auth_data := #{<<"authed">> := false}}) ->
+    {redirect, "/login"}.
+
+%% @doc
+%% 用户角色管理页面
+%% @end
+userrole(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName,
+         <<"permission">> := #{<<"usermanage">> := true}},
+         bindings := #{<<"userId">> := UserId}}) ->
+    case eadm_mnesia:get_user(UserId) of
+        {ok, User} ->
+            {ok, [{username, UserName}, {user_info, User}]};
+        {error, _Reason} ->
+            {json, [#{<<"Alert">> => unicode:characters_to_binary("用户不存在！", utf8)}]}
     end;
 
 userrole(#{auth_data := #{<<"permission">> := #{<<"usermanage">> := false}}}) ->
@@ -285,24 +284,25 @@ userrole(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 
 %% @doc
-%% 新增用户角色
+%% 为用户添加角色
 %% @end
-userroleadd(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
-      <<"permission">> := #{<<"usermanage">> := true}}, params := RoleIdMap}) ->
-    [{RoleIds, _Value}] = maps:to_list(RoleIdMap),
-    {ok, RoleIdList} = thoas:decode(RoleIds),
-    InsertQuery = "insert into eadm_userrole(userid, roleid, createduser) values($1, $2, $3);",
+userroleadd(#{auth_data := #{<<"authed">> := true,
+             <<"permission">> := #{<<"usermanage">> := true}},
+             params := #{<<"userId">> := UserId, <<"roleId">> := RoleId}}) ->
     try
-        lists:foreach(fun (Map) ->
-            eadm_pgpool:equery(pool_pg, InsertQuery,
-                [maps:get(<<"userId">>, Map), maps:get(<<"roleId">>, Map), LoginName])
-            end,
-            RoleIdList),
-        {json, [#{<<"Alert">> => unicode:characters_to_binary("用户角色新增成功！", utf8)}]}
+        case eadm_mnesia:assign_role_to_user(UserId, RoleId) of
+            ok ->
+                {json, [#{<<"Alert">> => unicode:characters_to_binary("角色分配成功！", utf8)}]};
+            {error, already_exists} ->
+                {json, [#{<<"Alert">> => unicode:characters_to_binary("用户已拥有该角色！", utf8)}]};
+            {error, Reason} ->
+                lager:error("角色分配失败：~p~n", [Reason]),
+                {json, [#{<<"Alert">> => unicode:characters_to_binary("角色分配失败！", utf8)}]}
+        end
     catch
         _:Error ->
-            lager:error("用户角色新增失败：~p~n", [Error]),
-            {json, [#{<<"Alert">> => unicode:characters_to_binary("用户角色新增失败！", utf8)}]}
+            lager:error("角色分配失败：~p~n", [Error]),
+            {json, [#{<<"Alert">> => unicode:characters_to_binary("角色分配失败！", utf8)}]}
     end;
 
 userroleadd(#{auth_data := #{<<"permission">> := #{<<"usermanage">> := false}}}) ->
@@ -312,23 +312,25 @@ userroleadd(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 
 %% @doc
-%% 删除用户角色数据
+%% 移除用户角色
 %% @end
-userroledel(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
-      <<"permission">> := #{<<"usermanage">> := true}},
-      bindings := #{<<"userRoleId">> := UserRoleId}}) ->
+userroledel(#{auth_data := #{<<"authed">> := true,
+             <<"permission">> := #{<<"usermanage">> := true}},
+             params := #{<<"userId">> := UserId, <<"roleId">> := RoleId}}) ->
     try
-        eadm_pgpool:equery(pool_pg, "update eadm_userrole
-                                  set deleteduser = $1,
-                                  deletedat = current_timestamp,
-                                  deleted = true
-                                  where id = $2;",
-                                  [LoginName, erlang:binary_to_integer(UserRoleId)]),
-        {json, [#{<<"Alert">> => unicode:characters_to_binary("用户角色删除成功！", utf8)}]}
+        case eadm_mnesia:remove_role_from_user(UserId, RoleId) of
+            ok ->
+                {json, [#{<<"Alert">> => unicode:characters_to_binary("角色移除成功！", utf8)}]};
+            {error, not_found} ->
+                {json, [#{<<"Alert">> => unicode:characters_to_binary("用户未拥有该角色！", utf8)}]};
+            {error, Reason} ->
+                lager:error("角色移除失败：~p~n", [Reason]),
+                {json, [#{<<"Alert">> => unicode:characters_to_binary("角色移除失败！", utf8)}]}
+        end
     catch
         _:Error ->
-            lager:error("用户角色删除失败：~p~n", [Error]),
-            {json, [#{<<"Alert">> => unicode:characters_to_binary("用户角色删除失败！", utf8)}]}
+            lager:error("角色移除失败：~p~n", [Error]),
+            {json, [#{<<"Alert">> => unicode:characters_to_binary("角色移除失败！", utf8)}]}
     end;
 
 userroledel(#{auth_data := #{<<"permission">> := #{<<"usermanage">> := false}}}) ->
@@ -338,12 +340,28 @@ userroledel(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 
 %% @doc
-%% 获取角色权限数据
-%% 需特殊处理权限验证，需要登录成功所以要验authed=true，无需数据权限不需验permission
+%% 获取用户权限信息
 %% @end
-userpermission(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName}}) ->
-    Permission = get_permission(LoginName),
-    {json, [Permission]};
+userpermission(#{auth_data := #{<<"authed">> := true,
+               <<"permission">> := #{<<"usermanage">> := true}},
+               bindings := #{<<"userId">> := UserId}}) ->
+    try
+        case eadm_mnesia:get_user_roles(UserId) of
+            {ok, Roles} ->
+                Response = format_roles_response(Roles),
+                {json, Response};
+            {error, Reason} ->
+                lager:error("用户权限查询失败：~p~n", [Reason]),
+                {json, [#{<<"Alert">> => unicode:characters_to_binary("用户权限查询失败！", utf8)}]}
+        end
+    catch
+        _:Error ->
+            lager:error("用户权限查询失败：~p~n", [Error]),
+            {json, [#{<<"Alert">> => unicode:characters_to_binary("用户权限查询失败！", utf8)}]}
+    end;
+
+userpermission(#{auth_data := #{<<"permission">> := #{<<"usermanage">> := false}}}) ->
+    {json, [#{<<"Alert">> => unicode:characters_to_binary("API鉴权失败！", utf8)}]};
 
 userpermission(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
@@ -353,128 +371,99 @@ userpermission(#{auth_data := #{<<"authed">> := false}}) ->
 %%====================================================================
 
 %% @doc
-%% 验证登录名是否有重复(新增)
+%% 格式化用户响应数据
+%% @end
+format_users_response(Users) ->
+    lists:map(fun(User) ->
+        #{<<"id">> => element(2, User),
+          <<"username">> => element(3, User),
+          <<"email">> => element(5, User),
+          <<"created_at">> => element(6, User),
+          <<"updated_at">> => element(7, User)}
+    end, Users).
+
+%% @doc
+%% 格式化角色响应数据
+%% @end
+format_roles_response(Roles) ->
+    lists:map(fun(Role) ->
+        #{<<"id">> => element(2, Role),
+          <<"name">> => element(3, Role),
+          <<"description">> => element(4, Role),
+          <<"created_at">> => element(5, Role),
+          <<"updated_at">> => element(6, Role)}
+    end, Roles).
+
+%% @doc
+%% 生成用户ID
+%% @end
+generate_user_id() ->
+    erlang:system_time(microsecond).
+
+%% @doc
+%% 验证密码
+%% @end
+validate_password(Password) ->
+    case byte_size(Password) of
+        Size when Size < 6 ->
+            {error, "密码不能少于6位！"};
+        Size when Size > 20 ->
+            {error, "密码不能大于20位！"};
+        _ ->
+            {ok}
+    end.
+
+%% @doc
+%% 验证新增登录名
 %% @end
 validate_addloginname(LoginName) ->
-    AllowedChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-",
-    Regex = "^[" ++ AllowedChars ++ "]+$",
-    try
-        case re:run(LoginName, Regex, [global, {capture, none}]) of
-            match ->
-                case erlang:byte_size(LoginName) of
-                    L when L < 6 ->
-                        {error, 1};
-                    L when L > 18 ->
-                        {error, 2};
-                    _ ->
-                        try
-                            case eadm_pgpool:equery(pool_pg, "select 1 from eadm_user where loginname = $1;", [LoginName]) of
-                                {ok, _, []} ->
-                                    {ok};
-                                {ok, _, _} ->
-                                    {error, 3};
-                                _ ->
-                                    {error, 4}
-                            end
-                        catch
-                            _ ->
-                                {error, 5}
-                        end
-                end;
-            _ ->
-                {error, 6}
-        end
-    catch
-        _:Error ->
-            lager:error("用户名验证失败：~p~n", [Error]),
-            {json, [#{<<"Alert">> => unicode:characters_to_binary("用户名验证失败！", utf8)}]}
+    case byte_size(LoginName) of
+        Size when Size < 6 ->
+            {error, 1};
+        Size when Size > 18 ->
+            {error, 2};
+        _ ->
+            case re:run(LoginName, "^[a-zA-Z0-9]+$") of
+                {match, _} ->
+                    case eadm_mnesia:get_user_by_username(LoginName) of
+                        {ok, _User} ->
+                            {error, 3};
+                        {error, not_found} ->
+                            {ok};
+                        {error, _} ->
+                            {error, 4}
+                    end;
+                _ ->
+                    {error, 6}
+            end
     end.
 
 %% @doc
-%% 验证登录名是否有重复(修改)
+%% 验证编辑登录名
 %% @end
 validate_editloginname(UserId, LoginName) ->
-    % io:format("UserId: ~p, LoginName: ~p~n", [UserId, LoginName]),
-    AllowedChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-",
-    Regex = "^[" ++ AllowedChars ++ "]+$",
-    try
-        case re:run(LoginName, Regex, [global, {capture, none}]) of
-            match ->
-                case erlang:byte_size(LoginName) of
-                    L when L < 6 ->
-                        {error, 1};
-                    L when L > 18 ->
-                        {error, 2};
-                    _ ->
-                        try
-                            case eadm_pgpool:equery(pool_pg,
-                                "select 1 from eadm_user where id != $1 and loginname = $2 and deleted is false;",
-                                [UserId, LoginName]) of
-                                {ok, _, []} ->
+    case byte_size(LoginName) of
+        Size when Size < 6 ->
+            {error, 1};
+        Size when Size > 18 ->
+            {error, 2};
+        _ ->
+            case re:run(LoginName, "^[a-zA-Z0-9]+$") of
+                {match, _} ->
+                    case eadm_mnesia:get_user_by_username(LoginName) of
+                        {ok, User} ->
+                            case element(2, User) of
+                                UserId ->
                                     {ok};
-                                {ok, _, _} ->
-                                    {error, 3};
                                 _ ->
-                                    {error, 4}
-                            end
-                        catch
-                            _ ->
-                                {error, 5}
-                        end
-                end;
-            _ ->
-                {error, 6}
-        end
-    catch
-        _:Error ->
-            lager:error("用户名验证失败：~p~n", [Error]),
-            {json, [#{<<"Alert">> => unicode:characters_to_binary("用户名验证失败！", utf8)}]}
-    end.
-
-%% @doc
-%% 验证二进制密码数据
-%% @end
-validate_password(PassWordBin) when erlang:is_binary(PassWordBin) ->
-    PassWord = erlang:binary_to_list(PassWordBin),
-    AllowedChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789,\._-",
-    Regex = "^[" ++ AllowedChars ++ "]+$",
-    try
-        case re:run(PassWord, Regex, [global, {capture, none}]) of
-            match ->
-                case erlang:byte_size(PassWordBin) of
-                    L when L < 6 ->
-                        {error, "密码不能少于6位！"};
-                    L when L > 36 ->
-                        {error, "密码不能大于36位！"};
-                    _ ->
-                        {ok}
-                end;
-            _ ->
-                {error, "密码仅支持【英文、数字、符号：,._-】"}
-        end
-    catch
-        _:Error ->
-            lager:error("密码验证失败：~p~n", [Error]),
-            {json, [#{<<"Alert">> => unicode:characters_to_binary("密码验证失败！", utf8)}]}
-    end;
-validate_password(_) ->
-    {error, "密码格式错误！"}.
-
-%% @doc
-%% 获取用户权限
-%% @end
-get_permission(LoginName) ->
-    try
-        {ok, _, ResData} = eadm_pgpool:equery(pool_pg,
-            "select rolepermission
-            from vi_userpermission
-            where loginname = $1
-            limit 1;", [LoginName]),
-        {ResBin} = hd(ResData),
-        {ok, ResJson} = thoas:decode(ResBin),
-        #{<<"data">> => ResJson}
-    catch
-        _:Error ->
-            lager:error("权限获取失败：~p~n", [Error]),
-            {json, [#{<<"Alert">> => unicode:characters_to_binary("权限获取失败！", utf8)}]}
+                                    {error, 3}
+                            end;
+                        {error, not_found} ->
+                            {ok};
+                        {error, _} ->
+                            {error, 4}
+                    end;
+                _ ->
+                    {error, 6}
+            end
     end.

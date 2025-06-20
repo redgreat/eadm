@@ -116,24 +116,25 @@ routes(_Environment) ->
     security => {eadm_auth, auth},
     routes => [
         {"/:userId", fun eadm_user_controller:userrole/1, #{methods => [get]}},
-        {"/delete/:userRoleId", fun eadm_user_controller:userroledel/1, #{methods => [delete]}},
+        {"/delete", fun eadm_user_controller:userroledel/1, #{methods => [post]}},
         {"/add", fun eadm_user_controller:userroleadd/1, #{methods => [post]}}
       ]
     },
     #{prefix => "role",
     security => {eadm_auth, auth},
     routes => [
-        {"/:userId", fun eadm_role_controller:getrolelist/1, #{methods => [get]}},
+        {"/list", fun eadm_role_controller:getrolelist/1, #{methods => [get]}},
         {"/add", fun eadm_role_controller:add/1, #{methods => [post]}},
-        {"/disable/:roleId", fun eadm_role_controller:disable/1, #{methods => [post]}}
+        {"/disable/:roleId", fun eadm_role_controller:disable/1, #{methods => [post]}},
+        {"/delete/:roleId", fun eadm_role_controller:delete/1, #{methods => [delete]}}
       ]
     },
     #{prefix => "permission",
     security => {eadm_auth, auth},
     routes => [
-        {"/", fun eadm_user_controller:userpermission/1, #{methods => [get]}},
-        {"/:roleId", fun eadm_role_controller:loadpermission/1, #{methods => [get]}},
-        {"/edit", fun eadm_role_controller:updatepermission/1, #{methods => [post]}}
+        {"/user/:userId", fun eadm_user_controller:userpermission/1, #{methods => [get]}},
+        {"/role/:roleId", fun eadm_role_controller:loadpermission/1, #{methods => [get]}},
+        {"/role/edit", fun eadm_role_controller:updatepermission/1, #{methods => [post]}}
       ]
     },
     #{prefix => "sys",

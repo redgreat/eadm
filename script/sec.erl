@@ -26,5 +26,6 @@
 %% base64:encode(crypto:hash(sha256, <<"aVkmcGh2qbLqtpY8NXqcUA==", "Mm19890425">>)).
 %% @end
 generate_sec(SecString) ->
-    SecretKey = application:get_env(nova, secret_key, <<>>),
+    SecretKey = application:get_env(eadm, secret_key, <<>>),
+    io:format("SecretKey: ~p~n", [SecretKey]),
     base64:encode(crypto:hash(sha256, <<SecretKey/binary, SecString>>)).

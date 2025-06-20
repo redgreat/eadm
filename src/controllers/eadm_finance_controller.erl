@@ -51,7 +51,7 @@ search(#{auth_data := #{<<"authed">> := true,
             ParameterEndTime = eadm_utils:parse_date_time(EndTime),
             ParameterSourceType = erlang:binary_to_integer(SourceType),
             ParameterInOrOut = case InOrOut of 1 -> <<"收入">>; 2 -> <<"支出">>; 3 -> <<"其他">>; _ -> 0 end,
-            MaxSearchSpan = application:get_env(restwong_cfg, max_fin_search_span, 366),
+            MaxSearchSpan = application:get_env(eadm, max_fin_search_span, 366),
             TimeDiff = eadm_utils:time_diff(StartTime, EndTime),
             case TimeDiff > (MaxSearchSpan * 86400) of
                 true ->

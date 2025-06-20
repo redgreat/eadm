@@ -47,7 +47,7 @@ search(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
             {_, false} ->
                 {json, [#{<<"Alert">> => unicode:characters_to_binary("结束时间格式错误！", utf8)}]};
             {_, _} ->
-                MaxSearchSpan = application:get_env(restwong_cfg, max_search_span, 3),
+                MaxSearchSpan = application:get_env(eadm, max_search_span, 3),
                 TimeDiff = eadm_utils:time_diff(StartTime, EndTime),
                 CtsStartTime = eadm_utils:cts_to_utc(StartTime),
                 CtsEndTime = eadm_utils:cts_to_utc(EndTime),

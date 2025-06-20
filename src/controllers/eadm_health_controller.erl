@@ -52,7 +52,7 @@ search(#{auth_data := #{<<"authed">> := true,
             {_, _} ->
                 ParameterStartTime = eadm_utils:parse_date_time(StartTime),
                 ParameterEndTime = eadm_utils:parse_date_time(EndTime),
-                MaxSearchSpan = application:get_env(restwong_cfg, max_search_span, 3),
+                MaxSearchSpan = application:get_env(eadm, max_search_span, 3),
                 TimeDiff = eadm_utils:time_diff(StartTime, EndTime),
                 case TimeDiff > (MaxSearchSpan * 86400) of
                     true ->

@@ -36,6 +36,7 @@
 %%--------------------------------------------------------------------
 start(_StartType, _StartArgs) ->
     application:start(lager),
+    eadm_mnesia:init(),
     {ok, Pid} = eadm_sup:start_link(),
     timer:apply_after(2000, fun() -> lager:info("EADM 启动成功，访问地址：http://127.0.0.1:8080") end),
     timer:apply_after(3000, eadm_crontab_controller, init, []),
