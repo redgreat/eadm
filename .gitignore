@@ -19,3 +19,5 @@ config/prod_db.config.prod
 rebar.lock
 rebar3.crashdump
 doc/
+.trae
+.qoder
