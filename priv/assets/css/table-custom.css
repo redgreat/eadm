@@ -1,19 +1,47 @@
+/*------------------------------------------------------------------
+* 表格美化样式（优化版）
+* Author: wangcw
+* Created: 2024-03-15
+* Updated: 2025-11-20
+* 用于统一所有表格的样式
+-------------------------------------------------------------------*/
+
+/* 表格基础样式 */
+.table {
+    border-collapse: separate;
+    border-spacing: 0;
+    width: 100%;
+}
+
 /* 表格标题美化样式 */
 .table thead th {
-    background-color: #f8f9fa;
-    color: #495057;
+    background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+    color: #ffffff;
     font-weight: 600;
     text-transform: none;
-    border-bottom: 2px solid #dee2e6;
-    padding: 12px 8px;
+    border: none;
+    padding: 1rem 0.75rem;
     vertical-align: middle;
     position: relative;
     text-align: center;
+    font-size: 0.9375rem;
+    letter-spacing: 0.3px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* 第一个和最后一个表头圆角 */
+.table thead th:first-child {
+    border-top-left-radius: 8px;
+}
+
+.table thead th:last-child {
+    border-top-right-radius: 8px;
 }
 
 /* 表格标题悬停效果 */
 .table thead th:hover {
-    background-color: #e9ecef;
+    background: linear-gradient(180deg, #764ba2 0%, #667eea 100%);
+    cursor: pointer;
 }
 
 /* 表格标题排序图标样式 */
@@ -23,79 +51,258 @@
 .table thead .sorting_asc:after,
 .table thead .sorting_desc:before,
 .table thead .sorting_desc:after {
-    color: #6c757d;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.875rem;
 }
 
-/* 表格标题边框样式 */
+.table thead .sorting_asc:after,
+.table thead .sorting_desc:after {
+    color: #ffffff;
+}
+
+/* 表格标题分隔线 */
 .table thead th:not(:last-child) {
-    border-right: 1px solid #e9ecef;
+    border-right: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* 表格行样式 */
+.table tbody tr {
+    transition: all 0.2s ease;
+    background-color: #ffffff;
 }
 
 /* 表格行悬停效果 */
 .table tbody tr:hover {
-    background-color: rgba(33, 150, 243, 0.05);
+    background: linear-gradient(90deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%);
+    transform: scale(1.005);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    position: relative;
+    z-index: 1;
 }
 
 /* 表格单元格样式 */
 .table td {
     vertical-align: middle;
-    padding: 8px;
+    padding: 0.875rem 0.75rem;
+    border-top: 1px solid #e9ecef;
+    color: #444;
+    font-size: 0.9375rem;
+}
+
+.table tbody tr:first-child td {
+    border-top: none;
 }
 
 /* 斑马纹表格 */
 .table-striped tbody tr:nth-of-type(odd) {
-    background-color: rgba(0, 0, 0, 0.02);
+    background-color: #f8f9fa;
+}
+
+.table-striped tbody tr:nth-of-type(odd):hover {
+    background: linear-gradient(90deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%);
 }
 
 /* 紧凑型表格 */
 .table-sm thead th {
-    padding: 8px 6px;
+    padding: 0.75rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+.table-sm td {
+    padding: 0.625rem 0.5rem;
+    font-size: 0.875rem;
 }
 
 /* 表格容器样式 */
 .dataTables_wrapper {
-    padding: 0;
-    margin-top: 10px;
+    padding: 1rem 0;
+    margin-top: 0;
+}
+
+/* DataTables 控制区域 */
+.dataTables_wrapper .dataTables_length,
+.dataTables_wrapper .dataTables_filter {
+    margin-bottom: 1rem;
+}
+
+/* 分页容器 */
+.dataTables_paginate {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.25rem;
+    margin-top: 1.5rem;
 }
 
 /* 分页按钮样式 */
 .dataTables_paginate .paginate_button {
-    border-radius: 4px;
-    margin: 0 2px;
+    border-radius: 8px;
+    margin: 0 0.125rem;
+    padding: 0.5rem 0.875rem;
+    border: 2px solid transparent;
+    transition: all 0.2s ease;
+    font-weight: 500;
+    min-width: 40px;
+    text-align: center;
 }
 
 .dataTables_paginate .paginate_button.current {
-    background: #2196F3 !important;
-    border-color: #2196F3 !important;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    border-color: transparent !important;
     color: white !important;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    transform: translateY(-2px);
 }
 
-.dataTables_paginate .paginate_button:hover {
-    background: #e9ecef !important;
-    border-color: #dee2e6 !important;
-    color: #212529 !important;
+.dataTables_paginate .paginate_button:hover:not(.current):not(.disabled) {
+    background: linear-gradient(90deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%) !important;
+    border-color: #667eea !important;
+    color: #667eea !important;
+    transform: translateY(-1px);
+}
+
+.dataTables_paginate .paginate_button.disabled,
+.dataTables_paginate .paginate_button.disabled:hover {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none !important;
+    background: transparent !important;
+}
+
+/* 上一页/下一页按钮 */
+.dataTables_paginate .paginate_button.previous,
+.dataTables_paginate .paginate_button.next {
+    font-weight: 600;
 }
 
 /* 表格信息样式 */
 .dataTables_info {
     visibility: visible !important;
-    padding-top: 10px;
+    padding-top: 1rem;
     color: #6c757d;
     font-size: 0.875rem;
+    font-weight: 500;
 }
 
 /* 表格搜索框样式 */
+.dataTables_filter {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.dataTables_filter label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    font-weight: 500;
+    color: #444;
+}
+
 .dataTables_filter input {
-    border: 1px solid #ced4da;
-    border-radius: 4px;
-    padding: 6px 12px;
-    margin-left: 8px;
+    border: 2px solid #e3e3e3;
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    margin-left: 0.5rem;
+    transition: all 0.2s ease;
+    background-color: #f8f9fa;
+    min-width: 200px;
+}
+
+.dataTables_filter input:focus {
+    border-color: #667eea;
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+    background-color: #fff;
 }
 
 /* 表格长度选择器样式 */
+.dataTables_length {
+    display: flex;
+    align-items: center;
+}
+
+.dataTables_length label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    font-weight: 500;
+    color: #444;
+}
+
 .dataTables_length select {
-    border: 1px solid #ced4da;
-    border-radius: 4px;
-    padding: 6px 12px;
-    margin: 0 4px;
+    border: 2px solid #e3e3e3;
+    border-radius: 8px;
+    padding: 0.5rem 2rem 0.5rem 0.75rem;
+    margin: 0 0.5rem;
+    transition: all 0.2s ease;
+    background-color: #f8f9fa;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23667eea' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 12px;
+    appearance: none;
+    cursor: pointer;
+}
+
+.dataTables_length select:focus {
+    border-color: #667eea;
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+    background-color: #fff;
+}
+
+/* 表格加载状态 */
+.dataTables_processing {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    background: rgba(255, 255, 255, 0.95) !important;
+    border-radius: 12px !important;
+    padding: 2rem 3rem !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15) !important;
+    border: 2px solid #667eea !important;
+    color: #667eea !important;
+    font-weight: 600 !important;
+    font-size: 1.125rem !important;
+}
+
+/* 空数据提示 */
+.dataTables_empty {
+    padding: 2rem !important;
+    text-align: center;
+    color: #6c757d;
+    font-style: italic;
+}
+
+/* 响应式表格 */
+@media (max-width: 768px) {
+    .table thead th {
+        padding: 0.75rem 0.5rem;
+        font-size: 0.875rem;
+    }
+
+    .table td {
+        padding: 0.625rem 0.5rem;
+        font-size: 0.875rem;
+    }
+
+    .dataTables_filter input {
+        min-width: 150px;
+    }
+
+    .dataTables_wrapper .dataTables_length,
+    .dataTables_wrapper .dataTables_filter {
+        justify-content: center;
+        margin-bottom: 0.75rem;
+    }
+
+    .dataTables_paginate .paginate_button {
+        padding: 0.375rem 0.625rem;
+        font-size: 0.875rem;
+        min-width: 32px;
+    }
 }
