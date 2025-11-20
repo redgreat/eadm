@@ -1,46 +1,52 @@
 /*------------------------------------------------------------------
-* 顶部导航栏样式
-* Author: wangcw
-* Created: 2024-03-15 15:10:03
-* Website: www.wongcw.cn
-* inspire by https://github.com/alexis-luna/bootstrap-simple-admin-template
--------------------------------------------------------------------*/
-
-.nav-dropdown .nav-link {
-    color: #2196F3;
-    line-height: 1.42857;
-    padding: 1rem 0 1rem 1rem !important;
-    transition: color 0.2s ease;
-    font-weight: 500;
-}
-
-.nav-dropdown .nav-link:hover {
-    color: #1565c0;
-}
-
-.nav-dropdown.show a {
-    color: #1565c0;
-}
+* 顶部导航栏样式（优化版）
 
 .nav-dropdown .nav-link::after {
     display: none;
 }
 
+/* 用户头像（如果有） */
+.nav-dropdown .nav-link .user-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    margin-right: 10px;
+    border: 2px solid #2196F3;
+    object-fit: cover;
+}
+
+/* 下拉菜单容器 */
 .nav-dropdown .nav-link-menu {
     position: absolute;
     border: none;
-    min-width: 0;
+    min-width: 220px;
     padding: 0;
     line-height: 1.4;
-    box-shadow: 0 4px 16px rgba(33, 150, 243, 0.08);
-    margin-top: -5px;
-    border-radius: 0.5rem;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    margin-top: 8px;
+    border-radius: 12px;
+    background: #fff;
+    overflow: hidden;
+    animation: dropdownFadeIn 0.2s ease;
 }
 
+@keyframes dropdownFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 下拉菜单箭头 */
 .nav-dropdown .nav-link-menu::before {
-    top: -4px;
-    right: 25%;
-    margin: 0 0 0 -.25em;
+    top: -6px;
+    right: 20px;
+    margin: 0 0 0 -0.25em;
     display: block;
     position: absolute;
     pointer-events: none;
@@ -48,14 +54,16 @@
     visibility: visible;
     -webkit-transform: rotate(45deg);
     transform: rotate(45deg);
-    width: .5em;
-    height: .5em;
+    width: 12px;
+    height: 12px;
     background: #ffffff;
     z-index: 2;
+    box-shadow: -2px -2px 4px rgba(0, 0, 0, 0.05);
 }
 
+/* 菜单列表 */
 .nav-dropdown .nav-link-menu .nav-list {
-    padding: 5px 0;
+    padding: 8px 0;
     margin-bottom: 0;
     list-style: none;
 }
@@ -64,20 +72,79 @@
     line-height: 1.2;
 }
 
+/* 菜单项 */
 .nav-dropdown .nav-link-menu .nav-list li a {
     color: #444;
-    font-size: 14px;
-    padding: .8rem 1.2rem;
-    transition: background 0.2s, color 0.2s;
-    border-radius: 0.375rem;
-    margin: 0 0.3rem;
+    font-size: 0.9375rem;
+    padding: 0.85rem 1.25rem;
+    transition: all 0.2s ease;
+    border-radius: 0;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    font-weight: 500;
 }
 
-.nav-dropdown .nav-link-menu .nav-list li a:hover {
-    background: #f0f7ff;
+.nav-dropdown .nav-link-menu .nav-list li a i {
+    margin-right: 10px;
+    width: 20px;
+    text-align: center;
     color: #2196F3;
 }
 
+.nav-dropdown .nav-link-menu .nav-list li a:hover {
+    background: linear-gradient(90deg, rgba(33, 150, 243, 0.1) 0%, rgba(33, 150, 243, 0.05) 100%);
+    color: #2196F3;
+    padding-left: 1.5rem;
+}
+
+/* 分割线 */
 .nav-dropdown .dropdown-divider {
-    margin: 3px 0;
+    margin: 6px 0;
+    border-top: 1px solid #e9ecef;
+}
+
+/* 用户信息区域（如果需要） */
+.nav-dropdown .nav-link-menu .user-info {
+    padding: 1rem 1.25rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.nav-dropdown .nav-link-menu .user-info .user-name {
+    font-weight: 600;
+    font-size: 1rem;
+    margin-bottom: 4px;
+}
+
+.nav-dropdown .nav-link-menu .user-info .user-role {
+    font-size: 0.8125rem;
+    opacity: 0.9;
+}
+
+/* 退出按钮特殊样式 */
+.nav-dropdown .nav-link-menu .nav-list li a.logout {
+    color: #dc3545;
+}
+
+.nav-dropdown .nav-link-menu .nav-list li a.logout i {
+    color: #dc3545;
+}
+
+.nav-dropdown .nav-link-menu .nav-list li a.logout:hover {
+    background: rgba(220, 53, 69, 0.1);
+    color: #c82333;
+}
+
+/* 响应式优化 */
+@media (max-width: 768px) {
+    .nav-dropdown .nav-link-menu {
+        min-width: 200px;
+        right: 0;
+    }
+
+    .nav-dropdown .nav-link-menu::before {
+        right: 15px;
+    }
 }
