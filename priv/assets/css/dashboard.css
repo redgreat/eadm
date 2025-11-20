@@ -1,0 +1,119 @@
+/*------------------------------------------------------------------
+* 看板页面专用样式优化
+* Author: wangcw
+* Created: 2025-11-20
+* Description: 仅优化看板页面的卡片和统计样式，不影响其他页面
+-------------------------------------------------------------------*/
+
+/* 看板卡片优化 */
+.dashboard-card {
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(33, 150, 243, 0.08);
+    margin-bottom: 24px;
+    transition: all 0.3s ease;
+    background: #ffffff;
+}
+
+.dashboard-card:hover {
+    box-shadow: 0 4px 16px rgba(33, 150, 243, 0.12);
+    transform: translateY(-2px);
+}
+
+/* 统计卡片内容区域 */
+.dashboard-card .content {
+    padding: 20px;
+}
+
+/* 图标样式优化 */
+.dashboard-card .icon-big {
+    font-size: 3em;
+    min-height: 64px;
+    line-height: 64px;
+}
+
+/* 数字显示优化 */
+.dashboard-card .number {
+    font-size: 1.8em;
+    font-weight: 700;
+    color: #2196F3;
+    display: block;
+    margin-top: 8px;
+}
+
+/* 副标题优化 */
+.dashboard-card .detail-subtitle {
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    color: #656d77;
+    margin-bottom: 4px;
+    font-weight: 500;
+}
+
+/* 底部信息栏 */
+.dashboard-card .footer {
+    border-top: 1px solid #f0f0f0;
+    padding-top: 12px;
+    margin-top: 12px;
+}
+
+.dashboard-card .footer hr {
+    display: none;
+}
+
+.dashboard-card .stats {
+    color: #aaa;
+    font-size: 0.875rem;
+}
+
+.dashboard-card .stats i {
+    margin-right: 6px;
+}
+
+/* 图表卡片优化 */
+.dashboard-card .head h5 {
+    color: #2196F3;
+    font-weight: 600;
+    font-size: 1.125rem;
+}
+
+.dashboard-card .canvas-wrapper {
+    padding: 16px 0;
+}
+
+/* 年度统计卡片 */
+.dashboard-card .large-icon {
+    font-size: 3em;
+    display: block;
+}
+
+.dashboard-card h4 {
+    font-size: 2em;
+    font-weight: 700;
+    color: #2196F3;
+    margin: 12px 0 8px 0;
+}
+
+.dashboard-card .text-muted {
+    color: #656d77 !important;
+    font-size: 0.9375rem;
+}
+
+/* 响应式优化 */
+@media (max-width: 768px) {
+    .dashboard-card {
+        margin-bottom: 16px;
+    }
+
+    .dashboard-card .content {
+        padding: 16px;
+    }
+
+    .dashboard-card .number {
+        font-size: 1.5em;
+    }
+
+    .dashboard-card h4 {
+        font-size: 1.5em;
+    }
+}
