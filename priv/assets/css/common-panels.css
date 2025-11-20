@@ -1,34 +1,47 @@
 /*------------------------------------------------------------------
-* 通用面板样式（查询栏和数据展示栏）
-* Author: Cascade
+* 通用面板样式（查询栏和数据展示栏）优化版
+* Author: wangcw
 * Created: 2025-04-25
+* Updated: 2025-11-20
 * 用于统一查询面板和数据展示面板的样式
 -------------------------------------------------------------------*/
 
 /* 卡片容器样式 */
 .card {
     border: none;
-    border-radius: 0.5rem;
-    box-shadow: 0 4px 16px rgba(33, 150, 243, 0.08);
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
     margin-bottom: 1.5rem;
     overflow: hidden;
+    transition: box-shadow 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
 }
 
 .card-header {
-    background-color: #f7fbff;
-    border-bottom: 1px solid #e3e3e3;
-    padding: 1rem 1.25rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-bottom: none;
+    padding: 1rem 1.5rem;
 }
 
 .card-title {
-    color: #1565c0;
+    color: #ffffff;
     font-weight: 600;
-    font-size: 1.1rem;
+    font-size: 1.125rem;
     margin: 0;
+    display: flex;
+    align-items: center;
+}
+
+.card-title i {
+    margin-right: 8px;
 }
 
 .card-body {
-    padding: 1.25rem;
+    padding: 1.5rem;
+    background: #fff;
 }
 
 /* 查询面板样式 */
@@ -42,6 +55,7 @@
     color: #444;
     margin-bottom: 0.5rem;
     display: block;
+    font-size: 0.9375rem;
 }
 
 .query-panel .form-group {
@@ -51,21 +65,23 @@
 .query-panel .form-control,
 .query-panel .form-select {
     width: 100%;
-    padding: 0.5rem 0.75rem;
-    border: 1px solid #e3e3e3;
-    border-radius: 0.375rem;
-    background-color: #fff;
+    padding: 0.625rem 0.875rem;
+    border: 2px solid #e3e3e3;
+    border-radius: 8px;
+    background-color: #f8f9fa;
     color: #444;
-    font-size: 0.95rem;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
-    height: calc(2.25rem + 2px);
+    font-size: 0.9375rem;
+    transition: all 0.2s ease;
+    height: calc(2.5rem + 4px);
 }
 
 .query-panel .form-control:focus,
 .query-panel .form-select:focus {
     border-color: #2196F3;
     outline: none;
-    box-shadow: 0 0 0 0.2rem rgba(33, 150, 243, 0.25);
+    box-shadow: 0 0 0 4px rgba(33, 150, 243, 0.1);
+    background-color: #fff;
+    transform: translateY(-1px);
 }
 
 .query-panel .form-control::placeholder {
@@ -73,41 +89,55 @@
     opacity: 0.7;
 }
 
-/* 查询按钮样式 */
+/* 查询按钮组 */
 .query-panel .button-group {
     display: flex;
     justify-content: flex-end;
-    gap: 0.5rem;
+    gap: 0.75rem;
+    margin-top: 1rem;
 }
 
 .query-panel .btn {
-    padding: 0.5rem 1rem;
-    border-radius: 0.375rem;
-    font-weight: 500;
+    padding: 0.625rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
     transition: all 0.2s ease;
+    border: none;
+    font-size: 0.9375rem;
 }
 
 .query-panel .btn-light {
     color: #444;
     background-color: #f0f0f0;
-    border-color: #e3e3e3;
+    border: 2px solid #e3e3e3;
 }
 
 .query-panel .btn-light:hover {
     background-color: #e3e3e3;
     border-color: #d0d0d0;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .query-panel .btn-primary {
     color: #fff;
-    background-color: #2196F3;
-    border-color: #2196F3;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
 .query-panel .btn-primary:hover {
-    background-color: #1565c0;
-    border-color: #1565c0;
-    box-shadow: 0 4px 8px rgba(33, 150, 243, 0.15);
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+    transform: translateY(-2px);
+}
+
+.query-panel .btn-primary:active {
+    transform: translateY(0);
+}
+
+/* 数据面板样式 */
+.data-panel {
+    margin-top: 1.5rem;
 }
 
 /* 数据表格样式 */
@@ -120,65 +150,129 @@
 }
 
 .data-panel .table thead th {
-    background-color: #f7fbff;
+    background: linear-gradient(180deg, #f7fbff 0%, #eef5fb 100%);
     color: #1565c0;
     font-weight: 600;
-    border-bottom: 2px solid #e3e3e3;
-    padding: 0.75rem;
+    border-bottom: 2px solid #2196F3;
+    padding: 1rem 0.75rem;
     vertical-align: middle;
+    text-align: center;
+    font-size: 0.9375rem;
+    position: relative;
+}
+
+.data-panel .table thead th::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent 0%, #2196F3 50%, transparent 100%);
 }
 
 .data-panel .table tbody tr {
-    transition: background-color 0.15s ease-in-out;
+    transition: all 0.2s ease;
 }
 
 .data-panel .table tbody tr:hover {
     background-color: #e3f2fd;
+    transform: scale(1.01);
+    box-shadow: 0 2px 8px rgba(33, 150, 243, 0.1);
 }
 
 .data-panel .table td {
-    padding: 0.75rem;
-    border-top: 1px solid #e3e3e3;
+    padding: 0.875rem 0.75rem;
+    border-top: 1px solid #e9ecef;
     vertical-align: middle;
 }
 
+.data-panel .table tbody tr:first-child td {
+    border-top: none;
+}
+
 /* DataTables 特定样式 */
+.dataTables_wrapper {
+    padding: 1rem 0;
+}
+
 .dataTables_wrapper .dataTables_length,
 .dataTables_wrapper .dataTables_filter,
 .dataTables_wrapper .dataTables_info,
 .dataTables_wrapper .dataTables_processing,
 .dataTables_wrapper .dataTables_paginate {
     color: #444;
-    margin-bottom: 0.5rem;
-    margin-top: 0.5rem;
+    margin-bottom: 0.75rem;
+    margin-top: 0.75rem;
+}
+
+.dataTables_wrapper .dataTables_length select,
+.dataTables_wrapper .dataTables_filter input {
+    border: 2px solid #e3e3e3;
+    border-radius: 6px;
+    padding: 0.375rem 0.75rem;
+    margin: 0 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.dataTables_wrapper .dataTables_length select:focus,
+.dataTables_wrapper .dataTables_filter input:focus {
+    border-color: #2196F3;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+}
+
+/* 分页按钮 */
+.dataTables_wrapper .dataTables_paginate {
+    display: flex;
+    gap: 0.25rem;
 }
 
 .dataTables_wrapper .dataTables_paginate .paginate_button {
-    border-radius: 0.375rem;
-    padding: 0.375rem 0.75rem;
-    margin-left: 0.25rem;
-    border: 1px solid transparent;
+    border-radius: 6px;
+    padding: 0.5rem 0.875rem;
+    margin: 0 0.125rem;
+    border: 2px solid transparent;
+    transition: all 0.2s ease;
+    font-weight: 500;
 }
 
 .dataTables_wrapper .dataTables_paginate .paginate_button.current,
 .dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
-    background: #2196F3;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: #fff !important;
-    border-color: #2196F3;
-    border-radius: 0.375rem;
+    border-color: transparent;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    transform: translateY(-1px);
 }
 
 .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
     background: #e3f2fd;
     color: #1565c0 !important;
-    border-color: #e3e3e3;
+    border-color: #2196F3;
+    transform: translateY(-1px);
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.disabled,
+.dataTables_wrapper .dataTables_paginate .paginate_button.disabled:hover {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
 }
 
 /* 操作按钮样式 */
 .btn-rounded {
-    padding: 0.25rem 0.5rem;
-    margin: 0 2px;
+    padding: 0.375rem 0.75rem;
+    margin: 0 3px;
     white-space: nowrap;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+}
+
+.btn-rounded:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 /* 操作列样式 */
@@ -186,6 +280,7 @@
     min-width: 220px !important;
     width: 220px !important;
     white-space: nowrap;
+    text-align: center;
 }
 
 /* 确保表格中的操作按钮不换行 */
@@ -194,11 +289,20 @@
 .table .d-flex {
     white-space: nowrap;
     min-width: 180px;
+    gap: 0.25rem;
+}
+
+/* 表格加载状态 */
+.dataTables_processing {
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 8px;
+    padding: 1rem 2rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 /* 响应式调整 */
 @media (max-width: 768px) {
-    .query-panel .row > div {
+    .query-panel .row>div {
         margin-bottom: 1rem;
     }
 
@@ -208,8 +312,21 @@
         margin-top: 0.5rem;
     }
 
+    .query-panel .button-group {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
     /* 确保表格在小屏幕上可以水平滚动 */
     .table-responsive {
         overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        border-radius: 8px;
+    }
+
+    .data-panel .table thead th,
+    .data-panel .table td {
+        padding: 0.625rem 0.5rem;
+        font-size: 0.875rem;
     }
 }
