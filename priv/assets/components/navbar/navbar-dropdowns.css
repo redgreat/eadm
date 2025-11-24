@@ -1,5 +1,49 @@
 /*------------------------------------------------------------------
 * 顶部导航栏样式（优化版）
+* Author: wangcw
+* Created: 2024-03-15 15:10:03
+* Updated: 2025-11-20
+* Website: www.wongcw.cn
+-------------------------------------------------------------------*/
+
+/* 用户下拉菜单 */
+.nav-dropdown .nav-link {
+    color: #2196F3;
+    line-height: 1.42857;
+    padding: 1rem 1.2rem !important;
+    transition: all 0.2s ease;
+    font-weight: 600;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    /* 元素之间的间距 */
+}
+
+/* 用户图标 */
+.nav-dropdown .nav-link .fa-user {
+    margin-right: 4px;
+}
+
+/* 用户名 */
+.nav-dropdown .nav-link span {
+    margin: 0 6px;
+}
+
+/* 下拉箭头 */
+.nav-dropdown .nav-link .fa-caret-down {
+    margin-left: 4px;
+}
+
+.nav-dropdown .nav-link:hover {
+    color: #1565c0;
+    background: rgba(33, 150, 243, 0.05);
+}
+
+.nav-dropdown.show .nav-link {
+    color: #1565c0;
+    background: rgba(33, 150, 243, 0.08);
+}
 
 .nav-dropdown .nav-link::after {
     display: none;
@@ -104,35 +148,16 @@
     border-top: 1px solid #e9ecef;
 }
 
-/* 用户信息区域（如果需要） */
-.nav-dropdown .nav-link-menu .user-info {
-    padding: 1rem 1.25rem;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: #fff;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.nav-dropdown .nav-link-menu .user-info .user-name {
-    font-weight: 600;
-    font-size: 1rem;
-    margin-bottom: 4px;
-}
-
-.nav-dropdown .nav-link-menu .user-info .user-role {
-    font-size: 0.8125rem;
-    opacity: 0.9;
-}
-
 /* 退出按钮特殊样式 */
-.nav-dropdown .nav-link-menu .nav-list li a.logout {
+.nav-dropdown .nav-link-menu .nav-list li a#logout {
     color: #dc3545;
 }
 
-.nav-dropdown .nav-link-menu .nav-list li a.logout i {
+.nav-dropdown .nav-link-menu .nav-list li a#logout i {
     color: #dc3545;
 }
 
-.nav-dropdown .nav-link-menu .nav-list li a.logout:hover {
+.nav-dropdown .nav-link-menu .nav-list li a#logout:hover {
     background: rgba(220, 53, 69, 0.1);
     color: #c82333;
 }
