@@ -45,7 +45,7 @@
 .dashboard-card {
     border: none;
     border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(33, 150, 243, 0.08);
+    box-shadow: 0 2px 8px rgba(255, 107, 107, 0.08);
     margin-bottom: 0;
     transition: all 0.3s ease;
     background: #ffffff;
@@ -57,7 +57,7 @@
 }
 
 .dashboard-card:hover {
-    box-shadow: 0 4px 16px rgba(33, 150, 243, 0.12);
+    box-shadow: 0 4px 16px rgba(255, 107, 107, 0.12);
     transform: translateY(-2px);
 }
 
@@ -81,7 +81,7 @@
 .dashboard-card .number {
     font-size: 1.4em;
     font-weight: 700;
-    color: #2196F3;
+    color: #ff6b6b;
     display: block;
     margin-top: 4px;
 }
@@ -117,7 +117,7 @@
 
 /* 图表卡片优化 */
 .dashboard-card .head h5 {
-    color: #2196F3;
+    color: #ff6b6b;
     font-weight: 600;
     font-size: 0.9rem;
     margin-bottom: 0.3rem;
@@ -148,7 +148,7 @@
 .dashboard-card h4 {
     font-size: 1.5em;
     font-weight: 700;
-    color: #2196F3;
+    color: #ff6b6b;
     margin: 6px 0 4px 0;
 }
 

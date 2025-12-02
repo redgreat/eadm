@@ -2,7 +2,7 @@
 * 通用面板样式（查询栏和数据展示栏）优化版
 * Author: wangcw
 * Created: 2025-04-25
-* Updated: 2025-11-20
+* Updated: 2025-12-02
 * 用于统一查询面板和数据展示面板的样式
 -------------------------------------------------------------------*/
 
@@ -21,7 +21,7 @@
 }
 
 .card-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #ffb3ba 0%, #ff8a8a 100%);
     border-bottom: none;
     padding: 1rem 1.5rem;
 }
@@ -77,9 +77,9 @@
 
 .query-panel .form-control:focus,
 .query-panel .form-select:focus {
-    border-color: #2196F3;
+    border-color: #ff6b6b;
     outline: none;
-    box-shadow: 0 0 0 4px rgba(33, 150, 243, 0.1);
+    box-shadow: 0 0 0 4px rgba(255, 107, 107, 0.1);
     background-color: #fff;
     transform: translateY(-1px);
 }
@@ -121,13 +121,13 @@
 
 .query-panel .btn-primary {
     color: #fff;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    background: linear-gradient(135deg, #ffb3ba 0%, #ff8a8a 100%);
+    box-shadow: 0 4px 12px rgba(255, 138, 138, 0.3);
 }
 
 .query-panel .btn-primary:hover {
-    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
-    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+    background: linear-gradient(135deg, #ff8a8a 0%, #ffb3ba 100%);
+    box-shadow: 0 6px 16px rgba(255, 138, 138, 0.4);
     transform: translateY(-2px);
 }
 
@@ -150,10 +150,10 @@
 }
 
 .data-panel .table thead th {
-    background: linear-gradient(180deg, #f7fbff 0%, #eef5fb 100%);
-    color: #1565c0;
+    background: linear-gradient(180deg, #fff5f5 0%, #ffe5e5 100%);
+    color: #e63946;
     font-weight: 600;
-    border-bottom: 2px solid #2196F3;
+    border-bottom: 2px solid #ff6b6b;
     padding: 1rem 0.75rem;
     vertical-align: middle;
     text-align: center;
@@ -168,7 +168,7 @@
     left: 0;
     right: 0;
     height: 2px;
-    background: linear-gradient(90deg, transparent 0%, #2196F3 50%, transparent 100%);
+    background: linear-gradient(90deg, transparent 0%, #ff6b6b 50%, transparent 100%);
 }
 
 .data-panel .table tbody tr {
@@ -176,9 +176,9 @@
 }
 
 .data-panel .table tbody tr:hover {
-    background-color: #e3f2fd;
+    background-color: #ffe5e5;
     transform: scale(1.01);
-    box-shadow: 0 2px 8px rgba(33, 150, 243, 0.1);
+    box-shadow: 0 2px 8px rgba(255, 107, 107, 0.1);
 }
 
 .data-panel .table td {
@@ -217,9 +217,9 @@
 
 .dataTables_wrapper .dataTables_length select:focus,
 .dataTables_wrapper .dataTables_filter input:focus {
-    border-color: #2196F3;
+    border-color: #ff6b6b;
     outline: none;
-    box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+    box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
 }
 
 /* 分页按钮 */
@@ -239,17 +239,17 @@
 
 .dataTables_wrapper .dataTables_paginate .paginate_button.current,
 .dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #ffb3ba 0%, #ff8a8a 100%);
     color: #fff !important;
     border-color: transparent;
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 4px 12px rgba(255, 138, 138, 0.3);
     transform: translateY(-1px);
 }
 
 .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
-    background: #e3f2fd;
-    color: #1565c0 !important;
-    border-color: #2196F3;
+    background: #ffe5e5;
+    color: #e63946 !important;
+    border-color: #ff6b6b;
     transform: translateY(-1px);
 }
 

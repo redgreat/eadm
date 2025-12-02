@@ -8,7 +8,7 @@
 -------------------------------------------------------------------*/
 
 body {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #ffb3ba 0%, #ff8a8a 100%);
     background-attachment: fixed;
 }
 
@@ -30,14 +30,14 @@ body {
 
 .wrapper a,
 .wrapper p>a {
-    color: #2196F3;
+    color: #ff6b6b;
     font-weight: 600;
     text-decoration: none;
     transition: color 0.2s;
 }
 
 .wrapper a:hover {
-    color: #1565c0;
+    color: #e63946;
 }
 
 .auth-content {
@@ -97,10 +97,10 @@ body {
 }
 
 .auth-content .form-control:focus {
-    border: 2px solid #2196F3;
+    border: 2px solid #ff6b6b;
     outline: none;
     background: #fff;
-    box-shadow: 0 0 0 4px rgba(33, 150, 243, 0.1);
+    box-shadow: 0 0 0 4px rgba(255, 107, 107, 0.1);
     transform: translateY(-1px);
 }
 
@@ -116,10 +116,10 @@ body {
     font-weight: 600;
     margin-bottom: 8px;
     margin-right: 10px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #ffb3ba 0%, #ff8a8a 100%);
     color: #fff;
     border: none;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 4px 15px rgba(255, 138, 138, 0.4);
     transition: all 0.3s ease;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -127,14 +127,14 @@ body {
 
 .btn:hover,
 .btn:focus {
-    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    background: linear-gradient(135deg, #ff8a8a 0%, #ffb3ba 100%);
     color: #fff;
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+    box-shadow: 0 6px 20px rgba(255, 138, 138, 0.5);
     transform: translateY(-2px);
 }
 
 .btn:active {
-    background: linear-gradient(135deg, #5a67d8 0%, #6b46a0 100%);
+    background: linear-gradient(135deg, #ff7979 0%, #ff5c5c 100%);
     color: #fff;
     transform: translateY(0);
 }

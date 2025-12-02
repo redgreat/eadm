@@ -47,7 +47,7 @@
     padding: 1rem 1rem;
     border-bottom: 1px solid #e3e3e3;
     max-height: 60px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #ffb3ba 0%, #ff8a8a 100%);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -91,7 +91,7 @@
     top: 0;
     height: 100%;
     width: 3px;
-    background: #2196F3;
+    background: #ff6b6b;
     transform: scaleY(0);
     transition: transform 0.2s ease;
 }
@@ -108,16 +108,16 @@
 }
 
 #sidebar ul li a:hover {
-    color: #2196F3;
-    background: linear-gradient(90deg, rgba(33, 150, 243, 0.08) 0%, rgba(33, 150, 243, 0.02) 100%);
+    color: #ff6b6b;
+    background: linear-gradient(90deg, rgba(255, 107, 107, 0.08) 0%, rgba(255, 107, 107, 0.02) 100%);
     transform: translateX(3px);
 }
 
 #sidebar ul li a.active,
 #sidebar ul li a:active {
     color: #fff;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    background: linear-gradient(135deg, #ffb3ba 0%, #ff8a8a 100%);
+    box-shadow: 0 4px 12px rgba(255, 138, 138, 0.3);
 }
 
 #sidebar ul li a.active::before {
@@ -147,8 +147,8 @@ a[aria-expanded="true"] {
 }
 
 #sidebar ul ul a:hover {
-    background: rgba(33, 150, 243, 0.1);
-    color: #2196F3;
+    background: rgba(255, 107, 107, 0.1);
+    color: #ff6b6b;
     transform: translateX(5px);
 }
 

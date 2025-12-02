@@ -3,185 +3,345 @@
  * @author wangcw
  * @copyright (C) 2024, REDGREAT
  * Created : 2024-03-01 13:24
+ * Updated : 2025-11-24
  *
  * Module : health.js
  *
  */
 
+let healthChart = null;
+
 function translateColumnNames(columnName) {
-  const translations = i18nHealth.columnName[defaultLanguage];
-  return translations[columnName] || columnName;
+    const translations = i18nHealth.columnName[defaultLanguage];
+    return translations[columnName] || columnName;
 }
 
 function translateSleepType(columnName) {
-  const translations = i18nHealth.sleepType[defaultLanguage];
-  return translations[columnName] || columnName;
+    const translations = i18nHealth.sleepType[defaultLanguage];
+    return translations[columnName] || columnName;
 }
 
-function loadHealthData(dataType, startTime, endTime) {
+// 数据类型配置
+const dataTypeConfig = {
+    'Steps': { name: '步数', unit: '步', color: '#5470c6' },
+    'HeartRate': { name: '心率', unit: 'bpm', color: '#ee6666' },
+    'Temperature': { name: '体温', unit: '°C', color: '#fac858' },
+    'Pressure': { name: '血压', unit: 'mmHg', color: '#91cc75' },
+    'Sleep': { name: '睡眠', unit: '小时', color: '#73c0de' },
+    'Battery': { name: '电量', unit: '%', color: '#3ba272' }
+};
+
+// 初始化图表
+function initChart() {
+    const chartDom = document.getElementById('health-chart');
+    if (healthChart) {
+        healthChart.dispose();
+    }
+    healthChart = echarts.init(chartDom);
+
+    // 设置初始空状态
+    healthChart.setOption({
+        title: {
+            text: '健康数据趋势图',
+            left: 'center',
+            top: 10,
+            textStyle: {
+                fontSize: 16,
+                fontWeight: 'normal'
+            }
+        },
+        grid: {
+            left: '3%',
+            right: '4%',
+            bottom: '3%',
+            containLabel: true
+        },
+        graphic: {
+            type: 'text',
+            left: 'center',
+            top: 'middle',
+            style: {
+                text: '请选择时间段并点击查询按钮',
+                fontSize: 14,
+                fill: '#999'
+            }
+        }
+    });
+}
+
+// 加载健康数据并渲染图表
+function loadHealthData(startTime, endTime) {
     const searchParams = {
-        dataType: dataType,
+        dataType: '0',  // 固定查询所有类型
         startTime: startTime,
         endTime: endTime
     };
-    let dynamicColumns = [];
-    let dynamicDatas = [];
 
     $.getJSON('/health', searchParams, function (response) {
-
-        function buildDynamicData(response) {
-            response.columns.forEach(function (column) {
-                let dynamicColumn = {};
-                dynamicColumn['data'] = column;
-                dynamicColumn['title'] = translateColumnNames(column);
-                dynamicColumns.push(dynamicColumn);
-                if (column === "SleepType") {
-                    response.data.forEach(function (rowData) {
-                    rowData["SleepType"] = translateSleepType(rowData["SleepType"]);
-                    });
-                }
-            });
-            dynamicDatas = response.data;
-        }
-
         if (response && response.length > 0 && response[0].Alert) {
             showWarningToast(response[0].Alert);
-        }
-        else if (response && response.data.length === 0) {
-            showWarningToast("此时间段内无健康数据！");
-            response.columns.forEach(function (column) {
-                let dynamicColumn = {};
-                dynamicColumn['data'] = column;
-                dynamicColumn['title'] = translateColumnNames(column);
-                dynamicColumn['className'] = "dataTables-column";
-                dynamicColumns.push(dynamicColumn);
-            });
-        }
-        else {
-            buildDynamicData(response)
+            renderEmptyChart();
+            return;
         }
 
-        // console.log("dynamicColumns: " + JSON.stringify(dynamicColumns));
-        // console.log("dynamicDatas: " + JSON.stringify(dynamicDatas));
+        if (!response || !response.data || response.data.length === 0) {
+            showWarningToast("此时间段内无健康数据!");
+            renderEmptyChart();
+            return;
+        }
 
-        $('#table-health').DataTable().destroy();
-        $('#table-health').empty();
-        $('#table-health').DataTable({
-            // lengthChange: true,  //是否允许用户改变表格每页显示的记录数
-            // bStateSave: true,  //记录cookie
-            destroy: true, // 销毁重新渲染
-            columns: dynamicColumns,
-            data: dynamicDatas,
-            responsive: true,
-            info: true, // 是否显示左下角分页信息
-            processing: true,  //是否显示处理状态(排序的时候，数据很多耗费时间长的话，也会显示这个)
-            orderMulti: true,  //启用多列排序
-            ordering: true,  //使用排序
-            paging: true,  //是否分页
-            pageLength: 10, //每页默认行数
-            lengthChange: false, //是否可以改变每页显示的记录数
-            pagingType: "full_numbers",  //除首页、上一页、下一页、末页四个按钮还有页数按钮
-            searching: false,  //是否开始本地搜索
-            stateSave: true,  //刷新时是否保存状态
-            // autoWidth: true,  //自动计算宽度
-            deferRender: true, // 延迟渲染
-            language: {
-                // decimal: "",//小数的小数位符号  比如“，”作为数字的小数位符号
-                // infoFiltered: "(从 _MAX_ 条记录过滤)",//当表格过滤的时候，将此字符串附加到主要信息
-                // infoPostFix: "",//在摘要信息后继续追加的字符串
-                // search: "搜索",//用来描述搜索输入框的字符串
-                // zeroRecords: "没有找到",//当没有搜索到结果时，显示
-                info: "当前 _START_ 条到 _END_ 条 共 _TOTAL_ 条",//左下角的信息，变量可以自定义，到官网详细查看
-                infoEmpty: "无记录",//当没有数据时，左下角的信息
-                emptyTable: "未查到数据",//当表格为空时，表格中信息
-                thousands: ",",//千分位分隔符
-                lengthMenu: "每页 _MENU_ 条记录",//用来描述分页长度选项的字符串
-                loadingRecords: "加载中...",//用来描述数据在加载中等待的提示字符串 - 当异步读取数据的时候显示
-                processing: "处理中...",//用来描述加载进度的字符串
-                paginate: {
-                  first: "首页",
-                  previous: "上一页",
-                  next: "下一页",
-                  last: "尾页"
-                  },
-                aria: {
-                   sortAscending: "：激活以按升序排序此列",
-                   sortDescending: ": 激活以按降序排序此列"
-                }
-            }
-        });
-    })
+        // 渲染图表
+        renderHealthChart(response);
+    }).fail(function () {
+        showWarningToast("数据加载失败");
+        renderEmptyChart();
+    });
 }
 
+// 渲染空图表
+function renderEmptyChart() {
+    if (!healthChart) {
+        initChart();
+    }
+
+    healthChart.setOption({
+        title: {
+            text: '健康数据趋势图',
+            left: 'center',
+            top: 10
+        },
+        graphic: {
+            type: 'text',
+            left: 'center',
+            top: 'middle',
+            style: {
+                text: '暂无数据',
+                fontSize: 14,
+                fill: '#999'
+            }
+        },
+        xAxis: {},
+        yAxis: {},
+        series: []
+    });
+}
+
+// 渲染健康数据图表
+function renderHealthChart(response) {
+    if (!healthChart) {
+        initChart();
+    }
+
+    const data = response.data;
+    const columns = response.columns;
+
+    // 提取时间轴数据
+    const timeColumn = columns.find(col => col.includes('Time') || col.includes('Date'));
+    if (!timeColumn) {
+        showWarningToast("数据格式错误:缺少时间字段");
+        return;
+    }
+
+    const times = data.map(item => item[timeColumn]);
+
+    // 构建系列数据
+    const series = [];
+    const legend = [];
+
+    // 遍历所有非时间列
+    columns.forEach(col => {
+        if (col === timeColumn || col.includes('Type')) {
+            return;
+        }
+
+        // 查找匹配的数据类型配置
+        let config = null;
+        let displayName = translateColumnNames(col);
+
+        for (const [key, value] of Object.entries(dataTypeConfig)) {
+            if (col.includes(key)) {
+                config = value;
+                break;
+            }
+        }
+
+        legend.push(displayName);
+
+        series.push({
+            name: displayName,
+            type: 'line',
+            smooth: true,
+            symbol: 'circle',
+            symbolSize: 6,
+            itemStyle: {
+                color: config ? config.color : undefined
+            },
+            lineStyle: {
+                width: 2
+            },
+            data: data.map(item => {
+                let value = item[col];
+                // 处理睡眠类型翻译
+                if (col === 'SleepType') {
+                    value = translateSleepType(value);
+                }
+                return value;
+            })
+        });
+    });
+
+    // 设置图表选项
+    const option = {
+        title: {
+            text: '健康数据趋势图',
+            left: 'center',
+            top: 10,
+            textStyle: {
+                fontSize: 16,
+                fontWeight: 'normal'
+            }
+        },
+        tooltip: {
+            trigger: 'axis',
+            axisPointer: {
+                type: 'cross'
+            }
+        },
+        legend: {
+            data: legend,
+            top: 40,
+            left: 'center',
+            type: 'scroll'
+        },
+        grid: {
+            left: '3%',
+            right: '4%',
+            bottom: '15%',
+            top: 80,
+            containLabel: true
+        },
+        xAxis: {
+            type: 'category',
+            boundaryGap: false,
+            data: times,
+            axisLabel: {
+                rotate: 45,
+                formatter: function (value) {
+                    // 格式化日期显示
+                    if (value.length > 16) {
+                        return value.substring(5, 16);
+                    }
+                    return value;
+                }
+            }
+        },
+        yAxis: {
+            type: 'value',
+            axisLabel: {
+                formatter: '{value}'
+            }
+        },
+        series: series,
+        dataZoom: [
+            {
+                type: 'inside',
+                start: 0,
+                end: 100
+            },
+            {
+                start: 0,
+                end: 100,
+                height: 20,
+                bottom: 10
+            }
+        ]
+    };
+
+    healthChart.setOption(option, true);
+}
 
 // 导出健康数据为Excel文件
 function exportHealthData() {
-    const dataType = $('#datatype').val();
     const startTime = $('#starttime').val();
     const endTime = $('#endtime').val();
-    
+
     if (!startTime || !endTime) {
         showWarningToast("请选择开始和结束时间");
         return;
     }
-    
-    // 获取表格数据
-    const table = $('#table-health').DataTable();
-    const data = table.data().toArray();
-    const headers = [];
-    
-    // 获取表头
-    table.columns().every(function() {
-        headers.push(this.header().textContent);
+
+    const searchParams = {
+        dataType: '0',
+        startTime: startTime,
+        endTime: endTime
+    };
+
+    $.getJSON('/health', searchParams, function (response) {
+        if (!response || !response.data || response.data.length === 0) {
+            showWarningToast("无数据可导出");
+            return;
+        }
+
+        // 创建工作簿
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.json_to_sheet(response.data);
+
+        // 添加工作表到工作簿
+        XLSX.utils.book_append_sheet(wb, ws, "健康数据");
+
+        // 生成文件名
+        const fileName = `健康数据_${startTime.replace(/[\/:]/g, '')}_${endTime.replace(/[\/:]/g, '')}.xlsx`;
+
+        // 导出Excel文件
+        XLSX.writeFile(wb, fileName);
+        showSuccessToast("导出成功");
+    }).fail(function () {
+        showWarningToast("导出失败");
     });
-    
-    if (data.length === 0) {
-        showWarningToast("无数据可导出");
-        return;
-    }
-    
-    // 创建工作簿
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.json_to_sheet(data, {header: headers});
-    
-    // 添加工作表到工作簿
-    XLSX.utils.book_append_sheet(wb, ws, "健康数据");
-    
-    // 生成文件名
-    const fileName = `健康数据_${dataType}_${startTime.replace(/[\/:]/g, '')}_${endTime.replace(/[\/:]/g, '')}.xlsx`;
-    
-    // 导出Excel文件
-    XLSX.writeFile(wb, fileName);
 }
 
-$(document).ready(function() {
-    const defaultDatatype = $('#datatype').val();
-    loadHealthData(defaultDatatype, defaultStartTime, defaultEndTime);
+$(document).ready(function () {
+    // 初始化图表
+    initChart();
+
+    // 默认加载数据
+    loadHealthData(defaultStartTime, defaultEndTime);
 
     // 查询按钮点击事件
-    $('#searchHealth').click(function() {
-        const dataType = $('#datatype').val();
+    $('#searchHealth').click(function () {
         const startTime = $('#starttime').val();
         const endTime = $('#endtime').val();
-        loadHealthData(dataType, startTime, endTime);
+
+        if (!startTime || !endTime) {
+            showWarningToast("请选择开始和结束时间");
+            return;
+        }
+
+        loadHealthData(startTime, endTime);
     });
 
     // 清空按钮点击事件
-    $('#cleanHealth').click(function() {
+    $('#cleanHealth').click(function () {
         $('input[type="text"]').val('');
     });
-    
+
     // 刷新按钮点击事件
-    $('#refresh-health-btn').click(function() {
-        const dataType = $('#datatype').val();
+    $('#refresh-health-btn').click(function () {
         const startTime = $('#starttime').val() || defaultStartTime;
         const endTime = $('#endtime').val() || defaultEndTime;
-        loadHealthData(dataType, startTime, endTime);
+        loadHealthData(startTime, endTime);
         showSuccessToast("数据已刷新");
     });
-    
+
     // 导出按钮点击事件
-    $('#export-health-btn').click(function() {
+    $('#export-health-btn').click(function () {
         exportHealthData();
+    });
+
+    // 窗口大小改变时重新调整图表
+    window.addEventListener('resize', function () {
+        if (healthChart) {
+            healthChart.resize();
+        }
     });
 });
