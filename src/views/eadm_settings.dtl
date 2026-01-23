@@ -1,0 +1,163 @@
+{% extends "eadm_base.dtl" %}
+
+{% block title %}运动数据设置{% endblock %}
+
+{% block css %}
+<style>
+    .settings-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        padding: 30px;
+        margin-bottom: 20px;
+    }
+    .settings-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #e0e0e0;
+    }
+    .settings-header i {
+        font-size: 24px;
+        margin-right: 12px;
+        color: #667eea;
+    }
+    .status-badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 600;
+    }
+    .status-linked { background: #4CAF50; color: white; }
+    .status-not-linked { background: #9E9E9E; color: white; }
+    .sync-log-item {
+        padding: 12px;
+        border-left: 3px solid #667eea;
+        background: #f8f9fa;
+        margin-bottom: 10px;
+        border-radius: 4px;
+    }
+    .sync-log-success { border-left-color: #4CAF50; }
+    .sync-log-failed { border-left-color: #f44336; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<h2 class="mb-4"><i class="fas fa-cog"></i> 运动数据设置</h2>
+
+<!-- Garmin账户关联 -->
+<div class="settings-card">
+    <div class="settings-header">
+        <i class="fas fa-link"></i>
+        <h4 class="mb-0">Garmin账户关联</h4>
+    </div>
+
+    {% if garmin_linked %}
+    <div class="alert alert-success">
+        <i class="fas fa-check-circle"></i> 
+        已关联账户: <strong>{{garmin_email}}</strong>
+        <span class="status-badge status-linked ms-2">已连接</span>
+    </div>
+    <p class="text-muted">
+        <i class="far fa-clock"></i> 
+        最后同步时间: <span>{{last_sync_time|default:"未同步"}}</span>
+    </p>
+    <button class="btn btn-danger" onclick="unlinkGarmin()">
+        <i class="fas fa-unlink"></i> 解除关联
+    </button>
+    {% else %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle"></i> 
+        尚未关联Garmin账户
+        <span class="status-badge status-not-linked ms-2">未连接</span>
+    </div>
+    <form id="linkForm" onsubmit="linkGarmin(event)">
+        <div class="mb-3">
+            <label class="form-label">Garmin邮箱</label>
+            <input type="email" class="form-control" id="garminEmailInput" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">密码</label>
+            <input type="password" class="form-control" id="garminPasswordInput" required>
+        </div>
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-link"></i> 关联账户
+        </button>
+    </form>
+    {% endif %}
+</div>
+
+<!-- 同步配置 -->
+{% if garmin_linked %}
+<div class="settings-card">
+    <div class="settings-header">
+        <i class="fas fa-sync"></i>
+        <h4 class="mb-0">同步配置</h4>
+    </div>
+
+    <div class="mb-3">
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="autoSyncEnabled" 
+                   {% if auto_sync %}checked{% endif %} onchange="updateSyncConfig()">
+            <label class="form-check-label" for="autoSyncEnabled">
+                启用自动同步(每天凌晨2点)
+            </label>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">每次同步天数</label>
+        <select class="form-select" id="syncDays" onchange="updateSyncConfig()">
+            <option value="7" {% if sync_days == 7 %}selected{% endif %}>最近7天</option>
+            <option value="14" {% if sync_days == 14 %}selected{% endif %}>最近14天</option>
+            <option value="30" {% if sync_days == 30 %}selected{% endif %}>最近30天</option>
+            <option value="60" {% if sync_days == 60 %}selected{% endif %}>最近60天</option>
+            <option value="90" {% if sync_days == 90 %}selected{% endif %}>最近90天</option>
+        </select>
+    </div>
+
+    <button class="btn btn-success" onclick="triggerManualSync()">
+        <i class="fas fa-download"></i> 立即同步
+    </button>
+    <span id="syncStatus" class="ms-3"></span>
+</div>
+
+<!-- 同步历史 -->
+<div class="settings-card">
+    <div class="settings-header">
+        <i class="fas fa-history"></i>
+        <h4 class="mb-0">同步历史</h4>
+    </div>
+    <div id="syncHistoryList">
+        {% if sync_logs %}
+            {% for log in sync_logs %}
+            <div class="sync-log-item {% if log.status == 'success' %}sync-log-success{% else %}sync-log-failed{% endif %}">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="fas {% if log.status == 'success' %}fa-check-circle text-success{% else %}fa-times-circle text-danger{% endif %}"></i>
+                        <strong>{{log.start_time}}</strong>
+                    </div>
+                    <div>
+                        {% if log.status == 'success' %}
+                            同步{{log.activities_synced}}个活动 (新增{{log.activities_new}}个)
+                        {% else %}
+                            失败: {{log.error_message|default:"未知错误"}}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p class="text-muted">暂无同步记录</p>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block js_scripts %}
+<script src="/assets/js/settings.js"></script>
+{% endblock %}

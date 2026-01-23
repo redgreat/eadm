@@ -1,0 +1,178 @@
+{% block html_top %}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="运动数据分享 - 查看运动活动详情">
+    <title>运动数据分享 - {{activity.activity_name|default:"运动活动"}}</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        .activity-container { max-width: 1200px; margin: 0 auto; }
+        .activity-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+        .activity-header { border-bottom: 2px solid #e0e0e0; padding-bottom: 20px; margin-bottom: 30px; }
+        .activity-title { font-size: 32px; font-weight: bold; color: #333; margin-bottom: 10px; }
+        .activity-time { color: #666; font-size: 16px; }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .stat-item {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            padding: 20px;
+            color: white;
+            text-align: center;
+            transition: transform 0.3s;
+        }
+        .stat-item:hover { transform: translateY(-5px); }
+        .stat-value { font-size: 28px; font-weight: bold; margin-bottom: 5px; }
+        .stat-label { font-size: 14px; opacity: 0.9; }
+        #map { height: 500px; border-radius: 12px; margin: 20px 0; }
+        .activity-type-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-right: 10px;
+        }
+        .type-running { background: #4CAF50; color: white; }
+        .type-cycling { background: #2196F3; color: white; }
+        .type-swimming { background: #00BCD4; color: white; }
+        .type-other { background: #9E9E9E; color: white; }
+    </style>
+</head>
+<body>
+    <div class="activity-container">
+        <div class="activity-card">
+            <div class="activity-header">
+                <div>
+                    {% if activity.activity_type == 1 %}
+                        <span class="activity-type-badge type-running">跑步</span>
+                    {% elif activity.activity_type == 2 %}
+                        <span class="activity-type-badge type-cycling">骑行</span>
+                    {% elif activity.activity_type == 3 %}
+                        <span class="activity-type-badge type-swimming">游泳</span>
+                    {% else %}
+                        <span class="activity-type-badge type-other">其他</span>
+                    {% endif %}
+                </div>
+                <h1 class="activity-title">{{activity.activity_name|default:"运动活动"}}</h1>
+                <p class="activity-time">
+                    <i class="far fa-calendar"></i>
+                    <span>{{activity.start_time}}</span>
+                </p>
+            </div>
+
+            <div class="stats-grid">
+                {% if activity.distance %}
+                <div class="stat-item">
+                    <i class="fas fa-route fa-2x mb-2"></i>
+                    <div class="stat-value">{{activity.distance_km}} <small>公里</small></div>
+                    <div class="stat-label">距离</div>
+                </div>
+                {% endif %}
+                
+                {% if activity.duration %}
+                <div class="stat-item">
+                    <i class="fas fa-clock fa-2x mb-2"></i>
+                    <div class="stat-value">{{activity.duration_formatted}}</div>
+                    <div class="stat-label">时长</div>
+                </div>
+                {% endif %}
+                
+                {% if activity.avg_heart_rate and not activity.hide_stats %}
+                <div class="stat-item">
+                    <i class="fas fa-heartbeat fa-2x mb-2"></i>
+                    <div class="stat-value">{{activity.avg_heart_rate}} <small>bpm</small></div>
+                    <div class="stat-label">平均心率</div>
+                </div>
+                {% endif %}
+                
+                {% if activity.calories %}
+                <div class="stat-item">
+                    <i class="fas fa-fire fa-2x mb-2"></i>
+                    <div class="stat-value">{{activity.calories}} <small>kcal</small></div>
+                    <div class="stat-label">卡路里</div>
+                </div>
+                {% endif %}
+                
+                {% if activity.elevation_gain %}
+                <div class="stat-item">
+                    <i class="fas fa-mountain fa-2x mb-2"></i>
+                    <div class="stat-value">{{activity.elevation_gain}} <small>m</small></div>
+                    <div class="stat-label">爬升</div>
+                </div>
+                {% endif %}
+                
+                {% if activity.avg_speed and not activity.hide_stats %}
+                <div class="stat-item">
+                    <i class="fas fa-tachometer-alt fa-2x mb-2"></i>
+                    <div class="stat-value">{{activity.avg_speed_kmh}} <small>km/h</small></div>
+                    <div class="stat-label">平均速度</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if not activity.hide_map and has_map_data %}
+        <div class="activity-card">
+            <h3><i class="fas fa-map-marked-alt"></i> 运动轨迹</h3>
+            <div id="map"></div>
+        </div>
+        {% endif %}
+
+        <div class="activity-card">
+            <p class="text-center text-muted">
+                <i class="fas fa-share-alt"></i> 此活动由用户公开分享
+            </p>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // 地图数据
+        {% if not activity.hide_map and map_coordinates %}
+        const coordinates = {{map_coordinates|safe}};
+        
+        if (coordinates && coordinates.length > 0) {
+            const map = L.map('map');
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19
+            }).addTo(map);
+
+            const polyline = L.polyline(coordinates, {
+                color: '#667eea',
+                weight: 4,
+                opacity: 0.8
+            }).addTo(map);
+
+            if (coordinates.length > 0) {
+                L.marker(coordinates[0]).addTo(map).bindPopup('起点');
+                L.marker(coordinates[coordinates.length - 1]).addTo(map).bindPopup('终点');
+            }
+
+            map.fitBounds(polyline.getBounds());
+        }
+        {% endif %}
+    </script>
+</body>
+</html>
+{% endblock %}
