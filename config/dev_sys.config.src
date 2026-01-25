@@ -1,8 +1,8 @@
 ["config/db",
   {nova, [
-    {environment, dev},
+    {environment, prod},
     {cowboy_configuration, #{port => 8080}},
-    {dev_mode, true},
+    {dev_mode, false},
     {bootstrap_application, eadm}, %% Bootstraps the application
     {use_sessions, true},
     {session_expire, 3600},

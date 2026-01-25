@@ -11,6 +11,8 @@
 -module(eadm_crontab_controller).
 -author("wangcw").
 
+-include("eadm_mnesia.hrl").
+
 %%%===================================================================
 %%% 函数导出
 %%%===================================================================
@@ -45,58 +47,59 @@ init() ->
 %% @doc
 %% 加载并调度任务
 %% @end
+-spec load_and_schedule_jobs() -> ok.
 load_and_schedule_jobs() ->
-
     try
-        % 从数据库加载所有激活的定时任务
-        case eadm_pgpool:equery(pool_pg,
-            "select id, cronname, cronexp, cronmfa, starttime, endtime
-             from eadm_crontab
-             where cronstatus = 0
-              and deleted is false;", []) of
-            {ok, Columns, ResData} ->
-                JsonResult = eadm_utils:pg_as_json(Columns, ResData),
-                case JsonResult of
-                    #{data := Jobs} when is_list(Jobs), length(Jobs) > 0 ->
-                        lager:info("找到 ~p 个需要初始化的定时任务", [length(Jobs)]),
-                        lists:foreach(fun(Job) ->
-                            try
-                                Id = maps:get(<<"id">>, Job, <<"">>),
-                                CronName = maps:get(<<"cronname">>, Job, <<"未知任务">>),
-                                ScheduleResult = schedule_job(Job),
-                                case ScheduleResult of
-                                    {ok, _} ->
-                                        lager:info("任务 ~p 初始化成功", [CronName]);
-                                    {error, ScheduleError} ->
-                                        lager:error("任务 ~p 初始化失败: ~p", [CronName, ScheduleError]);
-                                    OtherResult ->
-                                        lager:info("任务 ~p 初始化结果: ~p", [CronName, OtherResult])
-                                end
-                            catch
-                                InitErrorType:InitErrorReason:InitStacktrace ->
-                                    lager:error("初始化任务失败: ~p:~p~n~p~n任务数据: ~p",
-                                               [InitErrorType, InitErrorReason, InitStacktrace, Job])
-                            end
-                        end, Jobs);
-                    #{data := []} ->
-                        lager:info("没有找到需要初始化的定时任务");
-                    _ ->
-                        lager:error("解析任务数据失败: ~p", [JsonResult])
-                end;
-            {error, Error} ->
-                lager:error("查询定时任务失败: ~p", [Error]);
-            Other ->
-                lager:error("查询定时任务返回未知结果: ~p", [Other])
+        % 从 Mnesia 加载所有激活的定时任务
+        AllJobs = eadm_mnesia_api:find_by_field(eadm_crontab, cronstatus, 0),
+        % 过滤已删除的任务并转换为 map
+        ActiveJobs = [#{
+            <<"id">> => Id,
+            <<"cronname">> => Name,
+            <<"cronexp">> => Exp,
+            <<"cronmfa">> => MFA,
+            <<"starttime">> => Start,
+            <<"endtime">> => End
+        } || #eadm_crontab{id = Id, cronname = Name, cronexp = Exp, cronmfa = MFA, 
+                          starttime = Start, endtime = End, deleted = false} <- AllJobs],
+        
+        case ActiveJobs of
+            [] ->
+                lager:info("没有找到需要初始化的定时任务"),
+                ok;
+            Jobs ->
+                lager:info("找到 ~p 个需要初始化的定时任务", [length(Jobs)]),
+                lists:foreach(fun(#{<<"cronname">> := CronName} = Job) ->
+                    try
+                        ScheduleResult = schedule_job(Job),
+                        case ScheduleResult of
+                            {ok, _} ->
+                                lager:info("任务 ~p 初始化成功", [CronName]);
+                            {error, ScheduleError} ->
+                                lager:error("任务 ~p 初始化失败: ~p", [CronName, ScheduleError]);
+                            OtherResult ->
+                                lager:info("任务 ~p 初始化结果: ~p", [CronName, OtherResult])
+                        end
+                    catch
+                        InitErrorType:InitErrorReason:InitStacktrace ->
+                            lager:error("初始化任务失败: ~p:~p~n~p~n任务数据: ~p",
+                                       [InitErrorType, InitErrorReason, InitStacktrace, Job])
+                    end
+                end, Jobs),
+                ok
         end
     catch
         ErrorType:ErrorReason:Stacktrace ->
-            lager:error("从数据库加载任务失败: ~p:~p~n~p", [ErrorType, ErrorReason, Stacktrace])
+            lager:error("从 Mnesia 加载任务失败: ~p:~p~n~p", [ErrorType, ErrorReason, Stacktrace]),
+            ok
     end.
 
 %% @doc
 %% 调度任务函数
 %% @end
-schedule_job(#{<<"id">> := Id, <<"cronexp">> := CronExp, <<"cronmfa">> := CronMFA} = Job) ->
+-spec schedule_job(map()) -> any().
+schedule_job(#{<<"id">> := Id, <<"cronexp">> := CronExp, <<"cronmfa">> := CronMFA} = Job)
+  when is_binary(Id), is_binary(CronExp), is_binary(CronMFA) ->
     try
         % 检查 cronmfa 格式是否有效
         case is_valid_mfa_format(CronMFA) of
@@ -521,8 +524,6 @@ toggle(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
         ResData = case Result of
             {ok, _, _, Rows} -> Rows;
             {ok, _, Rows} -> Rows;
-            {ok, 1, _, Rows} -> Rows;
-            {ok, 1, Rows} -> Rows;
             _ -> []
         end,
 

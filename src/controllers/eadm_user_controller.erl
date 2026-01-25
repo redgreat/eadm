@@ -11,9 +11,7 @@
 -module(eadm_user_controller).
 -author("wangcw").
 
-%%%===================================================================
-%%% 函数导出
-%%%===================================================================
+-include("eadm_mnesia.hrl").
 -export([index/1, search/1, add/1, edit/1, reset/1, delete/1, disable/1,
     userrole/1, userroleadd/1, userroledel/1, userpermission/1]).
 
@@ -39,11 +37,20 @@ index(#{auth_data := #{<<"authed">> := false}}) ->
 %% @end
 search(#{auth_data := #{<<"authed">> := true, <<"permission">> := #{<<"usermanage">> := true}}}) ->
     try
-        {ok, Res_Col, Res_Data} = eadm_pgpool:equery(pool_pg,
-            "select id, tenantname, loginname, username, email, userstatus, createdat
-            from vi_user order by createdat;", []),
-        Response = eadm_utils:pg_as_json(Res_Col, Res_Data),
-        {json, Response}
+        Users = eadm_mnesia_api:query_all(eadm_user),
+        % 过滤已删除的用户并转换格式
+        ActiveUsers = [#{
+            <<"id">> => Id,
+            <<"tenantname">> => get_tenant_name(TenantId),
+            <<"loginname">> => LoginName,
+            <<"username">> => UserName,
+            <<"email">> => Email,
+            <<"userstatus">> => Status,
+            <<"createdat">> => CreatedAt
+        } || #eadm_user{id = Id, tenantid = TenantId, loginname = LoginName, username = UserName,
+                         email = Email, userstatus = Status, createdat = CreatedAt, deleted = false} <- Users],
+        {json, #{<<"columns">> => [<<"id">>, <<"tenantname">>, <<"loginname">>, <<"username">>, <<"email">>, <<"userstatus">>, <<"createdat">>],
+                 <<"data">> => ActiveUsers}}
     catch
         _:Error ->
             lager:error("用户查询失败：~p~n", [Error]),
@@ -71,9 +78,18 @@ add(#{auth_data := #{<<"authed">> := true, <<"loginname">> := CreatedUser,
                         case re:run(Email, "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$") of
                             {match, _} ->
                                 CryptoGram = eadm_utils:pass_encrypt(PassWord),
-                                eadm_pgpool:equery(pool_pg, "insert into eadm_user(tenantid, loginname, username, email, passwd, createduser)
-                                                          values('et0000000002', $1, $2, $3, $4, $5);",
-                                                          [LoginName, UserName, Email, CryptoGram, CreatedUser]),
+                                NewId = eadm_mnesia_api:get_next_id(eadm_user),
+                                User = #eadm_user{
+                                    id = NewId,
+                                    tenantid = <<"et0000000002">>,
+                                    loginname = LoginName,
+                                    username = UserName,
+                                    email = Email,
+                                    passwd = CryptoGram,
+                                    createduser = CreatedUser,
+                                    createdat = erlang:system_time(second)
+                                },
+                                ok = eadm_mnesia_api:create(eadm_user, User),
                                 A = unicode:characters_to_binary("用户【", utf8),
                                 B = unicode:characters_to_binary("】新增成功！", utf8),
                                 {json, [#{<<"Alert">> => <<A/binary, UserName/binary, B/binary>>}]};
@@ -130,14 +146,15 @@ edit(#{auth_data := #{<<"authed">> := true, <<"loginname">> := CreatedUser,
               case re:run(Email, "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$") of
                   {match, _} ->
                       try
-                          eadm_pgpool:equery(pool_pg,
-                                "update eadm_user
-                                set loginname = $1,
-                                username = $2,
-                                email = $3,
-                                updateduser = $4
-                                where id = $5;",
-                              [LoginName, UserName, Email, CreatedUser, UserId]),
+                          ok = eadm_mnesia_api:update(eadm_user, UserId, fun(U) ->
+                              U#eadm_user{
+                                  loginname = LoginName,
+                                  username = UserName,
+                                  email = Email,
+                                  updateduser = CreatedUser,
+                                  updatedat = erlang:system_time(second)
+                              }
+                          end),
                           A = unicode:characters_to_binary("用户【", utf8),
                           B = unicode:characters_to_binary("】编辑成功！", utf8),
                           {json, [#{<<"Alert">> => <<A/binary, UserName/binary, B/binary>>}]}
@@ -187,12 +204,13 @@ reset(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
     CryptoGram = eadm_utils:pass_encrypt(<<"123456">>),
     lager:info("用户~p重置了密码~n", [LoginName]),
     try
-        eadm_pgpool:equery(pool_pg, "update eadm_user
-                         set updateduser = $1,
-                         updatedat = current_timestamp,
-                         passwd = $2
-                         where id = $3;",
-                         [LoginName, CryptoGram, UserId]),
+        ok = eadm_mnesia_api:update(eadm_user, UserId, fun(U) ->
+            U#eadm_user{
+                passwd = CryptoGram,
+                updateduser = LoginName,
+                updatedat = erlang:system_time(second)
+            }
+        end),
         {json, [#{<<"Alert">> => unicode:characters_to_binary("用户密码重置成功！", utf8)}]}
     catch
         _:Error ->
@@ -213,13 +231,13 @@ disable(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
       <<"permission">> := #{<<"usermanage">> := true}},
      bindings := #{<<"userId">> := UserId}}) ->
     try
-        eadm_pgpool:equery(pool_pg, "update eadm_user
-                                  set userstatus= 1 - userstatus,
-                                      updateduser = $1,
-                                      updatedat = current_timestamp
-                                  where id = $2
-                                    and deleted is false;",
-                                  [LoginName, UserId]),
+        ok = eadm_mnesia_api:update(eadm_user, UserId, fun(U) ->
+            U#eadm_user{
+                userstatus = 1 - U#eadm_user.userstatus,
+                updateduser = LoginName,
+                updatedat = erlang:system_time(second)
+            }
+        end),
         {json, [#{<<"Alert">> => unicode:characters_to_binary("用户启禁用成功！", utf8)}]}
     catch
         _:Error ->
@@ -240,12 +258,13 @@ delete(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
       <<"permission">> := #{<<"usermanage">> := true}},
     bindings := #{<<"userId">> := UserId}}) ->
     try
-        eadm_pgpool:equery(pool_pg, "update eadm_user
-                                  set deleteduser = $1,
-                                  deletedat = current_timestamp,
-                                  deleted = true
-                                  where id = $2;",
-                                  [LoginName, UserId]),
+        ok = eadm_mnesia_api:update(eadm_user, UserId, fun(U) ->
+            U#eadm_user{
+                deleted = true,
+                deleteduser = LoginName,
+                deletedat = erlang:system_time(second)
+            }
+        end),
         {json, [#{<<"Alert">> => unicode:characters_to_binary("用户删除成功！", utf8)}]}
     catch
         _:Error ->
@@ -465,16 +484,33 @@ validate_password(_) ->
 %% @end
 get_permission(LoginName) ->
     try
-        {ok, _, ResData} = eadm_pgpool:equery(pool_pg,
-            "select rolepermission
-            from vi_userpermission
-            where loginname = $1
-            limit 1;", [LoginName]),
-        {ResBin} = hd(ResData),
-        {ok, ResJson} = thoas:decode(ResBin),
-        #{<<"data">> => ResJson}
+        case eadm_mnesia_api:find_by_field(eadm_user, loginname, LoginName) of
+            [#eadm_user{id = UserId}] ->
+                UserRoles = eadm_mnesia_api:find_by_field(eadm_userrole, userid, UserId),
+                case UserRoles of
+                    [] -> #{<<"data">> => #{}};
+                    [#eadm_userrole{roleid = RoleId}|_] ->
+                        case eadm_mnesia_api:read(eadm_role, RoleId) of
+                            [#eadm_role{rolepermission = Permission, rolestatus = 0}] ->
+                                #{<<"data">> => Permission};
+                            _ ->
+                                #{<<"data">> => #{}}
+                        end
+                end;
+            [] ->
+                #{<<"data">> => #{}}
+        end
     catch
         _:Error ->
-            lager:error("权限获取失败：~p~n", [Error]),
-            {json, [#{<<"Alert">> => unicode:characters_to_binary("权限获取失败！", utf8)}]}
+            lager:error("用户权限获取失败：~p~n", [Error]),
+            #{<<"data">> => #{}}
+    end.
+
+%% @doc
+%% 获取租户名称
+%% @end
+get_tenant_name(TenantId) ->
+    case eadm_mnesia_api:read(eadm_tenant, TenantId) of
+        [#eadm_tenant{tenantname = Name}] -> Name;
+        _ -> <<"未知租户"/utf8>>
     end.

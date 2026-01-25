@@ -11,6 +11,8 @@
 -module(eadm_role_controller).
 -author("wangcw").
 
+-include("eadm_mnesia.hrl").
+
 %%%===================================================================
 %%% 函数导出
 %%%===================================================================
@@ -39,12 +41,15 @@ index(#{auth_data := #{<<"authed">> := false}}) ->
 search(#{auth_data := #{<<"authed">> := true,
         <<"permission">> := #{<<"usermanage">> := true}}}) ->
     try
-        {ok, ResCol, ResData} = eadm_pgpool:equery(pool_pg,
-            "select id, rolename, rolestatus, createdat
-            from vi_role
-            order by createdat;", []),
-        Response = eadm_utils:pg_as_json(ResCol, ResData),
-        {json, Response}
+        Roles = eadm_mnesia_api:query_all(eadm_role),
+        ActiveRoles = [#{
+            <<"id">> => Id,
+            <<"rolename">> => Name,
+            <<"rolestatus">> => Status,
+            <<"createdat">> => CreatedAt
+        } || #eadm_role{id = Id, rolename = Name, rolestatus = Status, createdat = CreatedAt, deleted = false} <- Roles],
+        {json, #{<<"columns">> => [<<"id">>, <<"rolename">>, <<"rolestatus">>, <<"createdat">>],
+                 <<"data">> => ActiveRoles}}
     catch
         _:Error ->
             lager:error("数据查询失败：~p~n", [Error]),
@@ -64,8 +69,14 @@ add(#{auth_data := #{<<"authed">> := true, <<"loginname">> := CreatedUser,
     <<"permission">> := #{<<"usermanage">> := true}},
     params := #{<<"roleName">> := RoleName}}) ->
     try
-        eadm_pgpool:equery(pool_pg, "insert into eadm_role(rolename, createduser) values($1, $2);",
-            [RoleName, CreatedUser]),
+        NewId = eadm_mnesia_api:get_next_id(eadm_role),
+        Role = #eadm_role{
+            id = NewId,
+            rolename = RoleName,
+            createduser = CreatedUser,
+            createdat = erlang:system_time(second)
+        },
+        ok = eadm_mnesia_api:create(eadm_role, Role),
         A = unicode:characters_to_binary("角色【", utf8),
         B = unicode:characters_to_binary("】新增成功！", utf8),
         {json, [#{<<"Alert">> => <<A/binary, RoleName/binary, B/binary>>}]}
@@ -88,14 +99,12 @@ loadpermission(#{auth_data := #{<<"authed">> := true,
         <<"permission">> := #{<<"usermanage">> := true}},
         bindings := #{<<"roleId">> := RoleId}}) ->
     try
-        {ok, _, ResData} = eadm_pgpool:equery(pool_pg,
-            "select rolepermission
-            from eadm_role
-            where id = $1
-                and deleted is false;",
-            [RoleId]),
-        RetuenJson = eadm_utils:pg_as_jsondata(ResData),
-        {json, RetuenJson}
+        case eadm_mnesia_api:read(eadm_role, RoleId) of
+            [#eadm_role{rolepermission = Permission, deleted = false}] ->
+                {json, [#{<<"rolepermission">> => Permission}]};
+            _ ->
+                {json, [#{<<"Alert">> => unicode:characters_to_binary("角色不存在！", utf8)}]}
+        end
     catch
         _:Error ->
             lager:error("角色权限查询失败：~p~n", [Error]),
@@ -137,13 +146,13 @@ updatepermission(#{auth_data := #{<<"authed">> := true, <<"loginname">> := Login
             <<"crontab">> => erlang:binary_to_atom(Crontab),
             <<"usermanage">> => erlang:binary_to_atom(Usermanage)
         },
-        RolePermissionJson = thoas:encode(RolePermissionMap),
-        eadm_pgpool:equery(pool_pg,
-            "update eadm_role
-            set rolepermission = $1,
-                updateduser = $2,
-                updatedat = current_timestamp
-            where id = $3;", [RolePermissionJson, LoginName, RoleId]),
+        ok = eadm_mnesia_api:update(eadm_role, RoleId, fun(R) ->
+            R#eadm_role{
+                rolepermission = RolePermissionMap,
+                updateduser = LoginName,
+                updatedat = erlang:system_time(second)
+            }
+        end),
         {json, [#{<<"Alert">> => unicode:characters_to_binary("权限更新成功！", utf8)}]}
     catch
         _:Error ->
@@ -164,19 +173,18 @@ disable(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
         <<"permission">> := #{<<"usermanage">> := true}},
         bindings := #{<<"roleId">> := RoleId}}) ->
     try
-        eadm_pgpool:equery(pool_pg,
-            "update eadm_role
-            set rolestatus = 1 - rolestatus,
-                updateduser = $1,
-                updatedat = current_timestamp
-            where id = $2
-                and deleted is false;",
-            [LoginName, RoleId]),
+        ok = eadm_mnesia_api:update(eadm_role, RoleId, fun(R) ->
+            R#eadm_role{
+                rolestatus = 1 - R#eadm_role.rolestatus,
+                updateduser = LoginName,
+                updatedat = erlang:system_time(second)
+            }
+        end),
         {json, [#{<<"Alert">> => unicode:characters_to_binary("角色启禁用成功！", utf8)}]}
     catch
         _:Error ->
-            lager:error("任务新增失败：~p~n", [Error]),
-            {json, [#{<<"Alert">> => unicode:characters_to_binary("任务新增失败！", utf8)}]}
+            lager:error("角色启禁用失败：~p~n", [Error]),
+            {json, [#{<<"Alert">> => unicode:characters_to_binary("角色启禁用失败！", utf8)}]}
     end;
 
 disable(#{auth_data := #{<<"permission">> := #{<<"usermanage">> := false}}}) ->
@@ -192,13 +200,13 @@ delete(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName,
         <<"permission">> := #{<<"usermanage">> := true}},
         bindings := #{<<"roleId">> := RoleId}}) ->
     try
-        eadm_pgpool:equery(pool_pg,
-            "update eadm_role
-            set deleteduser = $1,
-                deletedat = now(),
-                deleted = true
-            where id = $2;",
-            [LoginName, RoleId]),
+        ok = eadm_mnesia_api:update(eadm_role, RoleId, fun(R) ->
+            R#eadm_role{
+                deleted = true,
+                deleteduser = LoginName,
+                deletedat = erlang:system_time(second)
+            }
+        end),
         {json, [#{<<"Alert">> => unicode:characters_to_binary("角色删除成功！", utf8)}]}
     catch
         _:Error ->
@@ -219,20 +227,23 @@ getrolelist(#{auth_data := #{<<"authed">> := true,
         <<"permission">> := #{<<"usermanage">> := true}},
         bindings := #{<<"userId">> := UserId}}) ->
     try
-        {ok, ResCol, ResData} = eadm_pgpool:equery(pool_pg,
-            "select a.id, a.rolename, a.createdat
-            from vi_role a
-            where not exists(select 1
-                from eadm_userrole b
-                where b.roleid=a.id
-                and b.userid=$1
-                and b.deleted is false)
-            order by a.createdat;", [UserId]),
-        {json, eadm_utils:pg_as_json(ResCol, ResData)}
+        Roles = eadm_mnesia_api:query_all(eadm_role),
+        UserRoles = eadm_mnesia_api:find_by_field(eadm_userrole, userid, UserId),
+        AssignedRoleIds = [RoleId || #eadm_userrole{roleid = RoleId, deleted = false} <- UserRoles],
+        
+        AvailableRoles = [#{
+            <<"id">> => Id,
+            <<"rolename">> => Name,
+            <<"createdat">> => CreatedAt
+        } || #eadm_role{id = Id, rolename = Name, createdat = CreatedAt, deleted = false} <- Roles,
+             not lists:member(Id, AssignedRoleIds)],
+        
+        {json, #{<<"columns">> => [<<"id">>, <<"rolename">>, <<"createdat">>],
+                 <<"data">> => AvailableRoles}}
     catch
         _:Error ->
-            lager:error("数据查询失败：~p~n", [Error]),
-            {json, [#{<<"Alert">> => unicode:characters_to_binary("数据查询失败！", utf8)}]}
+            lager:error("角色列表查询失败：~p~n", [Error]),
+            {json, [#{<<"Alert">> => unicode:characters_to_binary("角色列表查询失败！", utf8)}]}
     end;
 
 getrolelist(#{auth_data := #{<<"permission">> := #{<<"usermanage">> := false}}}) ->

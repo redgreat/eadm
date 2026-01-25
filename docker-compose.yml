@@ -25,6 +25,8 @@ services:
             - ./docker/sys.config.src:/opt/eadm/config/sys.config.src
             - ./docker/vm.args.src:/opt/eadm/config/vm.args.src
             - ./logs/:/opt/eadm/log/:rw
+            - ./mnesia_data:/opt/eadm/mnesia:rw
+            - ./backups:/opt/eadm/backups:rw
         environment:
             DISABLE_IPV6: 'true'
         depends_on:

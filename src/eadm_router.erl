@@ -42,7 +42,7 @@ routes(_Environment) ->
         {"/logout", fun eadm_login_controller:logout/1, #{methods => [post]}},
         {"/assets/[...]", "assets"}]},
    #{prefix => "menu",
-     security => {eadm_auth, auth},
+     security => fun eadm_auth:auth/1,
      routes =>
        [{"/health", fun eadm_health_controller:index/1, #{methods => [get]}},
         {"/location", fun eadm_location_controller:index/1, #{methods => [get]}},
@@ -52,7 +52,7 @@ routes(_Environment) ->
         {"/role", fun eadm_role_controller:index/1, #{methods => [get]}},
         {"/device", fun eadm_device_controller:index/1, #{methods => [get]}}]},
    #{prefix => "",
-     security => {eadm_auth, auth},
+     security => fun eadm_auth:auth/1,
      routes =>
        [{"/", fun eadm_dashboard_controller:index/1, #{methods => [get]}},
         {"/userinfo", fun eadm_login_controller:userinfo/1, #{methods => [get]}},
@@ -66,13 +66,13 @@ routes(_Environment) ->
         {"/user", fun eadm_user_controller:search/1, #{methods => [get]}},
         {"/role", fun eadm_role_controller:search/1, #{methods => [get]}}]},
    #{prefix => "finance",
-     security => {eadm_auth, auth},
+     security => fun eadm_auth:auth/1,
      routes =>
        [{"/:detailId", fun eadm_finance_controller:searchdetail/1, #{methods => [get]}},
         {"/:detailId", fun eadm_finance_controller:delete/1, #{methods => [delete]}},
         {"/upload", fun eadm_finance_controller:upload/1, #{methods => [post]}}]},
    #{prefix => "device",
-     security => {eadm_auth, auth},
+     security => fun eadm_auth:auth/1,
      routes =>
        [{"/", fun eadm_device_controller:search/1, #{methods => [get]}},
         {"/add", fun eadm_device_controller:add/1, #{methods => [post]}},
@@ -84,7 +84,7 @@ routes(_Environment) ->
         {"/users/:deviceNo", fun eadm_device_controller:device_users/1, #{methods => [get]}},
         {"/user_devices", fun eadm_device_controller:user_devices/1, #{methods => [get]}}]},
    #{prefix => "crontab",
-     security => {eadm_auth, auth},
+     security => fun eadm_auth:auth/1,
      routes =>
        [{"/detail/:cronId", fun eadm_crontab_controller:detail/1, #{methods => [get]}},
         {"/add", fun eadm_crontab_controller:add/1, #{methods => [post]}},
@@ -92,7 +92,7 @@ routes(_Environment) ->
         {"/toggle", fun eadm_crontab_controller:toggle/1, #{methods => [post]}},
         {"/delete/:cronId", fun eadm_crontab_controller:delete/1, #{methods => [delete]}}]},
    #{prefix => "user",
-     security => {eadm_auth, auth},
+     security => fun eadm_auth:auth/1,
      routes =>
        [{"/add", fun eadm_user_controller:add/1, #{methods => [post]}},
         {"/edit", fun eadm_user_controller:edit/1, #{methods => [post]}},
@@ -100,25 +100,25 @@ routes(_Environment) ->
         {"/reset/:userId", fun eadm_user_controller:reset/1, #{methods => [post]}},
         {"/disable/:userId", fun eadm_user_controller:disable/1, #{methods => [post]}}]},
    #{prefix => "userrole",
-     security => {eadm_auth, auth},
+     security => fun eadm_auth:auth/1,
      routes =>
        [{"/:userId", fun eadm_user_controller:userrole/1, #{methods => [get]}},
         {"/delete/:userRoleId", fun eadm_user_controller:userroledel/1, #{methods => [delete]}},
         {"/add", fun eadm_user_controller:userroleadd/1, #{methods => [post]}}]},
    #{prefix => "role",
-     security => {eadm_auth, auth},
+     security => fun eadm_auth:auth/1,
      routes =>
        [{"/:userId", fun eadm_role_controller:getrolelist/1, #{methods => [get]}},
         {"/add", fun eadm_role_controller:add/1, #{methods => [post]}},
         {"/disable/:roleId", fun eadm_role_controller:disable/1, #{methods => [post]}}]},
    #{prefix => "permission",
-     security => {eadm_auth, auth},
+     security => fun eadm_auth:auth/1,
      routes =>
        [{"/", fun eadm_user_controller:userpermission/1, #{methods => [get]}},
         {"/:roleId", fun eadm_role_controller:loadpermission/1, #{methods => [get]}},
         {"/edit", fun eadm_role_controller:updatepermission/1, #{methods => [post]}}]},
    #{prefix => "sys",
-     security => {eadm_auth, auth},
+     security => fun eadm_auth:auth/1,
      routes =>
        [{"/sysinfo", fun eadm_sys_sysinfo_controller:index/1, #{methods => [get]}},
         {"/route_table", fun eadm_sys_sysinfo_controller:route_table/1, #{methods => [get]}},
@@ -132,7 +132,7 @@ routes(_Environment) ->
      security => false,
      routes => [{"/watch", fun api_watch:index/1, #{methods => [post]}}]},
    #{prefix => "api/finance",
-     security => {eadm_auth, auth},
+     security => fun eadm_auth:auth/1,
      routes =>
        [{"/alipay", fun eadm_payment_controller:alipay/1, #{methods => [get]}},
         {"/wechat", fun eadm_payment_controller:wechat/1, #{methods => [get]}},

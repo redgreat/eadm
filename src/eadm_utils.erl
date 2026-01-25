@@ -14,6 +14,10 @@
 %% define
 -define(DATE_TIME_PATTERN, <<"^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$">>).
 
+-type pg_col() :: {column, binary(), any(), any(), any(), any(), any(), any(), any()}.
+-type pg_row() :: tuple().
+-type json_map() :: #{binary() => any()}.
+
 %%%===================================================================
 %%% Application callbacks
 %%%===================================================================
@@ -52,26 +56,31 @@ to_json(Element) ->
 %% @doc
 %% 获取session过期时间
 %% @end
+-spec get_exp_bin() -> integer().
 get_exp_bin() ->
-    ExpExtend = application:get_env(nova, session_expire, 3600),
+    ExpExtend = case application:get_env(nova, session_expire, 3600) of
+        Val when is_integer(Val) -> Val;
+        _ -> 3600
+    end,
     erlang:system_time(seconds) + ExpExtend.
 
 %% @doc
 %% 将MySQL查询结果转换为map格式
 %% @end
+-spec as_map({ok, [binary()], [tuple()]}) -> [json_map()].
 as_map({ok, ColumnNames, Rows}) ->
     as_map(ColumnNames, Rows, []).
 
+-spec as_map([binary()], [tuple()], [json_map()]) -> [json_map()].
 as_map(ColumnNames, [Row | RestRows], Acc) ->
-    Map = lists:foldl(
-        fun({Key, Value}, AccMap) ->
-            {TransformedValue, _IsTime} = transform_value(Key, Value),
-            AccMap#{Key => TransformedValue}
-        end,
-        #{},
-        lists:zip(ColumnNames, Row)
-    ),
-    as_map(ColumnNames, RestRows, [Map | Acc]);
+    RowList = erlang:tuple_to_list(Row),
+    Pairs = lists:zip(ColumnNames, RowList),
+    TransformedPairs = [{K, element(1, transform_value(K, V))} || {K, V} <- Pairs],
+    Map = maps:from_list(TransformedPairs),
+    case is_map(Map) of
+        true -> as_map(ColumnNames, RestRows, [Map | Acc]);
+        false -> as_map(ColumnNames, RestRows, Acc)
+    end;
 as_map(_ColumnNames, [], Acc) ->
     lists:reverse(Acc).
 
@@ -96,6 +105,7 @@ return_as_json(Columns, Rows) ->
 %% @doc
 %% epgsql返回结果转换为erlang的map格式
 %% @end
+-spec pg_as_map([pg_col()], [pg_row()]) -> [json_map()].
 pg_as_map(ResCol, ResData) ->
     ColumnNames = [Name || {column, Name, _, _, _, _, _, _, _} <- ResCol],
     [maps:from_list(lists:zip(ColumnNames, erlang:tuple_to_list(Row))) || Row <- ResData].
@@ -103,6 +113,7 @@ pg_as_map(ResCol, ResData) ->
 %% @doc
 %% epgsql返回结果转换为erlang的带列名的json格式
 %% @end
+-spec pg_as_json([pg_col()], [pg_row()]) -> #{columns => [binary()], data => [json_map()]}.
 pg_as_json(ResCol, ResData) ->
     #{columns => [Name || {column, Name, _, _, _, _, _, _, _} <- ResCol], data => pg_as_map(ResCol, ResData)}.
 
@@ -116,10 +127,15 @@ pg_as_jsonmap(ResData) ->
 %% @doc
 %% epgsql返回结果转换为json格式data
 %% @end
+-spec pg_as_jsondata([pg_row()]) -> any().
 pg_as_jsondata(ResData) ->
-    {ResBin} = erlang:hd(ResData),
-    {ok, RetuenData} = thoas:decode(ResBin),
-    RetuenData.
+    case erlang:hd(ResData) of
+        {ResBin} when is_binary(ResBin) ->
+            {ok, RetuenData} = thoas:decode(ResBin),
+            RetuenData;
+        _ ->
+            #{}
+    end.
 
 %% @doc
 %% epgsql返回结果转换为list格式data
@@ -278,28 +294,23 @@ lastyear_date_binary() ->
 %% @doc
 %% 密码加密.
 %% @end
+-spec pass_encrypt(binary()) -> binary().
 pass_encrypt(PassBin) ->
-    SecretKey = application:get_env(nova, secret_key, <<>>),
+    SecretKey = case application:get_env(nova, secret_key, <<>>) of
+        SKey when is_binary(SKey) -> SKey;
+        _ -> <<>>
+    end,
     EncryptPwd = crypto:hash(sha256, <<SecretKey/binary, PassBin/binary>>),
     base64:encode(EncryptPwd).
+
+-include("eadm_mnesia.hrl").
 
 %% @doc
 %% 验证密码
 %% @end
 validate_login(LoginName, Password) ->
-    {ok, _, Res_DbPassword} = eadm_pgpool:equery(pool_pg,
-        "select passwd, userstatus
-        from eadm_user
-        where loginname = $1
-          and deleted is false
-        order by updatedat desc
-        limit 1;",
-        [LoginName]),
-    case Res_DbPassword of
-        [] ->
-            2;
-        _ ->
-            {DbPassword, DbUserStatus} = hd(Res_DbPassword),
+    case eadm_mnesia_api:find_by_field(eadm_user, loginname, LoginName) of
+        [#eadm_user{passwd = DbPassword, userstatus = DbUserStatus, deleted = false}|_] ->
             case DbUserStatus of
                 0 ->
                     verify_password(Password, DbPassword);
@@ -307,14 +318,20 @@ validate_login(LoginName, Password) ->
                     3;
                 _ ->
                     4
-            end
+            end;
+        _ ->
+            2
     end.
 
 %% @doc
 %% 密码加密解密-验证密码
 %% @end
+-spec verify_password(binary(), binary()) -> boolean().
 verify_password(Pwd, DbPwd) ->
-    SecretKey = application:get_env(nova, secret_key, <<>>),
+    SecretKey = case application:get_env(nova, secret_key, <<>>) of
+        SKey when is_binary(SKey) -> SKey;
+        _ -> <<>>
+    end,
     HPwd = crypto:hash(sha256, <<SecretKey/binary, Pwd/binary>>),
     DbPwdBin = base64:decode(DbPwd),
     HPwd =:= DbPwdBin.

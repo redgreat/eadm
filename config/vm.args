@@ -13,4 +13,4 @@
 +C multi_time_warp
 +sbwt none
 
--mnesia dir '"/var/eadm_db"'
+-mnesia dir '"/opt/eadm/mnesia"'

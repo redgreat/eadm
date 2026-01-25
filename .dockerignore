@@ -19,3 +19,4 @@ rebar.lock
 !src
 !docker
 /config/prod_db.config.prod
+Mnesia*/

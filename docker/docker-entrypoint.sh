@@ -25,6 +25,8 @@ fi
 
 # 创建文件夹
 mkdir -p /opt/eadm/log && chown -R eadm:eadm /opt/eadm
+mkdir -p /opt/eadm/mnesia && chown -R eadm:eadm /opt/eadm/mnesia
+mkdir -p /opt/eadm/backups && chown -R eadm:eadm /opt/eadm/backups
 
 # 前台运行
 exec /usr/bin/gosu eadm /opt/eadm/bin/eadm foreground
