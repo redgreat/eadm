@@ -24,14 +24,23 @@
 %% API functions
 %%====================================================================
 
-index(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName,
-        <<"permission">> := Permission}, req := Req}) ->
+index(#{
+    auth_data := #{
+        <<"authed">> := true,
+        <<"username">> := UserName,
+        <<"permission">> := Permission
+    },
+    req := Req
+}) ->
     case maps:get(<<"sports">>, Permission, false) of
         true ->
             UserId = get_user_id(Req),
-            SQL = <<"SELECT garminemail, lastsynctime, syncenable, autosync, syncdays
-                    FROM sp_garminconf 
-                    WHERE userid = $1">>,
+            SQL =
+                <<
+                    "SELECT garminemail, lastsynctime, syncenable, autosync, syncdays\n"
+                    "                    FROM sp_garminconf \n"
+                    "                    WHERE userid = $1"
+                >>,
             {Linked, Email, LastSync, AutoSync, SyncDays} =
                 case eadm_pgpool:equery(SQL, [UserId]) of
                     {ok, _, [{Email0, LastSync0, _SyncEnabled0, AutoSync0, SyncDays0}]} ->
@@ -39,12 +48,15 @@ index(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName,
                     {ok, _, []} ->
                         {false, <<"">>, null, false, 30}
                 end,
-            LogSql = <<"SELECT starttime, endtime, synccount, 
-                               newcount, syncstatus, errmsg
-                        FROM sp_garminlog 
-                        WHERE userid = $1 
-                        ORDER BY starttime DESC 
-                        LIMIT 20">>,
+            LogSql =
+                <<
+                    "SELECT starttime, endtime, synccount, \n"
+                    "                               newcount, syncstatus, errmsg\n"
+                    "                        FROM sp_garminlog \n"
+                    "                        WHERE userid = $1 \n"
+                    "                        ORDER BY starttime DESC \n"
+                    "                        LIMIT 20"
+                >>,
             Logs =
                 case eadm_pgpool:equery(LogSql, [UserId]) of
                     {ok, _, Rows} ->
@@ -52,19 +64,20 @@ index(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName,
                     _ ->
                         []
                 end,
-            {ok, [
-                {username, UserName},
-                {garmin_linked, Linked},
-                {garmin_email, Email},
-                {last_sync_time, LastSync},
-                {auto_sync, AutoSync},
-                {sync_days, SyncDays},
-                {sync_logs, Logs}
-            ], #{view => eadm_settings}};
+            {ok,
+                [
+                    {username, UserName},
+                    {garmin_linked, Linked},
+                    {garmin_email, Email},
+                    {last_sync_time, LastSync},
+                    {auto_sync, AutoSync},
+                    {sync_days, SyncDays},
+                    {sync_logs, Logs}
+                ],
+                #{view => eadm_settings}};
         false ->
             {json, [#{<<"Alert">> => unicode:characters_to_binary("API鉴权失败！", utf8)}]}
     end;
-
 index(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 
@@ -75,11 +88,11 @@ index(#{auth_data := #{<<"authed">> := false}}) ->
 %%--------------------------------------------------------------------
 link_garmin(#{req := Req} = _Params) ->
     UserId = get_user_id(Req),
-    
+
     %% 解析请求体
     {ok, Body, _} = cowboy_req:read_body(Req),
     #{<<"email">> := Email, <<"password">> := Password} = jsx:decode(Body, [return_maps]),
-    
+
     %% 登录Garmin
     case garmin_client_service:login(Email, Password) of
         {ok, #{oauth1 := OAuth1Token, oauth2 := OAuth2Token}} ->
@@ -88,23 +101,26 @@ link_garmin(#{req := Req} = _Params) ->
             OAuth2Encrypted = garmin_client_service:encrypt_token(jsx:encode(OAuth2Token)),
             OAuth1Json = jsx:encode(#{<<"enc">> => OAuth1Encrypted}),
             OAuth2Json = jsx:encode(#{<<"enc">> => OAuth2Encrypted}),
-            
+
             %% 保存到数据库
-            SQL = <<"INSERT INTO sp_garminconf 
-                    (userid, garminemail, oauth1token, oauth2token, syncenable, autosync)
-                    VALUES ($1, $2, $3, $4, true, true)
-                    ON CONFLICT (userid) 
-                    DO UPDATE SET 
-                        garminemail = EXCLUDED.garminemail,
-                        oauth1token = EXCLUDED.oauth1token,
-                        oauth2token = EXCLUDED.oauth2token,
-                        syncenable = true,
-                        updatedat = CURRENT_TIMESTAMP">>,
-            
+            SQL =
+                <<
+                    "INSERT INTO sp_garminconf \n"
+                    "                    (userid, garminemail, oauth1token, oauth2token, syncenable, autosync)\n"
+                    "                    VALUES ($1, $2, $3, $4, true, true)\n"
+                    "                    ON CONFLICT (userid) \n"
+                    "                    DO UPDATE SET \n"
+                    "                        garminemail = EXCLUDED.garminemail,\n"
+                    "                        oauth1token = EXCLUDED.oauth1token,\n"
+                    "                        oauth2token = EXCLUDED.oauth2token,\n"
+                    "                        syncenable = true,\n"
+                    "                        updatedat = CURRENT_TIMESTAMP"
+                >>,
+
             case eadm_pgpool:equery(SQL, [UserId, Email, OAuth1Json, OAuth2Json]) of
                 {ok, _} ->
                     eadm_scheduler:schedule_user_sync(UserId),
-                    
+
                     {json, #{
                         <<"code">> => 200,
                         <<"message">> => <<"Garmin account linked successfully">>
@@ -129,13 +145,13 @@ link_garmin(#{req := Req} = _Params) ->
 %%--------------------------------------------------------------------
 unlink_garmin(#{req := Req} = _Params) ->
     UserId = get_user_id(Req),
-    
+
     %% 取消定时任务
     eadm_scheduler:cancel_user_sync(UserId),
-    
+
     %% 删除集成配置
     SQL = <<"DELETE FROM sp_garminconf WHERE userid = $1 RETURNING id">>,
-    
+
     case eadm_pgpool:equery(SQL, [UserId]) of
         {ok, _, [{_}]} ->
             {json, #{
@@ -161,15 +177,18 @@ unlink_garmin(#{req := Req} = _Params) ->
 %%--------------------------------------------------------------------
 garmin_status(#{req := Req} = _Params) ->
     UserId = get_user_id(Req),
-    
-    SQL = <<"SELECT garminemail, lastsynctime, syncenable, autosync, syncdays
-            FROM sp_garminconf 
-            WHERE userid = $1">>,
-    
+
+    SQL =
+        <<
+            "SELECT garminemail, lastsynctime, syncenable, autosync, syncdays\n"
+            "            FROM sp_garminconf \n"
+            "            WHERE userid = $1"
+        >>,
+
     case eadm_pgpool:equery(SQL, [UserId]) of
         {ok, _, [{Email, LastSync, SyncEnabled, AutoSync, SyncDays}]} ->
             {ok, SyncStatus} = eadm_scheduler:get_sync_status(UserId),
-            
+
             {json, #{
                 <<"code">> => 200,
                 <<"data">> => #{
@@ -203,20 +222,23 @@ garmin_status(#{req := Req} = _Params) ->
 %%--------------------------------------------------------------------
 update_sync_config(#{req := Req} = _Params) ->
     UserId = get_user_id(Req),
-    
+
     %% 解析请求体
     {ok, Body, _} = cowboy_req:read_body(Req),
     Config = jsx:decode(Body, [return_maps]),
-    
+
     SyncEnabled = maps:get(<<"syncEnabled">>, Config, true),
     AutoSync = maps:get(<<"autoSync">>, Config, true),
     SyncDays = maps:get(<<"syncDays">>, Config, 30),
-    
-    SQL = <<"UPDATE sp_garminconf 
-            SET syncenable = $1, autosync = $2, syncdays = $3, updatedat = CURRENT_TIMESTAMP
-            WHERE userid = $4 
-            RETURNING id">>,
-    
+
+    SQL =
+        <<
+            "UPDATE sp_garminconf \n"
+            "            SET syncenable = $1, autosync = $2, syncdays = $3, updatedat = CURRENT_TIMESTAMP\n"
+            "            WHERE userid = $4 \n"
+            "            RETURNING id"
+        >>,
+
     case eadm_pgpool:equery(SQL, [SyncEnabled, AutoSync, SyncDays, UserId]) of
         {ok, _, [{_}]} ->
             case {SyncEnabled, AutoSync} of
@@ -225,7 +247,7 @@ update_sync_config(#{req := Req} = _Params) ->
                 _ ->
                     eadm_scheduler:cancel_user_sync(UserId)
             end,
-            
+
             {json, #{
                 <<"code">> => 200,
                 <<"message">> => <<"Sync config updated successfully">>
@@ -249,23 +271,28 @@ update_sync_config(#{req := Req} = _Params) ->
 %%--------------------------------------------------------------------
 update_share_config(#{req := Req} = _Params) ->
     UserId = get_user_id(Req),
-    
+
     %% 解析请求体
     {ok, Body, _} = cowboy_req:read_body(Req),
     #{<<"activityId">> := ActivityId} = Config = jsx:decode(Body, [return_maps]),
-    
+
     IsPublic = maps:get(<<"isPublic">>, Config, false),
     HideMap = maps:get(<<"hideMap">>, Config, false),
     HideStats = maps:get(<<"hideStats">>, Config, false),
     HideLocation = maps:get(<<"hideLocation">>, Config, false),
-    
-    SQL = <<"UPDATE sp_activity 
-            SET ispublic = $1, hidemap = $2, hidestats = $3, hidelocation = $4,
-                updatedat = CURRENT_TIMESTAMP
-            WHERE id = $5 AND userid = $6 
-            RETURNING sharetoken">>,
-    
-    case eadm_pgpool:equery(SQL, [IsPublic, HideMap, HideStats, HideLocation, ActivityId, UserId]) of
+
+    SQL =
+        <<
+            "UPDATE sp_activity \n"
+            "            SET ispublic = $1, hidemap = $2, hidestats = $3, hidelocation = $4,\n"
+            "                updatedat = CURRENT_TIMESTAMP\n"
+            "            WHERE id = $5 AND userid = $6 \n"
+            "            RETURNING sharetoken"
+        >>,
+
+    case
+        eadm_pgpool:equery(SQL, [IsPublic, HideMap, HideStats, HideLocation, ActivityId, UserId])
+    of
         {ok, _, [{ShareToken}]} ->
             {json, #{
                 <<"code">> => 200,
@@ -293,14 +320,17 @@ update_share_config(#{req := Req} = _Params) ->
 %%--------------------------------------------------------------------
 sync_history(#{req := Req} = _Params) ->
     UserId = get_user_id(Req),
-    
-    SQL = <<"SELECT starttime, endtime, synccount, 
-                   newcount, syncstatus, errmsg
-            FROM sp_garminlog 
-            WHERE userid = $1 
-            ORDER BY starttime DESC 
-            LIMIT 20">>,
-    
+
+    SQL =
+        <<
+            "SELECT starttime, endtime, synccount, \n"
+            "                   newcount, syncstatus, errmsg\n"
+            "            FROM sp_garminlog \n"
+            "            WHERE userid = $1 \n"
+            "            ORDER BY starttime DESC \n"
+            "            LIMIT 20"
+        >>,
+
     case eadm_pgpool:equery(SQL, [UserId]) of
         {ok, _, Rows} ->
             Logs = lists:map(fun format_sync_log/1, Rows),
@@ -359,8 +389,10 @@ format_timestamp(null) ->
     null;
 format_timestamp({{Y, M, D}, {H, Mi, S}}) ->
     iolist_to_binary(
-        io_lib:format("~4..0w-~2..0w-~2..0w ~2..0w:~2..0w:~2..0w",
-                     [Y, M, D, H, Mi, S])
+        io_lib:format(
+            "~4..0w-~2..0w-~2..0w ~2..0w:~2..0w:~2..0w",
+            [Y, M, D, H, Mi, S]
+        )
     );
 format_timestamp(Timestamp) when is_binary(Timestamp) ->
     Timestamp.

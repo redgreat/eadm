@@ -48,7 +48,7 @@ backup(BackupFile) when is_binary(BackupFile) ->
 backup(BackupFile) when is_list(BackupFile) ->
     %% 确保备份目录存在
     ensure_backup_dir(),
-    
+
     %% 执行备份
     case mnesia:backup(BackupFile) of
         ok ->
@@ -106,57 +106,60 @@ restore(BackupFile) when is_list(BackupFile) ->
             {error, {file_not_found, BackupFile}};
         true ->
             %% 如果是压缩文件,先解压
-            ActualFile = case filename:extension(BackupFile) of
-                ".gz" ->
-                    DecompFile = filename:rootname(BackupFile),
-                    case decompress_file(BackupFile, DecompFile) of
-                        ok -> DecompFile;
-                        {error, Reason} ->
-                            lager:error("解压备份文件失败: ~p", [Reason]),
-                            throw({error, {decompress_failed, Reason}})
-                    end;
-                _ ->
-                    BackupFile
-            end,
-            
-            %% 执行恢复
-            RestoreResult = try
-                %% 停止mnesia
-                lager:info("停止Mnesia准备恢复..."),
-                mnesia:stop(),
-                
-                %% 安装fallback
-                case mnesia:install_fallback(ActualFile) of
-                    ok ->
-                        lager:info("Fallback安装成功,启动Mnesia..."),
-                        
-                        %% 启动mnesia
-                        mnesia:start(),
-                        
-                        %% 等待表就绪
-                        Tables = eadm_mnesia:get_all_tables(),
-                        case mnesia:wait_for_tables(Tables, 30000) of
+            ActualFile =
+                case filename:extension(BackupFile) of
+                    ".gz" ->
+                        DecompFile = filename:rootname(BackupFile),
+                        case decompress_file(BackupFile, DecompFile) of
                             ok ->
-                                lager:info("Mnesia恢复成功"),
-                                ok;
-                            {timeout, BadTables} ->
-                                lager:error("恢复后等待表超时: ~p", [BadTables]),
-                                {error, {timeout, BadTables}};
-                            {error, WaitReason} ->
-                                lager:error("恢复后等待表失败: ~p", [WaitReason]),
-                                {error, WaitReason}
+                                DecompFile;
+                            {error, Reason} ->
+                                lager:error("解压备份文件失败: ~p", [Reason]),
+                                throw({error, {decompress_failed, Reason}})
                         end;
-                    {error, FallbackReason} ->
-                        lager:error("Fallback安装失败: ~p", [FallbackReason]),
+                    _ ->
+                        BackupFile
+                end,
+
+            %% 执行恢复
+            RestoreResult =
+                try
+                    %% 停止mnesia
+                    lager:info("停止Mnesia准备恢复..."),
+                    mnesia:stop(),
+
+                    %% 安装fallback
+                    case mnesia:install_fallback(ActualFile) of
+                        ok ->
+                            lager:info("Fallback安装成功,启动Mnesia..."),
+
+                            %% 启动mnesia
+                            mnesia:start(),
+
+                            %% 等待表就绪
+                            Tables = eadm_mnesia:get_all_tables(),
+                            case mnesia:wait_for_tables(Tables, 30000) of
+                                ok ->
+                                    lager:info("Mnesia恢复成功"),
+                                    ok;
+                                {timeout, BadTables} ->
+                                    lager:error("恢复后等待表超时: ~p", [BadTables]),
+                                    {error, {timeout, BadTables}};
+                                {error, WaitReason} ->
+                                    lager:error("恢复后等待表失败: ~p", [WaitReason]),
+                                    {error, WaitReason}
+                            end;
+                        {error, FallbackReason} ->
+                            lager:error("Fallback安装失败: ~p", [FallbackReason]),
+                            mnesia:start(),
+                            {error, FallbackReason}
+                    end
+                catch
+                    Type:Error ->
+                        lager:error("恢复过程异常: ~p:~p", [Type, Error]),
                         mnesia:start(),
-                        {error, FallbackReason}
-                end
-            catch
-                Type:Error ->
-                    lager:error("恢复过程异常: ~p:~p", [Type, Error]),
-                    mnesia:start(),
-                    {error, {restore_failed, Error}}
-            end,
+                        {error, {restore_failed, Error}}
+                end,
             RestoreResult
     end.
 
@@ -186,34 +189,39 @@ restore_with_validation(BackupFile) ->
 -spec cleanup_old_backups(Days :: integer()) -> ok.
 cleanup_old_backups(Days) ->
     ensure_backup_dir(),
-    
+
     %% 获取所有备份文件
     Pattern = filename:join(?BACKUP_DIR, "mnesia_backup_*"),
     Files = filelib:wildcard(Pattern),
-    
+
     %% 获取N天前的时间戳
     Now = erlang:system_time(second),
     Threshold = Now - (Days * 24 * 3600),
-    
+
     %% 删除超过N天的文件
-    lists:foreach(fun(File) ->
-        case file:read_file_info(File) of
-            {ok, FileInfo} ->
-                %% FileInfo是一个record,mtime字段位置是第5个
-                MTime = calendar:datetime_to_gregorian_seconds(element(5, FileInfo)),
-                UnixTime = MTime - 62167219200,  %% 转换为Unix时间戳
-                
-                if UnixTime < Threshold ->
-                    lager:info("删除旧备份文件: ~s", [File]),
-                    file:delete(File);
-                true ->
+    lists:foreach(
+        fun(File) ->
+            case file:read_file_info(File) of
+                {ok, FileInfo} ->
+                    %% FileInfo是一个record,mtime字段位置是第5个
+                    MTime = calendar:datetime_to_gregorian_seconds(element(5, FileInfo)),
+                    %% 转换为Unix时间戳
+                    UnixTime = MTime - 62167219200,
+
+                    if
+                        UnixTime < Threshold ->
+                            lager:info("删除旧备份文件: ~s", [File]),
+                            file:delete(File);
+                        true ->
+                            ok
+                    end;
+                {error, _} ->
                     ok
-                end;
-            {error, _} ->
-                ok
-        end
-    end, Files),
-    
+            end
+        end,
+        Files
+    ),
+
     lager:info("备份文件清理完成,保留最近~p天", [Days]),
     ok.
 
@@ -233,12 +241,12 @@ list_backups() ->
 scheduled_backup() ->
     try
         lager:info("开始执行定时备份..."),
-        
+
         %% 执行压缩备份
         case backup_compressed() of
             {ok, BackupFile} ->
                 lager:info("定时备份成功: ~s", [BackupFile]),
-                
+
                 %% 清理超过30天的备份
                 cleanup_old_backups(?RETENTION_DAYS),
                 ok;
@@ -273,8 +281,10 @@ init_backup_scheduler() ->
 -spec generate_backup_filename() -> string().
 generate_backup_filename() ->
     {{Y, M, D}, {H, Mi, S}} = calendar:local_time(),
-    Filename = io_lib:format("mnesia_backup_~4..0B~2..0B~2..0B_~2..0B~2..0B~2..0B~s",
-                             [Y, M, D, H, Mi, S, ?BACKUP_EXT]),
+    Filename = io_lib:format(
+        "mnesia_backup_~4..0B~2..0B~2..0B_~2..0B~2..0B~2..0B~s",
+        [Y, M, D, H, Mi, S, ?BACKUP_EXT]
+    ),
     filename:join(?BACKUP_DIR, lists:flatten(Filename)).
 
 %% @private
@@ -322,18 +332,21 @@ decompress_file(GzFile, TargetFile) ->
 validate_data() ->
     try
         Tables = eadm_mnesia:get_all_tables(),
-        
+
         %% 验证所有表都可访问
-        lists:foreach(fun(Table) ->
-            case mnesia:table_info(Table, size) of
-                Size when is_integer(Size) ->
-                    lager:info("表 ~p 记录数: ~p", [Table, Size]),
-                    ok;
-                _ ->
-                    throw({invalid_table, Table})
-            end
-        end, Tables),
-        
+        lists:foreach(
+            fun(Table) ->
+                case mnesia:table_info(Table, size) of
+                    Size when is_integer(Size) ->
+                        lager:info("表 ~p 记录数: ~p", [Table, Size]),
+                        ok;
+                    _ ->
+                        throw({invalid_table, Table})
+                end
+            end,
+            Tables
+        ),
+
         %% 验证关键数据完整性
         case mnesia:dirty_read(eadm_tenant, <<"et0000000001">>) of
             [_] ->

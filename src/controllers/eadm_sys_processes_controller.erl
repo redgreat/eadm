@@ -28,7 +28,10 @@
 %% @end
 %%--------------------------------------------------------------------
 index(_Req) ->
-    Processes = [ maps:put(pid, erlang:pid_to_list(Pid), maps:from_list(erlang:process_info(Pid))) || Pid <- erlang:processes()],
+    Processes = [
+        maps:put(pid, erlang:pid_to_list(Pid), maps:from_list(erlang:process_info(Pid)))
+     || Pid <- erlang:processes()
+    ],
     {ok, [{procs, Processes}]}.
 
 %%--------------------------------------------------------------------

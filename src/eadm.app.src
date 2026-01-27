@@ -1,24 +1,22 @@
 %% -*- mode: erlang;erlang-indent-level: 4;indent-tabs-mode: nil -*-
-{application, eadm,
-[{description, "RG管理平台"},
-  {vsn, "0.1.47"},
-  {registered, []},
-  {mod, {eadm_app, []}},
-  {included_applications, []},
-  {applications,
-   [kernel,
-    stdlib,
-    nova,
-    epgsql,
-    poolboy,
-    lager,
-    ecron
-   ]},
-  {env,[]},
-  {modules, []},
-  {maintainers, [wangcw]},
-  {licenses, ["Apache-2.0"]},
-  {links,[{"Gogs",
-           "https://git.wongcw.cn/wangcw/eadm.git"}]}
- ]}.
-
+{application, eadm, [
+    {description, "RG管理平台"},
+    {vsn, "0.1.47"},
+    {registered, []},
+    {mod, {eadm_app, []}},
+    {included_applications, []},
+    {applications, [
+        kernel,
+        stdlib,
+        nova,
+        epgsql,
+        poolboy,
+        lager,
+        ecron
+    ]},
+    {env, []},
+    {modules, []},
+    {maintainers, [wangcw]},
+    {licenses, ["Apache-2.0"]},
+    {links, [{"Gogs", "https://git.wongcw.cn/wangcw/eadm.git"}]}
+]}.

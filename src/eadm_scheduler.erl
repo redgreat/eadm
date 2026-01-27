@@ -36,12 +36,16 @@
 ]).
 
 -define(SERVER, ?MODULE).
--define(DAILY_SYNC_HOUR, 2).  % 凌晨2点执行
--define(RETRY_INTERVAL, 1800000).  % 30分钟重试间隔
+% 凌晨2点执行
+-define(DAILY_SYNC_HOUR, 2).
+% 30分钟重试间隔
+-define(RETRY_INTERVAL, 1800000).
 
 -record(state, {
-    scheduled_tasks = #{} :: map(),  % UserId => TimerRef
-    running_syncs = #{} :: map()     % UserId => Pid
+    % UserId => TimerRef
+    scheduled_tasks = #{} :: map(),
+    % UserId => Pid
+    running_syncs = #{} :: map()
 }).
 
 %%====================================================================
@@ -62,7 +66,7 @@ schedule_user_sync(UserId) ->
 %%--------------------------------------------------------------------
 %% @doc 立即触发手动同步
 %%--------------------------------------------------------------------
--spec trigger_manual_sync(UserId :: integer(), DaysBack :: integer()) -> 
+-spec trigger_manual_sync(UserId :: integer(), DaysBack :: integer()) ->
     {ok, pid()} | {error, term()}.
 trigger_manual_sync(UserId, DaysBack) ->
     gen_server:call(?SERVER, {trigger_sync, UserId, DaysBack}).
@@ -77,7 +81,7 @@ cancel_user_sync(UserId) ->
 %%--------------------------------------------------------------------
 %% @doc 获取同步状态
 %%--------------------------------------------------------------------
--spec get_sync_status(UserId :: integer()) -> 
+-spec get_sync_status(UserId :: integer()) ->
     {ok, running | scheduled | idle} | {error, term()}.
 get_sync_status(UserId) ->
     gen_server:call(?SERVER, {get_status, UserId}).
@@ -104,15 +108,14 @@ init([]) ->
 handle_call({schedule_sync, UserId}, _From, State) ->
     {Reply, NewState} = do_schedule_sync(UserId, State),
     {reply, Reply, NewState};
-
 handle_call({trigger_sync, UserId, DaysBack}, _From, State) ->
     {Reply, NewState} = do_trigger_sync(UserId, DaysBack, State),
     {reply, Reply, NewState};
-
 handle_call({get_status, UserId}, _From, State) ->
     Status =
         case maps:is_key(UserId, State#state.running_syncs) of
-            true -> running;
+            true ->
+                running;
             false ->
                 case maps:is_key(UserId, State#state.scheduled_tasks) of
                     true -> scheduled;
@@ -120,22 +123,18 @@ handle_call({get_status, UserId}, _From, State) ->
                 end
         end,
     {reply, {ok, Status}, State};
-
 handle_call(_Request, _From, State) ->
     {reply, ok, State}.
 
 handle_cast({cancel_sync, UserId}, State) ->
     NewState = do_cancel_sync(UserId, State),
     {noreply, NewState};
-
 handle_cast({sync_started, UserId}, State) ->
     NewRunning = maps:put(UserId, true, State#state.running_syncs),
     {noreply, State#state{running_syncs = NewRunning}};
-
 handle_cast({sync_finished, UserId}, State) ->
     NewRunning = maps:remove(UserId, State#state.running_syncs),
     {noreply, State#state{running_syncs = NewRunning}};
-
 handle_cast(_Msg, State) ->
     {noreply, State}.
 
@@ -145,13 +144,11 @@ handle_info({sync_timer, UserId}, State) ->
     %% 重新调度下一次同步
     {ok, State2} = do_schedule_sync(UserId, NewState),
     {noreply, State2};
-
 handle_info({sync_complete, UserId, Result}, State) ->
     %% 同步任务完成
     logger:info("Sync complete for user ~p: ~p", [UserId, Result]),
     NewRunningSync = maps:remove(UserId, State#state.running_syncs),
     {noreply, State#state{running_syncs = NewRunningSync}};
-
 handle_info({sync_failed, UserId, Reason}, State) ->
     %% 同步失败,记录日志并安排重试
     logger:error("Sync failed for user ~p: ~p", [UserId, Reason]),
@@ -159,7 +156,6 @@ handle_info({sync_failed, UserId, Reason}, State) ->
     %% 30分钟后重试
     erlang:send_after(?RETRY_INTERVAL, self(), {sync_timer, UserId}),
     {noreply, State#state{running_syncs = NewRunningSync}};
-
 handle_info(_Info, State) ->
     {noreply, State}.
 
@@ -204,10 +200,10 @@ do_trigger_sync(UserId, DaysBack, State) ->
             {{error, sync_already_running}, State};
         false ->
             Parent = self(),
-            Pid = spawn_link(fun() -> 
+            Pid = spawn_link(fun() ->
                 sync_worker(UserId, DaysBack, Parent)
             end),
-            
+
             NewRunningSync = maps:put(UserId, Pid, State#state.running_syncs),
             {{ok, Pid}, State#state{running_syncs = NewRunningSync}}
     end.
@@ -238,10 +234,10 @@ do_cancel_sync(UserId, State) ->
 sync_worker(UserId, DaysBack, Parent) ->
     {ok, LogId} = log_sync_start(UserId),
     gen_server:cast(?SERVER, {sync_started, UserId}),
-    
+
     try
         Result = garmin_sync_service:sync_user_activities(UserId, DaysBack),
-        
+
         case Result of
             {ok, Stats} ->
                 log_sync_complete(LogId, Stats),
@@ -252,8 +248,10 @@ sync_worker(UserId, DaysBack, Parent) ->
         end
     catch
         Error:Reason2:Stacktrace ->
-            logger:error("Sync worker crashed for user ~p: ~p:~p~n~p",
-                        [UserId, Error, Reason2, Stacktrace]),
+            logger:error(
+                "Sync worker crashed for user ~p: ~p:~p~n~p",
+                [UserId, Error, Reason2, Stacktrace]
+            ),
             log_sync_failed(LogId, {Error, Reason2}),
             Parent ! {sync_failed, UserId, {Error, Reason2}}
     end,
@@ -277,8 +275,10 @@ run_user_sync(UserId) ->
         end
     catch
         Error:Reason2:Stacktrace ->
-            logger:error("Sync worker crashed for user ~p: ~p:~p~n~p",
-                        [UserId, Error, Reason2, Stacktrace]),
+            logger:error(
+                "Sync worker crashed for user ~p: ~p:~p~n~p",
+                [UserId, Error, Reason2, Stacktrace]
+            ),
             log_sync_failed(LogId, {Error, Reason2}),
             gen_server:cast(?SERVER, {sync_finished, UserId}),
             {error, {Error, Reason2}}
@@ -289,16 +289,19 @@ run_user_sync(UserId) ->
 %% @doc 计算下次运行时间
 %%--------------------------------------------------------------------
 calculate_next_run_time(_Hour) ->
-    {{1970,1,1},{0,0,0}}.
+    {{1970, 1, 1}, {0, 0, 0}}.
 
 %%--------------------------------------------------------------------
 %% @private
 %% @doc 加载所有自动同步用户
 %%--------------------------------------------------------------------
 schedule_all_auto_sync_users() ->
-    SQL = <<"SELECT userid FROM sp_garminconf 
-            WHERE syncenable = true AND autosync = true">>,
-    
+    SQL =
+        <<
+            "SELECT userid FROM sp_garminconf \n"
+            "            WHERE syncenable = true AND autosync = true"
+        >>,
+
     case eadm_pgpool:equery(SQL, []) of
         {ok, _, Rows} ->
             lists:foreach(
@@ -319,12 +322,13 @@ schedule_all_auto_sync_users() ->
 %%--------------------------------------------------------------------
 get_user_sync_days(UserId) ->
     SQL = <<"SELECT syncdays FROM sp_garminconf WHERE userid = $1">>,
-    
+
     case eadm_pgpool:equery(SQL, [UserId]) of
         {ok, _, [{Days}]} ->
             Days;
         _ ->
-            30  % 默认30天
+            % 默认30天
+            30
     end.
 
 %%--------------------------------------------------------------------
@@ -332,11 +336,14 @@ get_user_sync_days(UserId) ->
 %% @doc 记录同步开始
 %%--------------------------------------------------------------------
 log_sync_start(UserId) ->
-    SQL = <<"INSERT INTO sp_garminlog 
-            (userid, starttime, syncstatus)
-            VALUES ($1, CURRENT_TIMESTAMP, 'running')
-            RETURNING id">>,
-    
+    SQL =
+        <<
+            "INSERT INTO sp_garminlog \n"
+            "            (userid, starttime, syncstatus)\n"
+            "            VALUES ($1, CURRENT_TIMESTAMP, 'running')\n"
+            "            RETURNING id"
+        >>,
+
     case eadm_pgpool:equery(SQL, [UserId]) of
         {ok, _, [{LogId}]} ->
             {ok, LogId};
@@ -350,13 +357,16 @@ log_sync_start(UserId) ->
 %% @doc 记录同步完成
 %%--------------------------------------------------------------------
 log_sync_complete(LogId, Stats) ->
-    SQL = <<"UPDATE sp_garminlog 
-            SET endtime = CURRENT_TIMESTAMP,
-                synccount = $1,
-                newcount = $2,
-                syncstatus = 'success'
-            WHERE id = $3">>,
-    
+    SQL =
+        <<
+            "UPDATE sp_garminlog \n"
+            "            SET endtime = CURRENT_TIMESTAMP,\n"
+            "                synccount = $1,\n"
+            "                newcount = $2,\n"
+            "                syncstatus = 'success'\n"
+            "            WHERE id = $3"
+        >>,
+
     eadm_pgpool:equery(SQL, [
         maps:get(synced, Stats, 0),
         maps:get(new, Stats, 0),
@@ -368,11 +378,14 @@ log_sync_complete(LogId, Stats) ->
 %% @doc 记录同步失败
 %%--------------------------------------------------------------------
 log_sync_failed(LogId, Reason) ->
-    SQL = <<"UPDATE sp_garminlog 
-            SET endtime = CURRENT_TIMESTAMP,
-                syncstatus = 'failed',
-                errmsg = $1
-            WHERE id = $2">>,
-    
+    SQL =
+        <<
+            "UPDATE sp_garminlog \n"
+            "            SET endtime = CURRENT_TIMESTAMP,\n"
+            "                syncstatus = 'failed',\n"
+            "                errmsg = $1\n"
+            "            WHERE id = $2"
+        >>,
+
     ErrorMsg = io_lib:format("~p", [Reason]),
     eadm_pgpool:equery(SQL, [list_to_binary(ErrorMsg), LogId]).

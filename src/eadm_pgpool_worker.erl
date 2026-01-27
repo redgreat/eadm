@@ -19,28 +19,41 @@
 %%%===================================================================
 %%% 函数导出
 %%%===================================================================
--export([squery/1, squery/2, squery/3,
-         equery/2, equery/3, equery/4,
-         with_transaction/2, with_transaction/3]).
+-export([
+    squery/1, squery/2, squery/3,
+    equery/2, equery/3, equery/4,
+    with_transaction/2, with_transaction/3
+]).
 
 -export([start_link/1]).
 
--export([init/1, handle_call/3, handle_cast/2, handle_info/2,
-         terminate/2, code_change/3]).
+-export([
+    init/1,
+    handle_call/3,
+    handle_cast/2,
+    handle_info/2,
+    terminate/2,
+    code_change/3
+]).
 
 %%%===================================================================
 %%% 宏定义
 %%%===================================================================
--record(state, {conn::pid(),
-                delay::pos_integer(),
-                timer::timer:tref(),
-                start_args::proplists:proplist()}).
+-record(state, {
+    conn :: pid(),
+    delay :: pos_integer(),
+    timer :: timer:tref(),
+    start_args :: proplists:proplist()
+}).
 
 %%%===================================================================
 %%% 宏定义
 %%%===================================================================
--define(INITIAL_DELAY, 500). % Half a second
--define(MAXIMUM_DELAY, 5 * 60 * 1000). % Five minutes
+
+% Half a second
+-define(INITIAL_DELAY, 500).
+% Five minutes
+-define(MAXIMUM_DELAY, 5 * 60 * 1000).
 -define(TIMEOUT, 5 * 1000).
 
 -define(STATE_VAR, '$pgapp_state').
@@ -66,10 +79,13 @@ squery(Sql, Timeout) ->
     squery(epgsql_pool, Sql, Timeout).
 
 squery(PoolName, Sql, Timeout) ->
-    middle_man_transaction(PoolName,
-                           fun (W) ->
-                                   gen_server:call(W, {squery, Sql}, Timeout)
-                           end, Timeout).
+    middle_man_transaction(
+        PoolName,
+        fun(W) ->
+            gen_server:call(W, {squery, Sql}, Timeout)
+        end,
+        Timeout
+    ).
 
 %% @doc
 %% 带参数脚本执行
@@ -88,11 +104,17 @@ equery(Sql, Params, Timeout) ->
     equery(epgsql_pool, Sql, Params, Timeout).
 
 equery(PoolName, Sql, Params, Timeout) ->
-    middle_man_transaction(PoolName,
-                           fun (W) ->
-                                   gen_server:call(W, {equery, Sql, Params},
-                                                   Timeout)
-                           end, Timeout).
+    middle_man_transaction(
+        PoolName,
+        fun(W) ->
+            gen_server:call(
+                W,
+                {equery, Sql, Params},
+                Timeout
+            )
+        end,
+        Timeout
+    ).
 
 %% @doc
 %% 开启事务
@@ -101,11 +123,17 @@ with_transaction(PoolName, Fun) ->
     with_transaction(PoolName, Fun, ?TIMEOUT).
 
 with_transaction(PoolName, Fun, Timeout) ->
-    middle_man_transaction(PoolName,
-                           fun (W) ->
-                                   gen_server:call(W, {transaction, Fun},
-                                                   Timeout)
-                           end, Timeout).
+    middle_man_transaction(
+        PoolName,
+        fun(W) ->
+            gen_server:call(
+                W,
+                {transaction, Fun},
+                Timeout
+            )
+        end,
+        Timeout
+    ).
 
 %% @doc
 %% 开启事务
@@ -113,12 +141,16 @@ with_transaction(PoolName, Fun, Timeout) ->
 middle_man_transaction(Pool, Fun, Timeout) ->
     Tag = make_ref(),
     {Receiver, Ref} = erlang:spawn_monitor(
-                        fun() ->
-                                process_flag(trap_exit, true),
-                                Result = poolboy:transaction(Pool, Fun,
-                                                             Timeout),
-                                exit({self(),Tag,Result})
-                        end),
+        fun() ->
+            process_flag(trap_exit, true),
+            Result = poolboy:transaction(
+                Pool,
+                Fun,
+                Timeout
+            ),
+            exit({self(), Tag, Result})
+        end
+    ),
     receive
         {'DOWN', Ref, _, _, {Receiver, Tag, Result}} ->
             Result;
@@ -153,14 +185,23 @@ handle_call(Query, From, #state{conn = undefined} = State) ->
         NewState ->
             handle_call(Query, From, NewState)
     end;
-handle_call({squery, Sql}, _From,
-            #state{conn=Conn} = State) ->
+handle_call(
+    {squery, Sql},
+    _From,
+    #state{conn = Conn} = State
+) ->
     {reply, epgsql:squery(Conn, Sql), State};
-handle_call({equery, Sql, Params}, _From,
-            #state{conn = Conn} = State) ->
+handle_call(
+    {equery, Sql, Params},
+    _From,
+    #state{conn = Conn} = State
+) ->
     {reply, epgsql:equery(Conn, Sql, Params), State};
-handle_call({transaction, Fun}, _From,
-            #state{conn = Conn} = State) ->
+handle_call(
+    {transaction, Fun},
+    _From,
+    #state{conn = Conn} = State
+) ->
     put(?STATE_VAR, Conn),
     Result = epgsql:with_transaction(Conn, fun(_) -> Fun() end),
     erase(?STATE_VAR),
@@ -184,16 +225,20 @@ handle_info({'EXIT', From, Reason}, State) ->
                 Delay = calculate_delay(State#state.delay),
                 {ok, T} =
                     timer:apply_after(
-                      State#state.delay,
-                      gen_server, cast, [self(), reconnect]),
+                        State#state.delay,
+                        gen_server,
+                        cast,
+                        [self(), reconnect]
+                    ),
                 {Delay, T};
             Timer ->
                 {State#state.delay, Timer}
         end,
 
     error_logger:warning_msg(
-      "~p EXIT from ~p: ~p - attempting to reconnect in ~p ms~n",
-      [self(), From, Reason, NewDelay]),
+        "~p EXIT from ~p: ~p - attempting to reconnect in ~p ms~n",
+        [self(), From, Reason, NewDelay]
+    ),
     {noreply, State#state{conn = undefined, delay = NewDelay, timer = Tref}}.
 
 %% @doc
@@ -222,34 +267,44 @@ connect(State) ->
 
     case epgsql:connect(Args) of
         {ok, Conn} ->
-            lager:info("PGPool Worker ~p Connected to ~s at ~s with user ~s: ~p",
-              [self(), Database, Hostname, Username, Conn]),
+            lager:info(
+                "PGPool Worker ~p Connected to ~s at ~s with user ~s: ~p",
+                [self(), Database, Hostname, Username, Conn]
+            ),
             case State#state.timer of
                 undefined -> ok;
                 Tref -> timer:cancel(Tref)
             end,
-            State#state{conn=Conn, delay=?INITIAL_DELAY, timer = undefined};
+            State#state{conn = Conn, delay = ?INITIAL_DELAY, timer = undefined};
         {error, Error} ->
             NewDelay = calculate_delay(State#state.delay),
-            lager:warning("PGPool Worker ~p Unable to connect to ~s at ~s with user ~s (~p) - attempting reconnect in ~p ms",
-              [self(), Database, Hostname, Username, Error, NewDelay]),
+            lager:warning(
+                "PGPool Worker ~p Unable to connect to ~s at ~s with user ~s (~p) - attempting reconnect in ~p ms",
+                [self(), Database, Hostname, Username, Error, NewDelay]
+            ),
             case State#state.timer of
                 undefined ->
-                    {ok, Tref} = timer:apply_after(State#state.delay, gen_server, cast, [self(), reconnect]),
-                    State#state{conn=undefined, delay = NewDelay, timer = Tref};
+                    {ok, Tref} = timer:apply_after(State#state.delay, gen_server, cast, [
+                        self(), reconnect
+                    ]),
+                    State#state{conn = undefined, delay = NewDelay, timer = Tref};
                 _ ->
-                    State#state{conn=undefined, delay = NewDelay}
+                    State#state{conn = undefined, delay = NewDelay}
             end;
         Error ->
             NewDelay = calculate_delay(State#state.delay),
-            lager:warning("PGPool Worker ~p Unexpected error connecting to ~s at ~s with user ~s (~p) - attempting reconnect in ~p ms",
-              [self(), Database, Hostname, Username, Error, NewDelay]),
+            lager:warning(
+                "PGPool Worker ~p Unexpected error connecting to ~s at ~s with user ~s (~p) - attempting reconnect in ~p ms",
+                [self(), Database, Hostname, Username, Error, NewDelay]
+            ),
             case State#state.timer of
                 undefined ->
-                    {ok, Tref} = timer:apply_after(State#state.delay, gen_server, cast, [self(), reconnect]),
-                    State#state{conn=undefined, delay = NewDelay, timer = Tref};
+                    {ok, Tref} = timer:apply_after(State#state.delay, gen_server, cast, [
+                        self(), reconnect
+                    ]),
+                    State#state{conn = undefined, delay = NewDelay, timer = Tref};
                 _ ->
-                    State#state{conn=undefined, delay = NewDelay}
+                    State#state{conn = undefined, delay = NewDelay}
             end
     end.
 

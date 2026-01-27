@@ -25,7 +25,6 @@
 %% @end
 index(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName}}) ->
     {ok, [{username, UserName}]};
-
 index(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 
@@ -34,50 +33,68 @@ index(#{auth_data := #{<<"authed">> := false}}) ->
 %% @end
 search(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName}}) ->
     try
-        {ok, _, ResData} = eadm_pgpool:equery(pool_pg,
-            "with dt as (
-                select unnest(array[1,2,3,4]) as datatype
-            )
-            select coalesce(d.datavalue, '0')
-            from dt
-            left join eadm_dashboard d
-                on d.datatype = dt.datatype
-                and d.loginname = $1
-                and d.datavalue is not null
-            order by dt.datatype;",[LoginName]),
-        {ok, _, ResLocation} = eadm_pgpool:equery(pool_pg,
-            "select cast(right(checkdate, 2) as int) as month, datavalue
-            from eadm_dashboard
-            where loginname = $1
-                and datatype = 5
-            order by cast(right(checkdate, 2) as int);",[LoginName]),
-        {ok, _, ResFinanceIn} = eadm_pgpool:equery(pool_pg,
-            "select cast(right(checkdate, 2) as int) as month, datavalue
-            from eadm_dashboard
-            where loginname = $1
-                and datatype = 6
-            order by cast(right(checkdate, 2) as int);",[LoginName]),
-        {ok, _, ResFinanceOut} = eadm_pgpool:equery(pool_pg,
-            "select cast(right(checkdate, 2) as int) as month, datavalue
-            from eadm_dashboard
-            where loginname = $1
-                and datatype = 7
-            order by cast(right(checkdate, 2) as int);",[LoginName]),
+        {ok, _, ResData} = eadm_pgpool:equery(
+            pool_pg,
+            "with dt as (\n"
+            "                select unnest(array[1,2,3,4]) as datatype\n"
+            "            )\n"
+            "            select coalesce(d.datavalue, '0')\n"
+            "            from dt\n"
+            "            left join eadm_dashboard d\n"
+            "                on d.datatype = dt.datatype\n"
+            "                and d.loginname = $1\n"
+            "                and d.datavalue is not null\n"
+            "            order by dt.datatype;",
+            [LoginName]
+        ),
+        {ok, _, ResLocation} = eadm_pgpool:equery(
+            pool_pg,
+            "select cast(right(checkdate, 2) as int) as month, datavalue\n"
+            "            from eadm_dashboard\n"
+            "            where loginname = $1\n"
+            "                and datatype = 5\n"
+            "            order by cast(right(checkdate, 2) as int);",
+            [LoginName]
+        ),
+        {ok, _, ResFinanceIn} = eadm_pgpool:equery(
+            pool_pg,
+            "select cast(right(checkdate, 2) as int) as month, datavalue\n"
+            "            from eadm_dashboard\n"
+            "            where loginname = $1\n"
+            "                and datatype = 6\n"
+            "            order by cast(right(checkdate, 2) as int);",
+            [LoginName]
+        ),
+        {ok, _, ResFinanceOut} = eadm_pgpool:equery(
+            pool_pg,
+            "select cast(right(checkdate, 2) as int) as month, datavalue\n"
+            "            from eadm_dashboard\n"
+            "            where loginname = $1\n"
+            "                and datatype = 7\n"
+            "            order by cast(right(checkdate, 2) as int);",
+            [LoginName]
+        ),
         DataValues = [V || {V} <- ResData],
-        FinalData = DataValues ++          % resdata[0-3]: 周数据
-        [0,0,0,0] ++                       % resdata[4-7]: 年数据, 先造个假数
-        [get_hd(ResLocation)] ++           % resdata[8]: 地理位置月份标签
-        [get_tl(ResLocation)] ++           % resdata[9]: 地理位置数据
-        [get_hd(ResFinanceIn)] ++          % resdata[10]: 财务月份标签
-        [get_tl(ResFinanceIn)] ++          % resdata[11]: 收入数据
-        [get_tl(ResFinanceOut)],
+        % resdata[0-3]: 周数据
+        FinalData =
+            DataValues ++
+                % resdata[4-7]: 年数据, 先造个假数
+                [0, 0, 0, 0] ++
+                % resdata[8]: 地理位置月份标签
+                [get_hd(ResLocation)] ++
+                % resdata[9]: 地理位置数据
+                [get_tl(ResLocation)] ++
+                % resdata[10]: 财务月份标签
+                [get_hd(ResFinanceIn)] ++
+                % resdata[11]: 收入数据
+                [get_tl(ResFinanceIn)] ++
+                [get_tl(ResFinanceOut)],
         {json, FinalData}
     catch
         _:Error ->
             lager:error("首页信息查询失败：~p~n", [Error]),
             {json, [#{<<"Alert">> => unicode:characters_to_binary("首页信息查询失败！", utf8)}]}
     end;
-
 search(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 
@@ -90,7 +107,10 @@ search(#{auth_data := #{<<"authed">> := false}}) ->
 %% @end
 get_hd(List) ->
     Mon = unicode:characters_to_binary("月", utf8),
-    HdFun = fun({X, _}) -> Y = integer_to_binary(X), <<Y/binary, Mon/binary>> end,
+    HdFun = fun({X, _}) ->
+        Y = integer_to_binary(X),
+        <<Y/binary, Mon/binary>>
+    end,
     lists:map(HdFun, List).
 
 %% @private

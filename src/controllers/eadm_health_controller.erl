@@ -16,7 +16,6 @@
 %%%===================================================================
 -export([index/1, search/1]).
 
-
 %%====================================================================
 %% API 函数
 %%====================================================================
@@ -27,22 +26,31 @@
 % index(#{auth_data := #{<<"permission">> := Permission}}) ->
 %    io:format("Permission: ~p~n", [Permission]);
 
-index(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName,
-      <<"permission">> := #{<<"health">> := true}}}) ->
+index(#{
+    auth_data := #{
+        <<"authed">> := true,
+        <<"username">> := UserName,
+        <<"permission">> := #{<<"health">> := true}
+    }
+}) ->
     {ok, [{username, UserName}]};
-
 index(#{auth_data := #{<<"permission">> := #{<<"health">> := false}}}) ->
     {json, [#{<<"Alert">> => unicode:characters_to_binary("API鉴权失败！", utf8)}]};
-
 index(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 
 %% @doc
 %% 查询返回数据结果
 %% @end
-search(#{auth_data := #{<<"authed">> := true,
-      <<"permission">> := #{<<"health">> := true}},
-    parsed_qs := #{<<"dataType">> := DataType, <<"startTime">> := StartTime, <<"endTime">> := EndTime}}) ->
+search(#{
+    auth_data := #{
+        <<"authed">> := true,
+        <<"permission">> := #{<<"health">> := true}
+    },
+    parsed_qs := #{
+        <<"dataType">> := DataType, <<"startTime">> := StartTime, <<"endTime">> := EndTime
+    }
+}) ->
     try
         case {eadm_utils:validate_date_time(StartTime), eadm_utils:validate_date_time(EndTime)} of
             {false, _} ->
@@ -56,74 +64,93 @@ search(#{auth_data := #{<<"authed">> := true,
                 TimeDiff = eadm_utils:time_diff(StartTime, EndTime),
                 case TimeDiff > (MaxSearchSpan * 86400) of
                     true ->
-                        {json, [#{<<"Alert">> => unicode:characters_to_binary(("查询时长超过 "
-                            ++ erlang:integer_to_list(MaxSearchSpan) ++ " 天，禁止查询!"), utf8)}]};
+                        {json, [
+                            #{
+                                <<"Alert">> => unicode:characters_to_binary(
+                                    ("查询时长超过 " ++
+                                        erlang:integer_to_list(MaxSearchSpan) ++ " 天，禁止查询!"),
+                                    utf8
+                                )
+                            }
+                        ]};
                     _ ->
                         case DataType of
                             <<"1">> ->
                                 % 步数
-                                {ok, ResCol, ResData} = eadm_pgpool:equery(pool_pg,
-                                    "select to_char(ptime, 'yyyy-mm-dd hh24:mi:ss') as utctime, steps
-                                    from lc_watchstep
-                                    where ptime >= $1
-                                      and ptime < $2
-                                      and steps is not null
-                                    order by ptime desc;",
-                                    [ParameterStartTime, ParameterEndTime]);
+                                {ok, ResCol, ResData} = eadm_pgpool:equery(
+                                    pool_pg,
+                                    "select to_char(ptime, 'yyyy-mm-dd hh24:mi:ss') as utctime, steps\n"
+                                    "                                    from lc_watchstep\n"
+                                    "                                    where ptime >= $1\n"
+                                    "                                      and ptime < $2\n"
+                                    "                                      and steps is not null\n"
+                                    "                                    order by ptime desc;",
+                                    [ParameterStartTime, ParameterEndTime]
+                                );
                             <<"2">> ->
                                 % 心率
-                                {ok, ResCol, ResData} = eadm_pgpool:equery(pool_pg,
-                                    "select to_char(ptime, 'yyyy-mm-dd hh24:mi:ss') as utctime, heartbeat
-                                    from lc_watchhb
-                                    where ptime >= $1
-                                      and ptime < $2
-                                      and heartbeat is not null
-                                    order by ptime desc;",
-                                    [ParameterStartTime, ParameterEndTime]);
+                                {ok, ResCol, ResData} = eadm_pgpool:equery(
+                                    pool_pg,
+                                    "select to_char(ptime, 'yyyy-mm-dd hh24:mi:ss') as utctime, heartbeat\n"
+                                    "                                    from lc_watchhb\n"
+                                    "                                    where ptime >= $1\n"
+                                    "                                      and ptime < $2\n"
+                                    "                                      and heartbeat is not null\n"
+                                    "                                    order by ptime desc;",
+                                    [ParameterStartTime, ParameterEndTime]
+                                );
                             <<"3">> ->
                                 % 体温
-                                {ok, ResCol, ResData} = eadm_pgpool:equery(pool_pg,
-                                    "select to_char(ptime, 'yyyy-mm-dd hh24:mi:ss') as utctime,
-                                    bodytemperature, wristtemperature
-                                    from lc_watchbt
-                                    where ptime >= $1
-                                      and ptime < $2
-                                      and bodytemperature is not null
-                                    order by ptime desc;",
-                                    [ParameterStartTime, ParameterEndTime]);
+                                {ok, ResCol, ResData} = eadm_pgpool:equery(
+                                    pool_pg,
+                                    "select to_char(ptime, 'yyyy-mm-dd hh24:mi:ss') as utctime,\n"
+                                    "                                    bodytemperature, wristtemperature\n"
+                                    "                                    from lc_watchbt\n"
+                                    "                                    where ptime >= $1\n"
+                                    "                                      and ptime < $2\n"
+                                    "                                      and bodytemperature is not null\n"
+                                    "                                    order by ptime desc;",
+                                    [ParameterStartTime, ParameterEndTime]
+                                );
                             <<"4">> ->
                                 % 血压
-                                {ok, ResCol, ResData} = eadm_pgpool:equery(pool_pg,
-                                    "select to_char(ptime, 'yyyy-mm-dd hh24:mi:ss') as utctime,
-                                    diastolic, shrink
-                                    from lc_watchbp
-                                    where ptime >= $1
-                                    and ptime < $2
-                                    and diastolic is not null
-                                    order by ptime desc;",
-                                    [ParameterStartTime, ParameterEndTime]);
+                                {ok, ResCol, ResData} = eadm_pgpool:equery(
+                                    pool_pg,
+                                    "select to_char(ptime, 'yyyy-mm-dd hh24:mi:ss') as utctime,\n"
+                                    "                                    diastolic, shrink\n"
+                                    "                                    from lc_watchbp\n"
+                                    "                                    where ptime >= $1\n"
+                                    "                                    and ptime < $2\n"
+                                    "                                    and diastolic is not null\n"
+                                    "                                    order by ptime desc;",
+                                    [ParameterStartTime, ParameterEndTime]
+                                );
                             <<"5">> ->
                                 % 睡眠
-                                {ok, ResCol, ResData} = eadm_pgpool:equery(pool_pg,
-                                    "select to_char(ptime, 'yyyy-mm-dd hh24:mi:ss') as utctime,
-                                    sleeptype, starttime, endtime, minute
-                                    from lc_watchsleep
-                                    where ptime >= $1
-                                    and ptime < $2
-                                    and sleeptype is not null
-                                    order by ptime desc;",
-                                    [ParameterStartTime, ParameterEndTime]);
+                                {ok, ResCol, ResData} = eadm_pgpool:equery(
+                                    pool_pg,
+                                    "select to_char(ptime, 'yyyy-mm-dd hh24:mi:ss') as utctime,\n"
+                                    "                                    sleeptype, starttime, endtime, minute\n"
+                                    "                                    from lc_watchsleep\n"
+                                    "                                    where ptime >= $1\n"
+                                    "                                    and ptime < $2\n"
+                                    "                                    and sleeptype is not null\n"
+                                    "                                    order by ptime desc;",
+                                    [ParameterStartTime, ParameterEndTime]
+                                );
                             <<"6">> ->
                                 % 信号/电量
-                                {ok, ResCol, ResData} = eadm_pgpool:equery(pool_pg,
-                                    "select to_char(ptime, 'yyyy-mm-dd hh24:mi:ss') as utctime,
-                                     battery, signal
-                                    from lc_watchsb
-                                    where ptime >= $1
-                                    and ptime < $2
-                                    and battery is not null
-                                    order by ptime desc;",
-                                    [ParameterStartTime, ParameterEndTime]);
+                                {ok, ResCol, ResData} = eadm_pgpool:equery(
+                                    pool_pg,
+                                    "select to_char(ptime, 'yyyy-mm-dd hh24:mi:ss') as utctime,\n"
+                                    "                                     battery, signal\n"
+                                    "                                    from lc_watchsb\n"
+                                    "                                    where ptime >= $1\n"
+                                    "                                    and ptime < $2\n"
+                                    "                                    and battery is not null\n"
+                                    "                                    order by ptime desc;",
+                                    [ParameterStartTime, ParameterEndTime]
+                                );
                             _ ->
                                 {ResCol, ResData} = {undefined, undefined}
                         end,
@@ -135,10 +162,8 @@ search(#{auth_data := #{<<"authed">> := true,
             lager:error("数据查询失败：~p~n", [Error]),
             {json, [#{<<"Alert">> => unicode:characters_to_binary("数据查询失败！", utf8)}]}
     end;
-
 search(#{auth_data := #{<<"permission">> := #{<<"health">> := false}}}) ->
     {json, [#{<<"Alert">> => unicode:characters_to_binary("API鉴权失败！", utf8)}]};
-
 search(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 

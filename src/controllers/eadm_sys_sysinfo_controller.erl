@@ -14,7 +14,7 @@
 %%%===================================================================
 %%% 函数导出
 %%%===================================================================
--export([index/1,route_table/1]).
+-export([index/1, route_table/1]).
 
 %%%===================================================================
 %%% Includes
@@ -46,10 +46,11 @@ index(#{auth_data := #{<<"authed">> := true, <<"username">> := Username}}) ->
         {logical_processors_available, erlang:system_info(logical_processors_available)},
         {schedulers, erlang:system_info(schedulers)},
         {schedulers_online, erlang:system_info(schedulers_online)},
-        {schedulers_available, case erlang:system_info(multi_scheduling) of
-            enabled -> erlang:system_info(schedulers_online);
-            _ -> 1
-        end},
+        {schedulers_available,
+            case erlang:system_info(multi_scheduling) of
+                enabled -> erlang:system_info(schedulers_online);
+                _ -> 1
+            end},
         {run_queue, erlang:statistics(run_queue)},
         {atom_count, erlang:system_info(atom_count)},
         {atom_limit, erlang:system_info(atom_limit)},
@@ -75,7 +76,6 @@ index(#{auth_data := #{<<"authed">> := true, <<"username">> := Username}}) ->
     UptimeStr = io_lib:format("~p Secs", [Uptime div 1000]),
 
     {ok, [{sys_info, SysInfoWithIO}, {uptime, UptimeStr}, {username, Username}]};
-
 index(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 
@@ -87,11 +87,13 @@ index(#{auth_data := #{<<"authed">> := false}}) ->
 %%--------------------------------------------------------------------
 route_table(#{auth_data := #{<<"authed">> := true, <<"username">> := Username}}) ->
     #host_tree{hosts = Hosts} = persistent_term:get(nova_dispatch),
-    [Routes|_] = lists:map(fun({Host, #routing_tree{tree = Tree}}) ->
-                                #{"text" => to_string(Host), "children" => flatten_routes(Tree)}
-                        end, Hosts),
+    [Routes | _] = lists:map(
+        fun({Host, #routing_tree{tree = Tree}}) ->
+            #{"text" => to_string(Host), "children" => flatten_routes(Tree)}
+        end,
+        Hosts
+    ),
     {ok, [{routes, thoas:encode(Routes)}, {username, Username}], #{view => eadm_sys_routes}};
-
 route_table(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 
@@ -106,30 +108,56 @@ route_table(#{auth_data := #{<<"authed">> := false}}) ->
 %%
 %% @end
 %%--------------------------------------------------------------------
-flatten_routes([]) -> [];
-flatten_routes([#node{segment = <<>>}|Tl]) -> flatten_routes(Tl);
-flatten_routes([#node{segment = Segment, value = Values, children = Children, is_binding = IsBinding, is_wildcard = IsWildcard}|Tl]) ->
-    HTMLClass = case IsWildcard of
+flatten_routes([]) ->
+    [];
+flatten_routes([#node{segment = <<>>} | Tl]) ->
+    flatten_routes(Tl);
+flatten_routes([
+    #node{
+        segment = Segment,
+        value = Values,
+        children = Children,
+        is_binding = IsBinding,
+        is_wildcard = IsWildcard
+    }
+    | Tl
+]) ->
+    HTMLClass =
+        case IsWildcard of
+            true ->
+                <<"wildcard">>;
+            _ ->
+                case IsBinding of
                     true ->
-                        <<"wildcard">>;
+                        <<"binding">>;
                     _ ->
-                        case IsBinding of
-                            true ->
-                                <<"binding">>;
+                        case Values of
+                            [] ->
+                                <<"">>;
                             _ ->
-                                case Values of
-                                    [] ->
-                                        <<"">>;
-                                    _ ->
-                                        <<"endpoint">>
-                                end
+                                <<"endpoint">>
                         end
-                end,
+                end
+        end,
     case Values of
         [] ->
-            [#{"HTMLclass" => HTMLClass, "text" => #{"route" => to_string(Segment)}, "children" => flatten_routes(Children)}|flatten_routes(Tl)];
+            [
+                #{
+                    "HTMLclass" => HTMLClass,
+                    "text" => #{"route" => to_string(Segment)},
+                    "children" => flatten_routes(Children)
+                }
+                | flatten_routes(Tl)
+            ];
         _Values ->
-            [#{"HTMLclass" => HTMLClass, "text" => #{"route" => to_string(Segment)}, "children" => flatten_routes(Children)}|flatten_routes(Tl)]
+            [
+                #{
+                    "HTMLclass" => HTMLClass,
+                    "text" => #{"route" => to_string(Segment)},
+                    "children" => flatten_routes(Children)
+                }
+                | flatten_routes(Tl)
+            ]
     end.
 
 %%--------------------------------------------------------------------
@@ -139,10 +167,11 @@ flatten_routes([#node{segment = Segment, value = Values, children = Children, is
 %%
 %% @end
 %%--------------------------------------------------------------------
-to_string('_') -> <<"/">>;
+to_string('_') ->
+    <<"/">>;
 to_string(S) when erlang:is_list(S) -> S;
 to_string(I) when erlang:is_integer(I) ->
     SCode = erlang:integer_to_binary(I),
-    << <<"StatusCode: ">>/binary,
-        SCode/binary >>;
-to_string(B) -> B.
+    <<<<"StatusCode: ">>/binary, SCode/binary>>;
+to_string(B) ->
+    B.

@@ -35,8 +35,10 @@
 %% @end
 send_msg(Content) ->
     try
-        JsonData = thoas:encode(#{msgtype => 'text',
-            text => #{content => Content, mentioned_list => ?WX_MENTIONS}}),
+        JsonData = thoas:encode(#{
+            msgtype => 'text',
+            text => #{content => Content, mentioned_list => ?WX_MENTIONS}
+        }),
         httpc:request(post, {?WX_URL, ?WX_HEADERS, "application/json", JsonData}, [], []),
         #{<<"success">> => true}
     catch
@@ -48,4 +50,3 @@ send_msg(Content) ->
 %%====================================================================
 %% 内部函数
 %%====================================================================
-

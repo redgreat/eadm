@@ -19,7 +19,9 @@
 %%%===================================================================
 %%% 宏定义
 %%%===================================================================
--define(ALIPAY_API_URL, application:get_env(nova, alipay_api_url, "https://openapi.alipay.com/gateway.do")).
+-define(ALIPAY_API_URL,
+    application:get_env(nova, alipay_api_url, "https://openapi.alipay.com/gateway.do")
+).
 -define(ALIPAY_APP_ID, application:get_env(nova, alipay_app_id, "")).
 -define(ALIPAY_PRIVATE_KEY, application:get_env(nova, alipay_private_key, "")).
 -define(ALIPAY_PUBLIC_KEY, application:get_env(nova, alipay_public_key, "")).
@@ -67,12 +69,17 @@ fetch_alipay_transactions(StartDate, EndDate) ->
                 ParamsWithSign = Params#{sign => Sign},
 
                 % 发送请求
-                {ok, Response} = httpc:request(post, {
-                    ?ALIPAY_API_URL,
-                    [{"Content-Type", "application/x-www-form-urlencoded;charset=utf-8"}],
-                    "application/x-www-form-urlencoded",
-                    uri_string:compose_query(maps:to_list(ParamsWithSign))
-                }, [], []),
+                {ok, Response} = httpc:request(
+                    post,
+                    {
+                        ?ALIPAY_API_URL,
+                        [{"Content-Type", "application/x-www-form-urlencoded;charset=utf-8"}],
+                        "application/x-www-form-urlencoded",
+                        uri_string:compose_query(maps:to_list(ParamsWithSign))
+                    },
+                    [],
+                    []
+                ),
 
                 % 解析响应
                 {_, _, Body} = Response,
@@ -124,27 +131,34 @@ fetch_wechat_transactions(StartDate, _EndDate) ->
                 Method = "GET",
                 ParsedUrl = uri_string:parse(FullUrl),
                 Path = maps:get(path, ParsedUrl, ""),
-                SignString = Method ++ "\n" ++
-                             Path ++ "\n" ++
-                             Timestamp ++ "\n" ++
-                             Nonce ++ "\n\n",
+                SignString =
+                    Method ++ "\n" ++
+                        Path ++ "\n" ++
+                        Timestamp ++ "\n" ++
+                        Nonce ++ "\n\n",
 
                 % 使用私钥签名
                 Signature = sign_with_private_key(SignString, ?WECHAT_PRIVATE_KEY),
 
                 % 构建认证头
-                AuthHeader = "WECHATPAY2-SHA256-RSA2048 " ++
-                             "mchid=\"" ++ ?WECHAT_MCH_ID ++ "\"," ++
-                             "nonce_str=\"" ++ Nonce ++ "\"," ++
-                             "signature=\"" ++ Signature ++ "\"," ++
-                             "timestamp=\"" ++ Timestamp ++ "\"," ++
-                             "serial_no=\"" ++ ?WECHAT_SERIAL_NO ++ "\"",
+                AuthHeader =
+                    "WECHATPAY2-SHA256-RSA2048 " ++
+                        "mchid=\"" ++ ?WECHAT_MCH_ID ++ "\"," ++
+                        "nonce_str=\"" ++ Nonce ++ "\"," ++
+                        "signature=\"" ++ Signature ++ "\"," ++
+                        "timestamp=\"" ++ Timestamp ++ "\"," ++
+                        "serial_no=\"" ++ ?WECHAT_SERIAL_NO ++ "\"",
 
                 % 发送请求
-                {ok, Response} = httpc:request(get, {
-                    FullUrl,
-                    [{"Authorization", AuthHeader}, {"Accept", "application/json"}]
-                }, [], []),
+                {ok, Response} = httpc:request(
+                    get,
+                    {
+                        FullUrl,
+                        [{"Authorization", AuthHeader}, {"Accept", "application/json"}]
+                    },
+                    [],
+                    []
+                ),
 
                 % 解析响应
                 {_, _, Body} = Response,
@@ -252,5 +266,9 @@ sign_with_private_key(_Content, _PrivateKey) ->
 %% 格式化日期时间
 %% @end
 format_datetime({{Year, Month, Day}, {Hour, Minute, Second}}) ->
-    lists:flatten(io_lib:format("~4..0w-~2..0w-~2..0w ~2..0w:~2..0w:~2..0w",
-                               [Year, Month, Day, Hour, Minute, Second])).
+    lists:flatten(
+        io_lib:format(
+            "~4..0w-~2..0w-~2..0w ~2..0w:~2..0w:~2..0w",
+            [Year, Month, Day, Hour, Minute, Second]
+        )
+    ).

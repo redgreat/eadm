@@ -42,7 +42,6 @@ load_sheet(FileBin, true) ->
     Share = clean_share(proplists:get_value("xl/sharedStrings.xml", FileBin, undefined)),
     Sheet = clean_sheet(proplists:get_value("xl/worksheets/sheet1.xml", FileBin, undefined)),
     pack_table(Share, Sheet);
-
 %% @doc
 %% 读取所有工作表(sheet)，返回包含所有表格数据的列表
 %% @end
@@ -55,7 +54,8 @@ load_sheet(FileBin, _) ->
 %% @doc
 %% 处理共享字符串文件，提取所有共享字符串
 %% @end
-clean_share(undefined) -> [];
+clean_share(undefined) ->
+    [];
 clean_share(Share) ->
     BinStr = application:get_env(erlxlsx, binary_string, true),
     {SST, _Rest} = xmerl_scan:string(binary_to_list(Share)),
@@ -64,7 +64,8 @@ clean_share(Share) ->
 %% @doc
 %% 处理表格数据，解析XML格式的工作表数据
 %% @end
-clean_sheet(undefined) -> [];
+clean_sheet(undefined) ->
+    [];
 clean_sheet(Sheet) ->
     {Root, _Rest} = xmerl_scan:string(binary_to_list(Sheet)),
     SheetData = lists:keyfind(sheetData, #xmlElement.name, Root#xmlElement.content),
@@ -87,11 +88,12 @@ load_sheet(FileBin, Share, Amount, Tables) ->
     SheetName = "sheet" ++ integer_to_list(Amount),
     SheetPath = "xl/worksheets/" ++ SheetName ++ ".xml",
     case proplists:get_value(SheetPath, FileBin, undefined) of
-        undefined -> Tables;
+        undefined ->
+            Tables;
         SheetXML ->
             Sheet = clean_sheet(SheetXML),
             Table = {SheetName, pack_table(Share, Sheet)},
-            load_sheet(FileBin, Share, Amount+1, [Table | Tables])
+            load_sheet(FileBin, Share, Amount + 1, [Table | Tables])
     end.
 
 %% @private
@@ -123,7 +125,7 @@ clean_sheet_row(Row) ->
 %% @end
 clean_sheet_c(C) ->
     T = lists:keyfind(t, #xmlAttribute.name, C#xmlElement.attributes),
-    V = lists:keyfind(v, #xmlElement.name,   C#xmlElement.content),
+    V = lists:keyfind(v, #xmlElement.name, C#xmlElement.content),
     clean_sheet_v(T, V).
 
 %% @private
@@ -132,7 +134,8 @@ clean_sheet_c(C) ->
 %% @end
 clean_sheet_v(T, #xmlElement{content = [R]}) ->
     clean_sheet_v1(T, list_to_integer(R#xmlText.value));
-clean_sheet_v(_, _) -> null.
+clean_sheet_v(_, _) ->
+    null.
 
 %% @private
 %% @doc
@@ -152,5 +155,5 @@ pack_row(Row, Share) ->
 %% @doc
 %% 处理单个单元格的值，如果需要转换则从共享字符串中获取
 %% @end
-pack_value({transform, V}, Share) -> lists:nth(V+1, Share);
+pack_value({transform, V}, Share) -> lists:nth(V + 1, Share);
 pack_value(V, _Share) -> V.

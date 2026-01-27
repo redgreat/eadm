@@ -41,9 +41,11 @@ create(Table, Record) ->
 %% @end
 -spec read(Table :: atom(), Key :: any()) -> [tuple()] | {error, any()}.
 read(Table, Key) ->
-    case mnesia:transaction(fun() ->
-        mnesia:read(Table, Key)
-    end) of
+    case
+        mnesia:transaction(fun() ->
+            mnesia:read(Table, Key)
+        end)
+    of
         {atomic, Result} -> Result;
         {aborted, Reason} -> {error, Reason}
     end.
@@ -52,7 +54,7 @@ read(Table, Key) ->
 %% 更新记录
 %% UpdateFun是一个接收旧记录并返回新记录的函数
 %% @end
--spec update(Table :: atom(), Key :: any(), UpdateFun :: fun((tuple()) -> tuple())) -> 
+-spec update(Table :: atom(), Key :: any(), UpdateFun :: fun((tuple()) -> tuple())) ->
     ok | {error, any()}.
 update(Table, Key, UpdateFun) ->
     transaction(fun() ->
@@ -98,9 +100,11 @@ delete_hard(Table, Key) ->
 %% @end
 -spec query(Table :: atom(), MatchSpec :: list()) -> [tuple()] | {error, any()}.
 query(Table, MatchSpec) ->
-    case mnesia:transaction(fun() ->
-        mnesia:select(Table, MatchSpec)
-    end) of
+    case
+        mnesia:transaction(fun() ->
+            mnesia:select(Table, MatchSpec)
+        end)
+    of
         {atomic, Result} -> Result;
         {aborted, Reason} -> {error, Reason}
     end.
@@ -110,14 +114,20 @@ query(Table, MatchSpec) ->
 %% @end
 -spec query_all(Table :: atom()) -> [tuple()] | {error, any()}.
 query_all(Table) ->
-    case mnesia:transaction(fun() ->
-        mnesia:foldl(fun(Record, Acc) ->
-            case is_deleted(Record) of
-                false -> [Record | Acc];
-                true -> Acc
-            end
-        end, [], Table)
-    end) of
+    case
+        mnesia:transaction(fun() ->
+            mnesia:foldl(
+                fun(Record, Acc) ->
+                    case is_deleted(Record) of
+                        false -> [Record | Acc];
+                        true -> Acc
+                    end
+                end,
+                [],
+                Table
+            )
+        end)
+    of
         {atomic, Result} -> lists:reverse(Result);
         {aborted, Reason} -> {error, Reason}
     end.
@@ -127,9 +137,11 @@ query_all(Table) ->
 %% @end
 -spec count(Table :: atom()) -> integer() | {error, any()}.
 count(Table) ->
-    case mnesia:transaction(fun() ->
-        mnesia:table_info(Table, size)
-    end) of
+    case
+        mnesia:transaction(fun() ->
+            mnesia:table_info(Table, size)
+        end)
+    of
         {atomic, Count} -> Count;
         {aborted, Reason} -> {error, Reason}
     end.
@@ -139,9 +151,11 @@ count(Table) ->
 %% @end
 -spec count(Table :: atom(), MatchSpec :: list()) -> integer() | {error, any()}.
 count(Table, MatchSpec) ->
-    case mnesia:transaction(fun() ->
-        length(mnesia:select(Table, MatchSpec))
-    end) of
+    case
+        mnesia:transaction(fun() ->
+            length(mnesia:select(Table, MatchSpec))
+        end)
+    of
         {atomic, Count} -> Count;
         {aborted, Reason} -> {error, Reason}
     end.
@@ -184,28 +198,38 @@ get_next_id(Table) ->
         [] ->
             1;
         _ ->
-            MaxId = lists:foldl(fun(Record, Max) ->
-                RecordName = element(1, Record),
-                Id = case RecordName of
-                    eadm_userrole -> (Record)#eadm_userrole.id;
-                    eadm_dashboard -> (Record)#eadm_dashboard.id;
-                    eadm_userdevice -> (Record)#eadm_userdevice.id;
-                    _ -> 0
+            MaxId = lists:foldl(
+                fun(Record, Max) ->
+                    RecordName = element(1, Record),
+                    Id =
+                        case RecordName of
+                            eadm_userrole -> (Record)#eadm_userrole.id;
+                            eadm_dashboard -> (Record)#eadm_dashboard.id;
+                            eadm_userdevice -> (Record)#eadm_userdevice.id;
+                            _ -> 0
+                        end,
+                    if
+                        Id > Max -> Id;
+                        true -> Max
+                    end
                 end,
-                if Id > Max -> Id; true -> Max end
-            end, 0, AllRecords),
+                0,
+                AllRecords
+            ),
             MaxId + 1
     end.
 
 %% @doc
 %% 根据字段查找记录
 %% @end
--spec find_by_field(Table :: atom(), FieldName :: atom(), Value :: any()) -> 
+-spec find_by_field(Table :: atom(), FieldName :: atom(), Value :: any()) ->
     [tuple()] | {error, any()}.
 find_by_field(Table, FieldName, Value) ->
-    case mnesia:transaction(fun() ->
-        mnesia:index_read(Table, Value, FieldName)
-    end) of
+    case
+        mnesia:transaction(fun() ->
+            mnesia:index_read(Table, Value, FieldName)
+        end)
+    of
         {atomic, Result} -> Result;
         {aborted, Reason} -> {error, Reason}
     end.

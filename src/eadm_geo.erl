@@ -32,7 +32,8 @@
 %% @end
 wgs84_to_gcj02({Lng, Lat}) ->
     case out_of_china({Lng, Lat}) of
-        true -> {Lng, Lat};
+        true ->
+            {Lng, Lat};
         false ->
             DLat = convertlat(Lng - 105.0, Lat - 35.0),
             DLng = convertlng(Lng - 105.0, Lat - 35.0),
@@ -60,15 +61,17 @@ out_of_china({Lng, Lat}) ->
 %% 经纬度坐标转换
 %% @end
 convertlat(Lng, Lat) ->
-    Ret = -100.0 + 2.0 * Lng + 3.0 * Lat + 0.2 * Lat * Lat +
-        0.1 * Lng * Lat + 0.2 * math:sqrt(math:abs(Lng)),
+    Ret =
+        -100.0 + 2.0 * Lng + 3.0 * Lat + 0.2 * Lat * Lat +
+            0.1 * Lng * Lat + 0.2 * math:sqrt(math:abs(Lng)),
     Ret + sin_convert(Lng, 6.0, 20.0) * 2.0 / 3.0 +
         sin_convert(Lat, 1.0, 20.0) * 2.0 / 3.0 +
         sin_convert(Lat, 12.0, 160.0, 320.0) * 2.0 / 3.0.
 
 convertlng(Lng, Lat) ->
-    Ret = 300.0 + Lng + 2.0 * Lat + 0.1 * Lng * Lng +
-        0.1 * Lng * Lat + 0.1 * math:sqrt(math:abs(Lng)),
+    Ret =
+        300.0 + Lng + 2.0 * Lat + 0.1 * Lng * Lng +
+            0.1 * Lng * Lat + 0.1 * math:sqrt(math:abs(Lng)),
     Ret + sin_convert(Lng, 6.0, 20.0) * 2.0 / 3.0 +
         sin_convert(Lng, 1.0, 20.0, 40.0) * 2.0 / 3.0 +
         sin_convert(Lng, 12.0, 150.0, 300.0) * 2.0 / 3.0.

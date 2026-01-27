@@ -29,15 +29,21 @@ sync_user_activities(UserId, DaysBack) ->
         OAuth2Token = maps:get(<<"oauth2">>, get_user_tokens(UserId)),
         EndDate = calendar:universal_time(),
         StartDate = subtract_days(EndDate, DaysBack),
-        case garmin_client_service:get_activities(OAuth1Token, OAuth2Token,
-                                               format_date(StartDate),
-                                               format_date(EndDate)) of
+        case
+            garmin_client_service:get_activities(
+                OAuth1Token,
+                OAuth2Token,
+                format_date(StartDate),
+                format_date(EndDate)
+            )
+        of
             {ok, Activities} ->
                 lists:foreach(
                     fun(Activity) ->
                         save_activity(UserId, parse_garmin_activity(Activity))
                     end,
-                    Activities),
+                    Activities
+                ),
                 {ok, #{synced => length(Activities), new => 0}};
             {error, Reason} ->
                 logger:error("Failed to sync activities: ~p", [Reason]),
@@ -87,24 +93,41 @@ save_activity(UserId, ActivityData) ->
     ElevationGain = maps:get(<<"elevationGain">>, ActivityData, null),
     ElevationLoss = maps:get(<<"elevationLoss">>, ActivityData, null),
     GarminActivityId = maps:get(<<"activityId">>, ActivityData),
-    SQL = <<"INSERT INTO sp_activity 
-            (userid, actname, acttype, distance, starttime, endtime,
-             timespan, elevationgain, elevationloss, avgspeed, maxspeed,
-             avgheartbeat, maxheartbeat, calorie, garminactid)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
-            ON CONFLICT (garminactid) 
-            DO UPDATE SET
-                actname = EXCLUDED.actname,
-                distance = EXCLUDED.distance,
-                timespan = EXCLUDED.timespan,
-                updatedat = CURRENT_TIMESTAMP
-            RETURNING id">>,
+    SQL =
+        <<
+            "INSERT INTO sp_activity \n"
+            "            (userid, actname, acttype, distance, starttime, endtime,\n"
+            "             timespan, elevationgain, elevationloss, avgspeed, maxspeed,\n"
+            "             avgheartbeat, maxheartbeat, calorie, garminactid)\n"
+            "            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)\n"
+            "            ON CONFLICT (garminactid) \n"
+            "            DO UPDATE SET\n"
+            "                actname = EXCLUDED.actname,\n"
+            "                distance = EXCLUDED.distance,\n"
+            "                timespan = EXCLUDED.timespan,\n"
+            "                updatedat = CURRENT_TIMESTAMP\n"
+            "            RETURNING id"
+        >>,
     EndTime = add_seconds(StartTime, Duration),
-    case eadm_pgpool:equery(SQL, [
-        UserId, ActivityName, ActivityType, Distance, StartTime, EndTime,
-        Duration, ElevationGain, ElevationLoss, AvgSpeed, MaxSpeed,
-        AvgHR, MaxHR, Calories, GarminActivityId
-    ]) of
+    case
+        eadm_pgpool:equery(SQL, [
+            UserId,
+            ActivityName,
+            ActivityType,
+            Distance,
+            StartTime,
+            EndTime,
+            Duration,
+            ElevationGain,
+            ElevationLoss,
+            AvgSpeed,
+            MaxSpeed,
+            AvgHR,
+            MaxHR,
+            Calories,
+            GarminActivityId
+        ])
+    of
         {ok, _, [{ActivityId}]} ->
             {ok, ActivityId};
         {error, Reason} ->
@@ -181,8 +204,10 @@ subtract_days(DateTime, Days) ->
 %%--------------------------------------------------------------------
 format_date({{Y, M, D}, {H, Mi, S}}) ->
     list_to_binary(
-        io_lib:format("~4..0w-~2..0w-~2..0wT~2..0w:~2..0w:~2..0wZ",
-                     [Y, M, D, H, Mi, S])
+        io_lib:format(
+            "~4..0w-~2..0w-~2..0wT~2..0w:~2..0w:~2..0wZ",
+            [Y, M, D, H, Mi, S]
+        )
     );
 format_date(Timestamp) when is_binary(Timestamp) ->
     Timestamp.

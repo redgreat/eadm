@@ -19,9 +19,13 @@
 %% @doc
 %% 获取支付宝交易数据
 %% @end
-alipay(#{auth_data := #{<<"authed">> := true,
-      <<"permission">> := #{<<"finance">> := #{<<"finlist">> := true}}},
-      bindings := #{<<"startDate">> := StartDate, <<"endDate">> := EndDate}}) ->
+alipay(#{
+    auth_data := #{
+        <<"authed">> := true,
+        <<"permission">> := #{<<"finance">> := #{<<"finlist">> := true}}
+    },
+    bindings := #{<<"startDate">> := StartDate, <<"endDate">> := EndDate}
+}) ->
     try
         case api_payment:fetch_alipay_transactions(StartDate, EndDate) of
             {ok, Transactions} ->
@@ -36,19 +40,21 @@ alipay(#{auth_data := #{<<"authed">> := true,
             ?LOG_ERROR("获取支付宝交易数据失败: ~p:~p", [Exception, Error]),
             {json, #{<<"success">> => false, <<"message">> => "获取支付宝交易数据失败"}}
     end;
-
 alipay(#{auth_data := #{<<"permission">> := #{<<"finance">> := #{<<"finlist">> := false}}}}) ->
     {json, #{<<"success">> => false, <<"message">> => "API鉴权失败"}};
-
 alipay(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 
 %% @doc
 %% 获取微信支付交易数据
 %% @end
-wechat(#{auth_data := #{<<"authed">> := true,
-      <<"permission">> := #{<<"finance">> := #{<<"finlist">> := true}}},
-      bindings := #{<<"startDate">> := StartDate, <<"endDate">> := EndDate}}) ->
+wechat(#{
+    auth_data := #{
+        <<"authed">> := true,
+        <<"permission">> := #{<<"finance">> := #{<<"finlist">> := true}}
+    },
+    bindings := #{<<"startDate">> := StartDate, <<"endDate">> := EndDate}
+}) ->
     try
         case api_payment:fetch_wechat_transactions(StartDate, EndDate) of
             {ok, Transactions} ->
@@ -63,19 +69,21 @@ wechat(#{auth_data := #{<<"authed">> := true,
             ?LOG_ERROR("获取微信支付交易数据失败: ~p:~p", [Exception, Error]),
             {json, #{<<"success">> => false, <<"message">> => "获取微信支付交易数据失败"}}
     end;
-
 wechat(#{auth_data := #{<<"permission">> := #{<<"finance">> := #{<<"finlist">> := false}}}}) ->
     {json, #{<<"success">> => false, <<"message">> => "API鉴权失败"}};
-
 wechat(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 
 %% @doc
 %% 保存API配置
 %% @end
-config(#{auth_data := #{<<"authed">> := true,
-      <<"permission">> := #{<<"finance">> := #{<<"finlist">> := true}}},
-      json := #{<<"type">> := Type} = Config}) ->
+config(#{
+    auth_data := #{
+        <<"authed">> := true,
+        <<"permission">> := #{<<"finance">> := #{<<"finlist">> := true}}
+    },
+    json := #{<<"type">> := Type} = Config
+}) ->
     try
         % 根据不同的API类型保存配置
         case Type of
@@ -93,10 +101,8 @@ config(#{auth_data := #{<<"authed">> := true,
             ?LOG_ERROR("保存API配置失败: ~p:~p", [Exception, Error]),
             {json, #{<<"success">> => false, <<"message">> => "保存API配置失败"}}
     end;
-
 config(#{auth_data := #{<<"permission">> := #{<<"finance">> := #{<<"finlist">> := false}}}}) ->
     {json, #{<<"success">> => false, <<"message">> => "API鉴权失败"}};
-
 config(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 
@@ -117,29 +123,34 @@ process_alipay_transactions(Transactions) ->
                 Map = convert_alipay_transaction(Transaction),
 
                 % 插入数据库
-                eadm_pgpool:equery(pool_pg,
-                    "insert into fn_paybilldetail(owner, sourcetype, tradetime, tradetype, counterparty, goodscomment,
-                    inorout, amount, paymethod, paystatus, tradeorderno, counterorderno, billcomment)
-                    values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13);",
-                    [maps:get(<<"Owner">>, Map, null),
-                     maps:get(<<"Source">>, Map, null),
-                     maps:get(<<"TradeTime">>, Map, null),
-                     maps:get(<<"TradeType">>, Map, null),
-                     maps:get(<<"CounterParty">>, Map, null),
-                     maps:get(<<"GoodsComment">>, Map, null),
-                     maps:get(<<"InOrOut">>, Map, null),
-                     maps:get(<<"Amount">>, Map, null),
-                     maps:get(<<"PayMethod">>, Map, null),
-                     maps:get(<<"PayStatus">>, Map, null),
-                     maps:get(<<"TradeOrderNo">>, Map, null),
-                     maps:get(<<"CounterOrderNo">>, Map, null),
-                     maps:get(<<"BillComment">>, Map, null)])
+                eadm_pgpool:equery(
+                    pool_pg,
+                    "insert into fn_paybilldetail(owner, sourcetype, tradetime, tradetype, counterparty, goodscomment,\n"
+                    "                    inorout, amount, paymethod, paystatus, tradeorderno, counterorderno, billcomment)\n"
+                    "                    values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13);",
+                    [
+                        maps:get(<<"Owner">>, Map, null),
+                        maps:get(<<"Source">>, Map, null),
+                        maps:get(<<"TradeTime">>, Map, null),
+                        maps:get(<<"TradeType">>, Map, null),
+                        maps:get(<<"CounterParty">>, Map, null),
+                        maps:get(<<"GoodsComment">>, Map, null),
+                        maps:get(<<"InOrOut">>, Map, null),
+                        maps:get(<<"Amount">>, Map, null),
+                        maps:get(<<"PayMethod">>, Map, null),
+                        maps:get(<<"PayStatus">>, Map, null),
+                        maps:get(<<"TradeOrderNo">>, Map, null),
+                        maps:get(<<"CounterOrderNo">>, Map, null),
+                        maps:get(<<"BillComment">>, Map, null)
+                    ]
+                )
             catch
                 E:R ->
                     ?LOG_ERROR("保存支付宝交易数据失败: ~p:~p", [E, R])
             end
         end,
-        Transactions).
+        Transactions
+    ).
 
 %% @private
 %% @doc
@@ -154,28 +165,33 @@ process_wechat_transactions(Transactions) ->
                 Map = convert_wechat_transaction(Transaction),
 
                 % 插入数据库
-                eadm_pgpool:equery(pool_pg,
-                    "insert into fn_paybilldetail(owner, sourcetype, tradeorderno, counterorderno, tradetime,
-                    paymethod, counterparty, goodscomment, amount, inorout, paystatus, billcomment)
-                    values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12);",
-                    [maps:get(<<"Owner">>, Map, null),
-                     maps:get(<<"Source">>, Map, null),
-                     maps:get(<<"TradeOrderNo">>, Map, null),
-                     maps:get(<<"CounterOrderNo">>, Map, null),
-                     maps:get(<<"TradeTime">>, Map, null),
-                     maps:get(<<"PayMethod">>, Map, null),
-                     maps:get(<<"CounterParty">>, Map, null),
-                     maps:get(<<"GoodsComment">>, Map, null),
-                     maps:get(<<"Amount">>, Map, null),
-                     maps:get(<<"InOrOut">>, Map, null),
-                     maps:get(<<"PayStatus">>, Map, null),
-                     maps:get(<<"BillComment">>, Map, null)])
+                eadm_pgpool:equery(
+                    pool_pg,
+                    "insert into fn_paybilldetail(owner, sourcetype, tradeorderno, counterorderno, tradetime,\n"
+                    "                    paymethod, counterparty, goodscomment, amount, inorout, paystatus, billcomment)\n"
+                    "                    values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12);",
+                    [
+                        maps:get(<<"Owner">>, Map, null),
+                        maps:get(<<"Source">>, Map, null),
+                        maps:get(<<"TradeOrderNo">>, Map, null),
+                        maps:get(<<"CounterOrderNo">>, Map, null),
+                        maps:get(<<"TradeTime">>, Map, null),
+                        maps:get(<<"PayMethod">>, Map, null),
+                        maps:get(<<"CounterParty">>, Map, null),
+                        maps:get(<<"GoodsComment">>, Map, null),
+                        maps:get(<<"Amount">>, Map, null),
+                        maps:get(<<"InOrOut">>, Map, null),
+                        maps:get(<<"PayStatus">>, Map, null),
+                        maps:get(<<"BillComment">>, Map, null)
+                    ]
+                )
             catch
                 E:R ->
                     ?LOG_ERROR("保存微信支付交易数据失败: ~p:~p", [E, R])
             end
         end,
-        Transactions).
+        Transactions
+    ).
 
 %% @private
 %% @doc
@@ -185,7 +201,8 @@ convert_alipay_transaction(_Transaction) ->
     % TODO: 实现支付宝交易数据转换
     #{
         <<"Owner">> => "系统导入",
-        <<"Source">> => 1,  % 支付宝
+        % 支付宝
+        <<"Source">> => 1,
         <<"TradeTime">> => calendar:universal_time(),
         <<"TradeType">> => "支付宝交易",
         <<"CounterParty">> => "支付宝用户",
@@ -207,7 +224,8 @@ convert_wechat_transaction(_Transaction) ->
     % TODO: 实现微信支付交易数据转换
     #{
         <<"Owner">> => "系统导入",
-        <<"Source">> => 2,  % 微信
+        % 微信
+        <<"Source">> => 2,
         <<"TradeOrderNo">> => "",
         <<"CounterOrderNo">> => "",
         <<"TradeTime">> => calendar:universal_time(),

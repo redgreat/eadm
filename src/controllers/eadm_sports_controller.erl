@@ -11,8 +11,14 @@
 
 -author("wangcw").
 
--export([list_activities/1, activity_detail/1, public_activity/1, share_page/1,
-         trigger_sync/1, delete_activity/1]).
+-export([
+    list_activities/1,
+    activity_detail/1,
+    public_activity/1,
+    share_page/1,
+    trigger_sync/1,
+    delete_activity/1
+]).
 
 %%====================================================================
 %% API functions
@@ -35,11 +41,13 @@ list_activities(#{req := Req} = _Params) ->
     Offset = (Page - 1) * PageSize,
 
     %% 查询数据库
-    SQL = <<"SELECT id, actname, acttype, distance, starttime, "
-            "\r\n                   timespan, avgheartbeat, calorie, "
-            "ispublic, sharetoken\r\n            FROM sp_activity "
-            "\r\n            WHERE userid = $1 \r\n            ORDER BY "
-            "starttime DESC \r\n            LIMIT $2 OFFSET $3">>,
+    SQL = <<
+        "SELECT id, actname, acttype, distance, starttime, "
+        "\r\n                   timespan, avgheartbeat, calorie, "
+        "ispublic, sharetoken\r\n            FROM sp_activity "
+        "\r\n            WHERE userid = $1 \r\n            ORDER BY "
+        "starttime DESC \r\n            LIMIT $2 OFFSET $3"
+    >>,
 
     case eadm_pgpool:equery(SQL, [UserId, PageSize, Offset]) of
         {ok, _, Rows} ->
@@ -49,16 +57,20 @@ list_activities(#{req := Req} = _Params) ->
 
             Activities = lists:map(fun format_activity_row/1, Rows),
 
-            {json,
-             #{<<"code">> => 200,
-               <<"data">> =>
-                   #{<<"list">> => Activities,
-                     <<"total">> => Total,
-                     <<"page">> => Page,
-                     <<"pageSize">> => PageSize}}};
+            {json, #{
+                <<"code">> => 200,
+                <<"data">> =>
+                    #{
+                        <<"list">> => Activities,
+                        <<"total">> => Total,
+                        <<"page">> => Page,
+                        <<"pageSize">> => PageSize
+                    }
+            }};
         {error, Reason} ->
-            {json,
-             #{<<"code">> => 500, <<"message">> => iolist_to_binary(io_lib:format("~p", [Reason]))}}
+            {json, #{
+                <<"code">> => 500, <<"message">> => iolist_to_binary(io_lib:format("~p", [Reason]))
+            }}
     end.
 
 %%--------------------------------------------------------------------
@@ -70,8 +82,10 @@ activity_detail(#{bindings := #{id := IdBin}, req := Req} = _Params) ->
     UserId = get_user_id(Req),
     ActivityId = IdBin,
 
-    SQL = <<"SELECT * FROM sp_activity \r\n            WHERE id = "
-            "$1 AND userid = $2">>,
+    SQL = <<
+        "SELECT * FROM sp_activity \r\n            WHERE id = "
+        "$1 AND userid = $2"
+    >>,
 
     case eadm_pgpool:equery(SQL, [ActivityId, UserId]) of
         {ok, Columns, [Row]} ->
@@ -79,21 +93,26 @@ activity_detail(#{bindings := #{id := IdBin}, req := Req} = _Params) ->
 
             %% 获取streams数据
             StreamsSQL =
-                <<"SELECT streamtype, streamjson \r\n                       "
-                  "   FROM sp_stream \r\n                       "
-                  "   WHERE actid = $1">>,
+                <<
+                    "SELECT streamtype, streamjson \r\n                       "
+                    "   FROM sp_stream \r\n                       "
+                    "   WHERE actid = $1"
+                >>,
             {ok, _, StreamRows} = eadm_pgpool:equery(StreamsSQL, [ActivityId]),
 
             Streams =
-                lists:map(fun({Type, Data}) -> #{<<"type">> => Type, <<"data">> => Data} end,
-                          StreamRows),
+                lists:map(
+                    fun({Type, Data}) -> #{<<"type">> => Type, <<"data">> => Data} end,
+                    StreamRows
+                ),
 
             {json, #{<<"code">> => 200, <<"data">> => Activity#{<<"streams">> => Streams}}};
         {ok, _, []} ->
             {json, #{<<"code">> => 404, <<"message">> => <<"Activity not found">>}};
         {error, Reason} ->
-            {json,
-             #{<<"code">> => 500, <<"message">> => iolist_to_binary(io_lib:format("~p", [Reason]))}}
+            {json, #{
+                <<"code">> => 500, <<"message">> => iolist_to_binary(io_lib:format("~p", [Reason]))
+            }}
     end.
 
 %%--------------------------------------------------------------------
@@ -102,8 +121,10 @@ activity_detail(#{bindings := #{id := IdBin}, req := Req} = _Params) ->
 %% @end
 %%--------------------------------------------------------------------
 public_activity(#{bindings := #{<<"shareId">> := ShareToken}} = _Params) ->
-    SQL = <<"SELECT * FROM sp_activity \r\n            WHERE sharetoken "
-            "= $1 AND ispublic = true">>,
+    SQL = <<
+        "SELECT * FROM sp_activity \r\n            WHERE sharetoken "
+        "= $1 AND ispublic = true"
+    >>,
 
     case eadm_pgpool:equery(SQL, [ShareToken]) of
         {ok, Columns, [Row]} ->
@@ -118,14 +139,17 @@ public_activity(#{bindings := #{<<"shareId">> := ShareToken}} = _Params) ->
                     false ->
                         ActivityId = maps:get(<<"id">>, Activity),
                         StreamsSQL =
-                            <<"SELECT streamtype, streamjson \r\n                       "
-                              "           FROM sp_stream \r\n               "
-                              "                   WHERE actid = $1 AND streamtype = "
-                              "'latlng'">>,
+                            <<
+                                "SELECT streamtype, streamjson \r\n                       "
+                                "           FROM sp_stream \r\n               "
+                                "                   WHERE actid = $1 AND streamtype = "
+                                "'latlng'"
+                            >>,
                         {ok, _, StreamRows} = eadm_pgpool:equery(StreamsSQL, [ActivityId]),
-                        lists:map(fun({Type, Data}) -> #{<<"type">> => Type, <<"data">> => Data}
-                                  end,
-                                  StreamRows);
+                        lists:map(
+                            fun({Type, Data}) -> #{<<"type">> => Type, <<"data">> => Data} end,
+                            StreamRows
+                        );
                     true ->
                         []
                 end,
@@ -134,13 +158,16 @@ public_activity(#{bindings := #{<<"shareId">> := ShareToken}} = _Params) ->
         {ok, _, []} ->
             {status, 404};
         {error, Reason} ->
-            {json,
-             #{<<"code">> => 500, <<"message">> => iolist_to_binary(io_lib:format("~p", [Reason]))}}
+            {json, #{
+                <<"code">> => 500, <<"message">> => iolist_to_binary(io_lib:format("~p", [Reason]))
+            }}
     end.
 
 share_page(#{bindings := #{<<"shareId">> := ShareToken}} = _Params) ->
-    SQL = <<"SELECT * FROM sp_activity \r\n            WHERE sharetoken "
-            "= $1 AND ispublic = true">>,
+    SQL = <<
+        "SELECT * FROM sp_activity \r\n            WHERE sharetoken "
+        "= $1 AND ispublic = true"
+    >>,
 
     case eadm_pgpool:equery(SQL, [ShareToken]) of
         {ok, Columns, [Row]} ->
@@ -151,10 +178,12 @@ share_page(#{bindings := #{<<"shareId">> := ShareToken}} = _Params) ->
                     false ->
                         ActivityId = maps:get(<<"id">>, Activity),
                         StreamsSQL =
-                            <<"SELECT streamtype, streamjson \r\n                       "
-                              "           FROM sp_stream \r\n               "
-                              "                   WHERE actid = $1 AND streamtype = "
-                              "'latlng'">>,
+                            <<
+                                "SELECT streamtype, streamjson \r\n                       "
+                                "           FROM sp_stream \r\n               "
+                                "                   WHERE actid = $1 AND streamtype = "
+                                "'latlng'"
+                            >>,
                         case eadm_pgpool:equery(StreamsSQL, [ActivityId]) of
                             {ok, _, StreamRows} ->
                                 decode_stream_coordinates(StreamRows);
@@ -165,12 +194,14 @@ share_page(#{bindings := #{<<"shareId">> := ShareToken}} = _Params) ->
                         {[], false}
                 end,
             ShareUrl = <<"/share/sports/", ShareToken/binary>>,
-            {ok, [
-                {activity, ActivityView},
-                {has_map_data, HasMapData},
-                {map_coordinates, jsx:encode(MapCoordinates)},
-                {share_url, ShareUrl}
-            ], #{view => eadm_share}};
+            {ok,
+                [
+                    {activity, ActivityView},
+                    {has_map_data, HasMapData},
+                    {map_coordinates, jsx:encode(MapCoordinates)},
+                    {share_url, ShareUrl}
+                ],
+                #{view => eadm_share}};
         {ok, _, []} ->
             {status, 404};
         {error, _Reason} ->
@@ -198,8 +229,9 @@ trigger_sync(#{req := Req} = _Params) ->
         {error, sync_already_running} ->
             {json, #{<<"code">> => 409, <<"message">> => <<"Sync already in progress">>}};
         {error, Reason} ->
-            {json,
-             #{<<"code">> => 500, <<"message">> => iolist_to_binary(io_lib:format("~p", [Reason]))}}
+            {json, #{
+                <<"code">> => 500, <<"message">> => iolist_to_binary(io_lib:format("~p", [Reason]))
+            }}
     end.
 
 %%--------------------------------------------------------------------
@@ -211,8 +243,10 @@ delete_activity(#{bindings := #{id := IdBin}, req := Req} = _Params) ->
     UserId = get_user_id(Req),
     ActivityId = IdBin,
 
-    SQL = <<"DELETE FROM sp_activity \r\n            WHERE id = $1 "
-            "AND userid = $2 \r\n            RETURNING id">>,
+    SQL = <<
+        "DELETE FROM sp_activity \r\n            WHERE id = $1 "
+        "AND userid = $2 \r\n            RETURNING id"
+    >>,
 
     case eadm_pgpool:equery(SQL, [ActivityId, UserId]) of
         {ok, _, [{_}]} ->
@@ -220,8 +254,9 @@ delete_activity(#{bindings := #{id := IdBin}, req := Req} = _Params) ->
         {ok, _, []} ->
             {json, #{<<"code">> => 404, <<"message">> => <<"Activity not found">>}};
         {error, Reason} ->
-            {json,
-             #{<<"code">> => 500, <<"message">> => iolist_to_binary(io_lib:format("~p", [Reason]))}}
+            {json, #{
+                <<"code">> => 500, <<"message">> => iolist_to_binary(io_lib:format("~p", [Reason]))
+            }}
     end.
 
 %%====================================================================
@@ -248,33 +283,28 @@ get_user_id(Req) ->
 %% @private
 %% @doc 格式化活动行数据
 %%--------------------------------------------------------------------
-format_activity_row({Id,
-                     Name,
-                     Type,
-                     Distance,
-                     StartTime,
-                     Duration,
-                     AvgHR,
-                     Calories,
-                     IsPublic,
-                     ShareToken}) ->
-    #{<<"id">> => Id,
-      <<"name">> => Name,
-      <<"type">> => Type,
-      <<"distance">> => Distance,
-      <<"startTime">> => format_timestamp(StartTime),
-      <<"duration">> => Duration,
-      <<"avgHeartRate">> => AvgHR,
-      <<"calories">> => Calories,
-      <<"isPublic">> => IsPublic,
-      <<"shareToken">> => ShareToken,
-      <<"shareUrl">> =>
-          case IsPublic of
-              true ->
-                  <<"/share/sports/", ShareToken/binary>>;
-              false ->
-                  null
-          end}.
+format_activity_row(
+    {Id, Name, Type, Distance, StartTime, Duration, AvgHR, Calories, IsPublic, ShareToken}
+) ->
+    #{
+        <<"id">> => Id,
+        <<"name">> => Name,
+        <<"type">> => Type,
+        <<"distance">> => Distance,
+        <<"startTime">> => format_timestamp(StartTime),
+        <<"duration">> => Duration,
+        <<"avgHeartRate">> => AvgHR,
+        <<"calories">> => Calories,
+        <<"isPublic">> => IsPublic,
+        <<"shareToken">> => ShareToken,
+        <<"shareUrl">> =>
+            case IsPublic of
+                true ->
+                    <<"/share/sports/", ShareToken/binary>>;
+                false ->
+                    null
+            end
+    }.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -284,7 +314,8 @@ format_activity_detail(Columns, Row) ->
     %% 将Column names和Row values组合成map
     ColumnNames = [Name || {column, Name, _, _, _, _} <- Columns],
     maps:from_list(
-        lists:zip(ColumnNames, tuple_to_list(Row))).
+        lists:zip(ColumnNames, tuple_to_list(Row))
+    ).
 
 %%--------------------------------------------------------------------
 %% @private
@@ -294,13 +325,17 @@ filter_by_privacy(Activity) ->
     %% 如果hidestats为true,隐藏统计数据
     case maps:get(<<"hidestats">>, Activity, false) of
         true ->
-            maps:without([<<"avgheartbeat">>,
-                          <<"maxheartbeat">>,
-                          <<"avgpower">>,
-                          <<"maxpower">>,
-                          <<"avgcadence">>,
-                          <<"maxcadence">>],
-                         Activity);
+            maps:without(
+                [
+                    <<"avgheartbeat">>,
+                    <<"maxheartbeat">>,
+                    <<"avgpower">>,
+                    <<"maxpower">>,
+                    <<"avgcadence">>,
+                    <<"maxcadence">>
+                ],
+                Activity
+            );
         false ->
             Activity
     end.
@@ -351,15 +386,18 @@ decode_stream_coordinates(StreamRows) ->
         ),
     {Coordinates, Coordinates =/= []}.
 
-format_distance_km(null) -> null;
+format_distance_km(null) ->
+    null;
 format_distance_km(Distance) when is_number(Distance) ->
     (Distance / 1000).
 
-format_speed_kmh(null) -> null;
+format_speed_kmh(null) ->
+    null;
 format_speed_kmh(Speed) when is_number(Speed) ->
     (Speed * 3.6).
 
-format_duration(null) -> null;
+format_duration(null) ->
+    null;
 format_duration(Seconds) when is_number(Seconds) ->
     Total = trunc(Seconds),
     Hours = Total div 3600,
@@ -372,8 +410,12 @@ format_duration(Seconds) when is_number(Seconds) ->
 %% @doc 格式化时间戳
 %%--------------------------------------------------------------------
 format_timestamp({{Y, M, D}, {H, Mi, S}}) ->
-    iolist_to_binary(io_lib:format("~4..0w-~2..0w-~2..0w ~2..0w:~2..0w:~2..0w",
-                                   [Y, M, D, H, Mi, S]));
+    iolist_to_binary(
+        io_lib:format(
+            "~4..0w-~2..0w-~2..0w ~2..0w:~2..0w:~2..0w",
+            [Y, M, D, H, Mi, S]
+        )
+    );
 format_timestamp(Timestamp) when is_binary(Timestamp) ->
     Timestamp;
 format_timestamp(_) ->

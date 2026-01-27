@@ -13,7 +13,7 @@
 %%%===================================================================
 %%% 函数导出
 %%%===================================================================
--export([ s/0, l/0, l/1, r/0]).
+-export([s/0, l/0, l/1, r/0]).
 
 %%====================================================================
 %% API 函数
@@ -23,7 +23,7 @@
 %% @end
 s() ->
     % [?LOG_NOTICE(Info) || Info <- string:replace( os:cmd("rebar3 compile"), "\n", "", all ), Info =/= []],
-    lager:info(string:replace( os:cmd("rebar3 compile"), "\n", "", all )),
+    lager:info(string:replace(os:cmd("rebar3 compile"), "\n", "", all)),
     r().
 
 %% @doc
@@ -43,8 +43,8 @@ l(LoadApps) when is_list(LoadApps) ->
     Modules = lists:foldl(F, [], LoadApps),
     update(Modules),
     ok;
-l(LoadApp) -> l([LoadApp]).
-
+l(LoadApp) ->
+    l([LoadApp]).
 
 %% @doc
 %% 重新载入所有已经载入过的模块

@@ -22,18 +22,22 @@
 %% 主函数
 %% @end
 auth(Req) ->
-    case nova_session:get(Req ,<<"exp">>) of
+    case nova_session:get(Req, <<"exp">>) of
         {ok, Exp} ->
             case erlang:is_integer(Exp) andalso (Exp > erlang:system_time(seconds)) of
                 true ->
-                    {ok, LoginName} = nova_session:get(Req ,<<"loginname">>),
-                    {ok, UserName} = nova_session:get(Req ,<<"username">>),
-                    {ok, Permission} = nova_session:get(Req ,<<"permission">>),
+                    {ok, LoginName} = nova_session:get(Req, <<"loginname">>),
+                    {ok, UserName} = nova_session:get(Req, <<"username">>),
+                    {ok, Permission} = nova_session:get(Req, <<"permission">>),
                     NewExp = eadm_utils:get_exp_bin(),
                     nova_session:set(Req, <<"exp">>, NewExp),
                     % lager:info("User: ~ts ~p Auth Success! Exp: ~p, NewExp: ~p", [UserName, self(), Exp, NewExp]),
-                    {true, #{<<"authed">> => true, <<"username">> => UserName,
-                        <<"loginname">> => LoginName, <<"permission">> => Permission}};
+                    {true, #{
+                        <<"authed">> => true,
+                        <<"username">> => UserName,
+                        <<"loginname">> => LoginName,
+                        <<"permission">> => Permission
+                    }};
                 false ->
                     lager:info("Auth Failed, Exp: ~p Expired!", [Exp]),
                     {true, #{<<"authed">> => false}}

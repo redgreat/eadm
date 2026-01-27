@@ -69,11 +69,13 @@ login_with_tokens(OAuth1Token, OAuth2Token) ->
 %% @end
 %%--------------------------------------------------------------------
 get_activities(OAuth1Token, OAuth2Token, StartDate, EndDate) ->
-    Url = io_lib:format("~s/activitylist-service/activities/search/activities?start=0&limit=100",
-                       [?GARMIN_MODERN_URL]),
+    Url = io_lib:format(
+        "~s/activitylist-service/activities/search/activities?start=0&limit=100",
+        [?GARMIN_MODERN_URL]
+    ),
     Headers = build_oauth_headers(OAuth1Token, OAuth2Token),
     Body = jsx:encode(#{<<"startDate">> => StartDate, <<"endDate">> => EndDate}),
-    
+
     case http_request(post, Url, Headers, Body) of
         {ok, ResponseBody} ->
             Activities = jsx:decode(ResponseBody, [return_maps]),
@@ -89,8 +91,10 @@ get_activities(OAuth1Token, OAuth2Token, StartDate, EndDate) ->
 %%--------------------------------------------------------------------
 get_activity_detail(OAuth2Token, ActivityId) ->
     Url = io_lib:format("~s/activity-service/activity/~p", [?GARMIN_MODERN_URL, ActivityId]),
-    Headers = [{"Authorization", "Bearer " ++ binary_to_list(maps:get(<<"access_token">>, OAuth2Token))}],
-    
+    Headers = [
+        {"Authorization", "Bearer " ++ binary_to_list(maps:get(<<"access_token">>, OAuth2Token))}
+    ],
+
     case http_request(get, Url, Headers, "") of
         {ok, ResponseBody} ->
             Activity = jsx:decode(ResponseBody, [return_maps]),
@@ -106,8 +110,10 @@ get_activity_detail(OAuth2Token, ActivityId) ->
 %%--------------------------------------------------------------------
 get_activity_streams(OAuth2Token, ActivityId) ->
     Url = io_lib:format("~s/activity-service/activity/~p/details", [?GARMIN_MODERN_URL, ActivityId]),
-    Headers = [{"Authorization", "Bearer " ++ binary_to_list(maps:get(<<"access_token">>, OAuth2Token))}],
-    
+    Headers = [
+        {"Authorization", "Bearer " ++ binary_to_list(maps:get(<<"access_token">>, OAuth2Token))}
+    ],
+
     case http_request(get, Url, Headers, "") of
         {ok, ResponseBody} ->
             Streams = jsx:decode(ResponseBody, [return_maps]),
@@ -125,7 +131,7 @@ refresh_oauth2_token(OAuth2Token) ->
     RefreshToken = maps:get(<<"refresh_token">>, OAuth2Token),
     Url = ?GARMIN_MODERN_URL ++ "/oauth-service/oauth/exchange/user/2.0",
     Headers = [{"Authorization", "Bearer " ++ binary_to_list(RefreshToken)}],
-    
+
     case http_request(post, Url, Headers, "") of
         {ok, ResponseBody} ->
             NewToken = jsx:decode(ResponseBody, [return_maps]),
@@ -193,7 +199,7 @@ sso_login(Email, Password, CsrfToken) ->
         {"password", binary_to_list(Password)},
         {"_csrf", binary_to_list(CsrfToken)}
     ]),
-    
+
     case http_request(post, Url, Headers, Body) of
         {ok, ResponseBody} ->
             case extract_ticket(ResponseBody) of
@@ -215,7 +221,7 @@ get_oauth_tokens(Ticket) ->
     Url = ?GARMIN_MODERN_URL ++ "/oauth-service/oauth/preauthorized",
     Headers = [{"Content-Type", "application/x-www-form-urlencoded"}],
     Body = "ticket=" ++ binary_to_list(Ticket) ++ "&login-url=" ++ ?GARMIN_SSO_URL ++ "/signin",
-    
+
     case http_request(post, Url, Headers, Body) of
         {ok, ResponseBody} ->
             Tokens = jsx:decode(ResponseBody, [return_maps]),
@@ -246,8 +252,10 @@ verify_tokens(_OAuth1Token, OAuth2Token) ->
 %%--------------------------------------------------------------------
 build_oauth_headers(_OAuth1Token, OAuth2Token) ->
     AccessToken = maps:get(<<"access_token">>, OAuth2Token),
-    [{"Authorization", "Bearer " ++ binary_to_list(AccessToken)},
-     {"Content-Type", "application/json"}].
+    [
+        {"Authorization", "Bearer " ++ binary_to_list(AccessToken)},
+        {"Content-Type", "application/json"}
+    ].
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -257,16 +265,17 @@ build_oauth_headers(_OAuth1Token, OAuth2Token) ->
 http_request(Method, Url, Headers, Body) ->
     inets:start(),
     ssl:start(),
-    
-    Request = case Method of
-        get ->
-            {Url, Headers};
-        post ->
-            {Url, Headers, "application/json", Body};
-        _ ->
-            {Url, Headers, "application/json", Body}
-    end,
-    
+
+    Request =
+        case Method of
+            get ->
+                {Url, Headers};
+            post ->
+                {Url, Headers, "application/json", Body};
+            _ ->
+                {Url, Headers, "application/json", Body}
+        end,
+
     case httpc:request(Method, Request, [{timeout, 30000}], []) of
         {ok, {{_, 200, _}, _RespHeaders, RespBody}} ->
             {ok, list_to_binary(RespBody)};
@@ -287,10 +296,11 @@ extract_ticket(ResponseBody) ->
     case binary:match(ResponseBody, <<"ticket=">>) of
         {Pos, _} ->
             <<_:Pos/binary, "ticket=", Ticket/binary>> = ResponseBody,
-            TicketValue = case binary:split(Ticket, <<"&">>) of
-                [T, _] -> T;
-                [T] -> T
-            end,
+            TicketValue =
+                case binary:split(Ticket, <<"&">>) of
+                    [T, _] -> T;
+                    [T] -> T
+                end,
             {ok, TicketValue};
         nomatch ->
             {error, ticket_not_found}

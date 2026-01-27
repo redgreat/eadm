@@ -36,7 +36,7 @@
 %%--------------------------------------------------------------------
 start(_StartType, _StartArgs) ->
     application:start(lager),
-    
+
     %% 初始化Mnesia数据库
     lager:info("开始初始化Mnesia..."),
     ok = eadm_mnesia:init_schema(),
@@ -45,13 +45,12 @@ start(_StartType, _StartArgs) ->
     ok = eadm_mnesia:wait_for_tables(),
     ok = eadm_mnesia:init_seed_data(),
     lager:info("Mnesia初始化完成"),
-    
+
     {ok, Pid} = eadm_sup:start_link(),
     timer:apply_after(2000, fun() -> lager:info("EADM 启动成功，访问地址：http://127.0.0.1:8080") end),
     timer:apply_after(3000, eadm_crontab_controller, init, []),
     timer:apply_after(4000, eadm_mnesia_backup, init_backup_scheduler, []),
     {ok, Pid}.
-
 
 %%--------------------------------------------------------------------
 %% @private

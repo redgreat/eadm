@@ -35,122 +35,198 @@
 %% @end
 %%--------------------------------------------------------------------
 routes(_Environment) ->
-  [#{prefix => "",
-     security => false,
-     routes =>
-       [{"/login", fun eadm_login_controller:login/1, #{methods => [get, post, options]}},
-        {"/logout", fun eadm_login_controller:logout/1, #{methods => [post]}},
-        {"/assets/[...]", "assets"}]},
-   #{prefix => "menu",
-     security => fun eadm_auth:auth/1,
-     routes =>
-       [{"/health", fun eadm_health_controller:index/1, #{methods => [get]}},
-        {"/location", fun eadm_location_controller:index/1, #{methods => [get]}},
-        {"/finance", fun eadm_finance_controller:index/1, #{methods => [get]}},
-        {"/crontab", fun eadm_crontab_controller:index/1, #{methods => [get]}},
-        {"/user", fun eadm_user_controller:index/1, #{methods => [get]}},
-        {"/role", fun eadm_role_controller:index/1, #{methods => [get]}},
-        {"/device", fun eadm_device_controller:index/1, #{methods => [get]}},
-        {"/sports", fun eadm_settings_controller:index/1, #{methods => [get]}}]},
-   #{prefix => "",
-     security => fun eadm_auth:auth/1,
-     routes =>
-       [{"/", fun eadm_dashboard_controller:index/1, #{methods => [get]}},
-        {"/userinfo", fun eadm_login_controller:userinfo/1, #{methods => [get]}},
-        {"/userpwd", fun eadm_login_controller:userpwd/1, #{methods => [post]}},
-        {"/useredit", fun eadm_login_controller:useredit/1, #{methods => [post]}},
-        {"/dashboard", fun eadm_dashboard_controller:search/1, #{methods => [get]}},
-        {"/health", fun eadm_health_controller:search/1, #{methods => [get]}},
-        {"/location", fun eadm_location_controller:search/1, #{methods => [get]}},
-        {"/finance", fun eadm_finance_controller:search/1, #{methods => [get]}},
-        {"/crontab", fun eadm_crontab_controller:search/1, #{methods => [get]}},
-        {"/user", fun eadm_user_controller:search/1, #{methods => [get]}},
-        {"/role", fun eadm_role_controller:search/1, #{methods => [get]}}]},
-  #{prefix => "sports",
-    security => fun eadm_auth:auth/1,
-    routes =>
-      [{"/settings/garmin/link", fun eadm_settings_controller:link_garmin/1, #{methods => [post]}},
-       {"/settings/garmin/unlink", fun eadm_settings_controller:unlink_garmin/1, #{methods => [delete]}},
-       {"/settings/sync_config", fun eadm_settings_controller:update_sync_config/1, #{methods => [post]}},
-       {"/sync", fun eadm_sports_controller:trigger_sync/1, #{methods => [post]}},
-       {"/sync_history", fun eadm_settings_controller:sync_history/1, #{methods => [get]}}]},
-  #{prefix => "share/sports",
-    security => false,
-    routes =>
-      [{"/:shareId", fun eadm_sports_controller:share_page/1, #{methods => [get]}}]},
-   #{prefix => "finance",
-     security => fun eadm_auth:auth/1,
-     routes =>
-       [{"/:detailId", fun eadm_finance_controller:searchdetail/1, #{methods => [get]}},
-        {"/:detailId", fun eadm_finance_controller:delete/1, #{methods => [delete]}},
-        {"/upload", fun eadm_finance_controller:upload/1, #{methods => [post]}}]},
-   #{prefix => "device",
-     security => fun eadm_auth:auth/1,
-     routes =>
-       [{"/", fun eadm_device_controller:search/1, #{methods => [get]}},
-        {"/add", fun eadm_device_controller:add/1, #{methods => [post]}},
-        {"/edit", fun eadm_device_controller:edit/1, #{methods => [post]}},
-        {"/delete/:deviceNo", fun eadm_device_controller:delete/1, #{methods => [delete]}},
-        {"/toggle", fun eadm_device_controller:toggle_status/1, #{methods => [post]}},
-        {"/assign", fun eadm_device_controller:assign/1, #{methods => [post]}},
-        {"/unassign/:id", fun eadm_device_controller:unassign/1, #{methods => [delete]}},
-        {"/users/:deviceNo", fun eadm_device_controller:device_users/1, #{methods => [get]}},
-        {"/user_devices", fun eadm_device_controller:user_devices/1, #{methods => [get]}}]},
-   #{prefix => "crontab",
-     security => fun eadm_auth:auth/1,
-     routes =>
-       [{"/detail/:cronId", fun eadm_crontab_controller:detail/1, #{methods => [get]}},
-        {"/add", fun eadm_crontab_controller:add/1, #{methods => [post]}},
-        {"/edit", fun eadm_crontab_controller:edit/1, #{methods => [post]}},
-        {"/toggle", fun eadm_crontab_controller:toggle/1, #{methods => [post]}},
-        {"/delete/:cronId", fun eadm_crontab_controller:delete/1, #{methods => [delete]}}]},
-   #{prefix => "user",
-     security => fun eadm_auth:auth/1,
-     routes =>
-       [{"/add", fun eadm_user_controller:add/1, #{methods => [post]}},
-        {"/edit", fun eadm_user_controller:edit/1, #{methods => [post]}},
-        {"/delete/:userId", fun eadm_user_controller:delete/1, #{methods => [delete]}},
-        {"/reset/:userId", fun eadm_user_controller:reset/1, #{methods => [post]}},
-        {"/disable/:userId", fun eadm_user_controller:disable/1, #{methods => [post]}}]},
-   #{prefix => "userrole",
-     security => fun eadm_auth:auth/1,
-     routes =>
-       [{"/:userId", fun eadm_user_controller:userrole/1, #{methods => [get]}},
-        {"/delete/:userRoleId", fun eadm_user_controller:userroledel/1, #{methods => [delete]}},
-        {"/add", fun eadm_user_controller:userroleadd/1, #{methods => [post]}}]},
-   #{prefix => "role",
-     security => fun eadm_auth:auth/1,
-     routes =>
-       [{"/:userId", fun eadm_role_controller:getrolelist/1, #{methods => [get]}},
-        {"/add", fun eadm_role_controller:add/1, #{methods => [post]}},
-        {"/disable/:roleId", fun eadm_role_controller:disable/1, #{methods => [post]}}]},
-   #{prefix => "permission",
-     security => fun eadm_auth:auth/1,
-     routes =>
-       [{"/", fun eadm_user_controller:userpermission/1, #{methods => [get]}},
-        {"/:roleId", fun eadm_role_controller:loadpermission/1, #{methods => [get]}},
-        {"/edit", fun eadm_role_controller:updatepermission/1, #{methods => [post]}}]},
-   #{prefix => "sys",
-     security => fun eadm_auth:auth/1,
-     routes =>
-       [{"/sysinfo", fun eadm_sys_sysinfo_controller:index/1, #{methods => [get]}},
-        {"/route_table", fun eadm_sys_sysinfo_controller:route_table/1, #{methods => [get]}},
-        {"/processes", fun eadm_sys_processes_controller:index/1, #{methods => [get]}},
-        {"/processes/:pid",
-         fun eadm_sys_processes_controller:process_info/1,
-         #{methods => [get]}},
-        {"/ports", fun eadm_sys_ports_controller:index/1, #{methods => [get]}},
-        {"/tables", fun eadm_sys_tv_controller:index/1, #{methods => [get]}}]},
-  #{prefix => "sys/migrate",
-    security => fun eadm_auth:auth/1,
-    routes =>
-      [{"/sports_permission", fun eadm_sys_migrate_controller:sports_permission/1, #{methods => [get]}}]},
-   #{prefix => "api",
-     security => false,
-     routes => [{"/watch", fun api_watch:index/1, #{methods => [post]}}]},
-   #{prefix => "api/finance",
-     security => fun eadm_auth:auth/1,
-     routes =>
-       [{"/alipay", fun eadm_payment_controller:alipay/1, #{methods => [get]}},
-        {"/wechat", fun eadm_payment_controller:wechat/1, #{methods => [get]}},
-        {"/config", fun eadm_payment_controller:config/1, #{methods => [post]}}]}].
+    [
+        #{
+            prefix => "",
+            security => false,
+            routes =>
+                [
+                    {"/login", fun eadm_login_controller:login/1, #{
+                        methods => [get, post, options]
+                    }},
+                    {"/logout", fun eadm_login_controller:logout/1, #{methods => [post]}},
+                    {"/assets/[...]", "assets"}
+                ]
+        },
+        #{
+            prefix => "menu",
+            security => fun eadm_auth:auth/1,
+            routes =>
+                [
+                    {"/health", fun eadm_health_controller:index/1, #{methods => [get]}},
+                    {"/location", fun eadm_location_controller:index/1, #{methods => [get]}},
+                    {"/finance", fun eadm_finance_controller:index/1, #{methods => [get]}},
+                    {"/crontab", fun eadm_crontab_controller:index/1, #{methods => [get]}},
+                    {"/user", fun eadm_user_controller:index/1, #{methods => [get]}},
+                    {"/role", fun eadm_role_controller:index/1, #{methods => [get]}},
+                    {"/device", fun eadm_device_controller:index/1, #{methods => [get]}},
+                    {"/sports", fun eadm_settings_controller:index/1, #{methods => [get]}}
+                ]
+        },
+        #{
+            prefix => "",
+            security => fun eadm_auth:auth/1,
+            routes =>
+                [
+                    {"/", fun eadm_dashboard_controller:index/1, #{methods => [get]}},
+                    {"/userinfo", fun eadm_login_controller:userinfo/1, #{methods => [get]}},
+                    {"/userpwd", fun eadm_login_controller:userpwd/1, #{methods => [post]}},
+                    {"/useredit", fun eadm_login_controller:useredit/1, #{methods => [post]}},
+                    {"/dashboard", fun eadm_dashboard_controller:search/1, #{methods => [get]}},
+                    {"/health", fun eadm_health_controller:search/1, #{methods => [get]}},
+                    {"/location", fun eadm_location_controller:search/1, #{methods => [get]}},
+                    {"/finance", fun eadm_finance_controller:search/1, #{methods => [get]}},
+                    {"/crontab", fun eadm_crontab_controller:search/1, #{methods => [get]}},
+                    {"/user", fun eadm_user_controller:search/1, #{methods => [get]}},
+                    {"/role", fun eadm_role_controller:search/1, #{methods => [get]}}
+                ]
+        },
+        #{
+            prefix => "sports",
+            security => fun eadm_auth:auth/1,
+            routes =>
+                [
+                    {"/settings/garmin/link", fun eadm_settings_controller:link_garmin/1, #{
+                        methods => [post]
+                    }},
+                    {"/settings/garmin/unlink", fun eadm_settings_controller:unlink_garmin/1, #{
+                        methods => [delete]
+                    }},
+                    {"/settings/sync_config", fun eadm_settings_controller:update_sync_config/1, #{
+                        methods => [post]
+                    }},
+                    {"/sync", fun eadm_sports_controller:trigger_sync/1, #{methods => [post]}},
+                    {"/sync_history", fun eadm_settings_controller:sync_history/1, #{
+                        methods => [get]
+                    }}
+                ]
+        },
+        #{
+            prefix => "share/sports",
+            security => false,
+            routes =>
+                [{"/:shareId", fun eadm_sports_controller:share_page/1, #{methods => [get]}}]
+        },
+        #{
+            prefix => "finance",
+            security => fun eadm_auth:auth/1,
+            routes =>
+                [
+                    {"/:detailId", fun eadm_finance_controller:searchdetail/1, #{methods => [get]}},
+                    {"/:detailId", fun eadm_finance_controller:delete/1, #{methods => [delete]}},
+                    {"/upload", fun eadm_finance_controller:upload/1, #{methods => [post]}}
+                ]
+        },
+        #{
+            prefix => "device",
+            security => fun eadm_auth:auth/1,
+            routes =>
+                [
+                    {"/", fun eadm_device_controller:search/1, #{methods => [get]}},
+                    {"/add", fun eadm_device_controller:add/1, #{methods => [post]}},
+                    {"/edit", fun eadm_device_controller:edit/1, #{methods => [post]}},
+                    {"/delete/:deviceNo", fun eadm_device_controller:delete/1, #{
+                        methods => [delete]
+                    }},
+                    {"/toggle", fun eadm_device_controller:toggle_status/1, #{methods => [post]}},
+                    {"/assign", fun eadm_device_controller:assign/1, #{methods => [post]}},
+                    {"/unassign/:id", fun eadm_device_controller:unassign/1, #{methods => [delete]}},
+                    {"/users/:deviceNo", fun eadm_device_controller:device_users/1, #{
+                        methods => [get]
+                    }},
+                    {"/user_devices", fun eadm_device_controller:user_devices/1, #{
+                        methods => [get]
+                    }}
+                ]
+        },
+        #{
+            prefix => "crontab",
+            security => fun eadm_auth:auth/1,
+            routes =>
+                [
+                    {"/detail/:cronId", fun eadm_crontab_controller:detail/1, #{methods => [get]}},
+                    {"/add", fun eadm_crontab_controller:add/1, #{methods => [post]}},
+                    {"/edit", fun eadm_crontab_controller:edit/1, #{methods => [post]}},
+                    {"/toggle", fun eadm_crontab_controller:toggle/1, #{methods => [post]}},
+                    {"/delete/:cronId", fun eadm_crontab_controller:delete/1, #{
+                        methods => [delete]
+                    }}
+                ]
+        },
+        #{
+            prefix => "user",
+            security => fun eadm_auth:auth/1,
+            routes =>
+                [
+                    {"/add", fun eadm_user_controller:add/1, #{methods => [post]}},
+                    {"/edit", fun eadm_user_controller:edit/1, #{methods => [post]}},
+                    {"/delete/:userId", fun eadm_user_controller:delete/1, #{methods => [delete]}},
+                    {"/reset/:userId", fun eadm_user_controller:reset/1, #{methods => [post]}},
+                    {"/disable/:userId", fun eadm_user_controller:disable/1, #{methods => [post]}}
+                ]
+        },
+        #{
+            prefix => "userrole",
+            security => fun eadm_auth:auth/1,
+            routes =>
+                [
+                    {"/:userId", fun eadm_user_controller:userrole/1, #{methods => [get]}},
+                    {"/delete/:userRoleId", fun eadm_user_controller:userroledel/1, #{
+                        methods => [delete]
+                    }},
+                    {"/add", fun eadm_user_controller:userroleadd/1, #{methods => [post]}}
+                ]
+        },
+        #{
+            prefix => "role",
+            security => fun eadm_auth:auth/1,
+            routes =>
+                [
+                    {"/:userId", fun eadm_role_controller:getrolelist/1, #{methods => [get]}},
+                    {"/add", fun eadm_role_controller:add/1, #{methods => [post]}},
+                    {"/disable/:roleId", fun eadm_role_controller:disable/1, #{methods => [post]}}
+                ]
+        },
+        #{
+            prefix => "permission",
+            security => fun eadm_auth:auth/1,
+            routes =>
+                [
+                    {"/", fun eadm_user_controller:userpermission/1, #{methods => [get]}},
+                    {"/:roleId", fun eadm_role_controller:loadpermission/1, #{methods => [get]}},
+                    {"/edit", fun eadm_role_controller:updatepermission/1, #{methods => [post]}}
+                ]
+        },
+        #{
+            prefix => "sys",
+            security => fun eadm_auth:auth/1,
+            routes =>
+                [
+                    {"/sysinfo", fun eadm_sys_sysinfo_controller:index/1, #{methods => [get]}},
+                    {"/route_table", fun eadm_sys_sysinfo_controller:route_table/1, #{
+                        methods => [get]
+                    }},
+                    {"/processes", fun eadm_sys_processes_controller:index/1, #{methods => [get]}},
+                    {"/processes/:pid", fun eadm_sys_processes_controller:process_info/1, #{
+                        methods => [get]
+                    }},
+                    {"/ports", fun eadm_sys_ports_controller:index/1, #{methods => [get]}},
+                    {"/tables", fun eadm_sys_tv_controller:index/1, #{methods => [get]}}
+                ]
+        },
+        #{
+            prefix => "api",
+            security => false,
+            routes => [{"/watch", fun api_watch:index/1, #{methods => [post]}}]
+        },
+        #{
+            prefix => "api/finance",
+            security => fun eadm_auth:auth/1,
+            routes =>
+                [
+                    {"/alipay", fun eadm_payment_controller:alipay/1, #{methods => [get]}},
+                    {"/wechat", fun eadm_payment_controller:wechat/1, #{methods => [get]}},
+                    {"/config", fun eadm_payment_controller:config/1, #{methods => [post]}}
+                ]
+        }
+    ].

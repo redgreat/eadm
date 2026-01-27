@@ -48,20 +48,38 @@ login(Req) ->
                         lager:info("User: ~ts, Login Success! New Exp: ~p", [UserName, NewExp]),
                         A = unicode:characters_to_binary("欢迎【", utf8),
                         B = unicode:characters_to_binary("】登录! ", utf8),
-                        {json, [#{<<"Alert">> => <<A/binary, UserName/binary, B/binary>>,
-                            <<"logined">> => 1}]};
+                        {json, [
+                            #{
+                                <<"Alert">> => <<A/binary, UserName/binary, B/binary>>,
+                                <<"logined">> => 1
+                            }
+                        ]};
                     2 ->
                         lager:info("User Not Fond!"),
-                        {json, [#{<<"Alert">> => unicode:characters_to_binary("用户不存在，请联系管理员！", utf8),
-                            <<"logined">> => 0}]};
+                        {json, [
+                            #{
+                                <<"Alert">> => unicode:characters_to_binary("用户不存在，请联系管理员！", utf8),
+                                <<"logined">> => 0
+                            }
+                        ]};
                     3 ->
                         lager:info("User Disable!"),
-                        {json, [#{<<"Alert">> => unicode:characters_to_binary("用户已禁用，请联系管理员！", utf8),
-                            <<"logined">> => 0}]};
+                        {json, [
+                            #{
+                                <<"Alert">> => unicode:characters_to_binary("用户已禁用，请联系管理员！", utf8),
+                                <<"logined">> => 0
+                            }
+                        ]};
                     _ ->
                         lager:info("User Login Failed!"),
-                        {json, [#{<<"Alert">> => unicode:characters_to_binary("用户名或密码错误，请重新登录！", utf8),
-                            <<"logined">> => 0}]}
+                        {json, [
+                            #{
+                                <<"Alert">> => unicode:characters_to_binary(
+                                    "用户名或密码错误，请重新登录！", utf8
+                                ),
+                                <<"logined">> => 0
+                            }
+                        ]}
                 end
         end
     catch
@@ -83,8 +101,16 @@ logout(Req) ->
 userinfo(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName}}) ->
     try
         case eadm_mnesia_api:find_by_field(eadm_user, loginname, LoginName) of
-            [#eadm_user{userstatus = 0, deleted = false, loginname = LName, 
-                        username = UName, email = Email}|_] ->
+            [
+                #eadm_user{
+                    userstatus = 0,
+                    deleted = false,
+                    loginname = LName,
+                    username = UName,
+                    email = Email
+                }
+                | _
+            ] ->
                 {json, [#{<<"loginname">> => LName, <<"username">> => UName, <<"email">> => Email}]};
             _ ->
                 {json, [#{<<"Alert">> => unicode:characters_to_binary("用户不存在或已禁用！", utf8)}]}
@@ -94,15 +120,16 @@ userinfo(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName}}) 
             lager:error("用户查询失败：~p~n", [Error]),
             {json, [#{<<"Alert">> => unicode:characters_to_binary("用户查询失败！", utf8)}]}
     end;
-
 userinfo(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 
 %% @doc
 %% 编辑用户数据
 %% @end
-useredit(#{auth_data := #{<<"authed">> := true, <<"loginname">> := CreatedUser},
-    params := #{<<"loginName">> := LoginName, <<"email">> := Email, <<"userName">> := NewUserName}}) ->
+useredit(#{
+    auth_data := #{<<"authed">> := true, <<"loginname">> := CreatedUser},
+    params := #{<<"loginName">> := LoginName, <<"email">> := Email, <<"userName">> := NewUserName}
+}) ->
     case re:run(Email, "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$") of
         {match, _} ->
             try
@@ -133,15 +160,16 @@ useredit(#{auth_data := #{<<"authed">> := true, <<"loginname">> := CreatedUser},
             B = unicode:characters_to_binary("】格式错误！", utf8),
             {json, [#{<<"Alert">> => <<A/binary, Email/binary, B/binary>>}]}
     end;
-
 useredit(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 
 %% @doc
 %% 修改用户密码
 %% @end
-userpwd(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName},
-    params := #{<<"passwordOld">> := PasswordOld, <<"passwordNew">> := PasswordNew}}) ->
+userpwd(#{
+    auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName},
+    params := #{<<"passwordOld">> := PasswordOld, <<"passwordNew">> := PasswordNew}
+}) ->
     case validate_password(PasswordNew) of
         {ok} ->
             case eadm_utils:validate_login(LoginName, PasswordOld) of
@@ -157,34 +185,51 @@ userpwd(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName},
                                         updatedat = erlang:system_time(second)
                                     }
                                 end),
-                                {json, [#{<<"Alert">> => unicode:characters_to_binary("密码修改成功！", utf8)}]};
+                                {json, [
+                                    #{<<"Alert">> => unicode:characters_to_binary("密码修改成功！", utf8)}
+                                ]};
                             [] ->
-                                {json, [#{<<"Alert">> => unicode:characters_to_binary("用户不存在！", utf8)}]}
+                                {json, [
+                                    #{<<"Alert">> => unicode:characters_to_binary("用户不存在！", utf8)}
+                                ]}
                         end
                     catch
                         _:Error ->
                             lager:error("用户密码修改失败：~p~n", [Error]),
-                            {json, [#{<<"Alert">> => unicode:characters_to_binary("用户密码修改失败！", utf8)}]}
+                            {json, [
+                                #{<<"Alert">> => unicode:characters_to_binary("用户密码修改失败！", utf8)}
+                            ]}
                     end;
                 2 ->
                     lager:info("User Not Fond!"),
-                    {json, [#{<<"Alert">> => unicode:characters_to_binary("用户不存在，请联系管理员！", utf8),
-                        <<"logined">> => 0}]};
+                    {json, [
+                        #{
+                            <<"Alert">> => unicode:characters_to_binary("用户不存在，请联系管理员！", utf8),
+                            <<"logined">> => 0
+                        }
+                    ]};
                 3 ->
                     lager:info("User Disable!"),
-                    {json, [#{<<"Alert">> => unicode:characters_to_binary("用户已禁用，请联系管理员！", utf8),
-                        <<"logined">> => 0}]};
+                    {json, [
+                        #{
+                            <<"Alert">> => unicode:characters_to_binary("用户已禁用，请联系管理员！", utf8),
+                            <<"logined">> => 0
+                        }
+                    ]};
                 _ ->
                     lager:info("User Login Failed!"),
-                    {json, [#{<<"Alert">> => unicode:characters_to_binary("用户名或密码错误，请重新登录！", utf8),
-                        <<"logined">> => 0}]}
+                    {json, [
+                        #{
+                            <<"Alert">> => unicode:characters_to_binary("用户名或密码错误，请重新登录！", utf8),
+                            <<"logined">> => 0
+                        }
+                    ]}
             end;
         {error, ErrInfo} ->
             {json, [#{<<"Alert">> => unicode:characters_to_binary(ErrInfo, utf8)}]};
         _ ->
             {json, [#{<<"Alert">> => unicode:characters_to_binary("用户新增失败！", utf8)}]}
     end;
-
 userpwd(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 
@@ -201,8 +246,9 @@ getpermission(LoginName) ->
             [#eadm_user{id = UserId}] ->
                 UserRoles = eadm_mnesia_api:find_by_field(eadm_userrole, userid, UserId),
                 case UserRoles of
-                    [] -> #{};
-                    [#eadm_userrole{roleid = RoleId}|_] ->
+                    [] ->
+                        #{};
+                    [#eadm_userrole{roleid = RoleId} | _] ->
                         case eadm_mnesia_api:read(eadm_role, RoleId) of
                             [#eadm_role{rolepermission = Permission, rolestatus = 0}] ->
                                 Permission;
@@ -225,7 +271,7 @@ getpermission(LoginName) ->
 getusername(LoginName) ->
     try
         case eadm_mnesia_api:find_by_field(eadm_user, loginname, LoginName) of
-            [#eadm_user{username = UserName}|_] ->
+            [#eadm_user{username = UserName} | _] ->
                 UserName;
             [] ->
                 <<"未知用户"/utf8>>
