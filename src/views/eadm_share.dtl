@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="运动数据分享 - 查看运动活动详情">
     <title>运动数据分享 - {{activity.activity_name|default:"运动活动"}}</title>
+    <link rel="stylesheet" href="/assets/vendor/fontawesome/css/fontawesome.min.css" />
+    <link rel="stylesheet" href="/assets/vendor/fontawesome/css/solid.min.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         body {
@@ -138,9 +140,12 @@
         {% endif %}
 
         <div class="activity-card">
-            <p class="text-center text-muted">
-                <i class="fas fa-share-alt"></i> 此活动由用户公开分享
-            </p>
+            <h3><i class="fas fa-share-alt"></i> 分享此活动</h3>
+            <div class="input-group mb-2">
+                <input type="text" class="form-control" id="share-url" value="{{share_url}}" readonly>
+                <button class="btn btn-primary" id="copy-share-url">复制链接</button>
+            </div>
+            <p class="text-muted mb-0">可将链接发送给朋友或分享到社交平台</p>
         </div>
     </div>
 
@@ -172,6 +177,26 @@
             map.fitBounds(polyline.getBounds());
         }
         {% endif %}
+
+        const shareUrlInput = document.getElementById('share-url');
+        const shareUrlBtn = document.getElementById('copy-share-url');
+        if (shareUrlInput && !shareUrlInput.value) {
+            shareUrlInput.value = window.location.href;
+        }
+        if (shareUrlBtn) {
+            shareUrlBtn.addEventListener('click', async () => {
+                try {
+                    await navigator.clipboard.writeText(shareUrlInput.value);
+                    shareUrlBtn.textContent = '已复制';
+                    setTimeout(() => {
+                        shareUrlBtn.textContent = '复制链接';
+                    }, 1500);
+                } catch (e) {
+                    shareUrlInput.select();
+                    document.execCommand('copy');
+                }
+            });
+        }
     </script>
 </body>
 </html>

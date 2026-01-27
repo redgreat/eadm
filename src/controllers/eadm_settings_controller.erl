@@ -11,6 +11,7 @@
 -author("wangcw").
 
 -export([
+    index/1,
     link_garmin/1,
     unlink_garmin/1,
     garmin_status/1,
@@ -22,6 +23,50 @@
 %%====================================================================
 %% API functions
 %%====================================================================
+
+index(#{auth_data := #{<<"authed">> := true, <<"username">> := UserName,
+        <<"permission">> := Permission}, req := Req}) ->
+    case maps:get(<<"sports">>, Permission, false) of
+        true ->
+            UserId = get_user_id(Req),
+            SQL = <<"SELECT garminemail, lastsynctime, syncenable, autosync, syncdays
+                    FROM sp_garminconf 
+                    WHERE userid = $1">>,
+            {Linked, Email, LastSync, AutoSync, SyncDays} =
+                case eadm_pgpool:equery(SQL, [UserId]) of
+                    {ok, _, [{Email0, LastSync0, _SyncEnabled0, AutoSync0, SyncDays0}]} ->
+                        {true, Email0, format_timestamp(LastSync0), AutoSync0, SyncDays0};
+                    {ok, _, []} ->
+                        {false, <<"">>, null, false, 30}
+                end,
+            LogSql = <<"SELECT starttime, endtime, synccount, 
+                               newcount, syncstatus, errmsg
+                        FROM sp_garminlog 
+                        WHERE userid = $1 
+                        ORDER BY starttime DESC 
+                        LIMIT 20">>,
+            Logs =
+                case eadm_pgpool:equery(LogSql, [UserId]) of
+                    {ok, _, Rows} ->
+                        lists:map(fun format_sync_log_view/1, Rows);
+                    _ ->
+                        []
+                end,
+            {ok, [
+                {username, UserName},
+                {garmin_linked, Linked},
+                {garmin_email, Email},
+                {last_sync_time, LastSync},
+                {auto_sync, AutoSync},
+                {sync_days, SyncDays},
+                {sync_logs, Logs}
+            ], #{view => eadm_settings}};
+        false ->
+            {json, [#{<<"Alert">> => unicode:characters_to_binary("API鉴权失败！", utf8)}]}
+    end;
+
+index(#{auth_data := #{<<"authed">> := false}}) ->
+    {redirect, "/login"}.
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -294,6 +339,16 @@ format_sync_log({StartTime, EndTime, Synced, New, Status, ErrorMsg}) ->
         <<"activitiesNew">> => New,
         <<"status">> => Status,
         <<"errorMessage">> => ErrorMsg
+    }.
+
+format_sync_log_view({StartTime, EndTime, Synced, New, Status, ErrorMsg}) ->
+    #{
+        <<"start_time">> => format_timestamp(StartTime),
+        <<"end_time">> => format_timestamp(EndTime),
+        <<"activities_synced">> => Synced,
+        <<"activities_new">> => New,
+        <<"status">> => Status,
+        <<"error_message">> => ErrorMsg
     }.
 
 %%--------------------------------------------------------------------

@@ -3,6 +3,7 @@
 -smp auto
 -megabytes 64
 -env ERL_MAX_PORTS 64
+-mnesia dir '"/opt/eadm/mnesia"'
 
 +P 1024
 +Q 1024

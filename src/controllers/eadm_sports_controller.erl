@@ -11,8 +11,8 @@
 
 -author("wangcw").
 
--export([list_activities/1, activity_detail/1, public_activity/1, trigger_sync/1,
-         delete_activity/1]).
+-export([list_activities/1, activity_detail/1, public_activity/1, share_page/1,
+         trigger_sync/1, delete_activity/1]).
 
 %%====================================================================
 %% API functions
@@ -136,6 +136,45 @@ public_activity(#{bindings := #{<<"shareId">> := ShareToken}} = _Params) ->
         {error, Reason} ->
             {json,
              #{<<"code">> => 500, <<"message">> => iolist_to_binary(io_lib:format("~p", [Reason]))}}
+    end.
+
+share_page(#{bindings := #{<<"shareId">> := ShareToken}} = _Params) ->
+    SQL = <<"SELECT * FROM sp_activity \r\n            WHERE sharetoken "
+            "= $1 AND ispublic = true">>,
+
+    case eadm_pgpool:equery(SQL, [ShareToken]) of
+        {ok, Columns, [Row]} ->
+            Activity = format_activity_detail(Columns, Row),
+            ActivityView = format_share_activity(Activity),
+            {MapCoordinates, HasMapData} =
+                case maps:get(<<"hidemap">>, Activity, false) of
+                    false ->
+                        ActivityId = maps:get(<<"id">>, Activity),
+                        StreamsSQL =
+                            <<"SELECT streamtype, streamjson \r\n                       "
+                              "           FROM sp_stream \r\n               "
+                              "                   WHERE actid = $1 AND streamtype = "
+                              "'latlng'">>,
+                        case eadm_pgpool:equery(StreamsSQL, [ActivityId]) of
+                            {ok, _, StreamRows} ->
+                                decode_stream_coordinates(StreamRows);
+                            _ ->
+                                {[], false}
+                        end;
+                    true ->
+                        {[], false}
+                end,
+            ShareUrl = <<"/share/sports/", ShareToken/binary>>,
+            {ok, [
+                {activity, ActivityView},
+                {has_map_data, HasMapData},
+                {map_coordinates, jsx:encode(MapCoordinates)},
+                {share_url, ShareUrl}
+            ], #{view => eadm_share}};
+        {ok, _, []} ->
+            {status, 404};
+        {error, _Reason} ->
+            {status, 500}
     end.
 
 %%--------------------------------------------------------------------
@@ -265,6 +304,68 @@ filter_by_privacy(Activity) ->
         false ->
             Activity
     end.
+
+format_share_activity(Activity) ->
+    Distance = maps:get(<<"distance">>, Activity, null),
+    Duration = maps:get(<<"timespan">>, Activity, null),
+    AvgSpeed = maps:get(<<"avgspeed">>, Activity, null),
+    #{
+        activity_name => maps:get(<<"actname">>, Activity, null),
+        activity_type => maps:get(<<"acttype">>, Activity, null),
+        start_time => format_timestamp(maps:get(<<"starttime">>, Activity, null)),
+        distance => Distance,
+        duration => Duration,
+        avg_heart_rate => maps:get(<<"avgheartbeat">>, Activity, null),
+        calories => maps:get(<<"calorie">>, Activity, null),
+        elevation_gain => maps:get(<<"elevationgain">>, Activity, null),
+        avg_speed => AvgSpeed,
+        hide_stats => maps:get(<<"hidestats">>, Activity, false),
+        hide_map => maps:get(<<"hidemap">>, Activity, false),
+        distance_km => format_distance_km(Distance),
+        duration_formatted => format_duration(Duration),
+        avg_speed_kmh => format_speed_kmh(AvgSpeed)
+    }.
+
+decode_stream_coordinates(StreamRows) ->
+    Coordinates =
+        lists:foldl(
+            fun({_Type, Data}, Acc) ->
+                Decoded =
+                    case Data of
+                        Bin when is_binary(Bin) ->
+                            try jsx:decode(Bin, [return_maps]) of
+                                V -> V
+                            catch
+                                _:_ -> []
+                            end;
+                        V ->
+                            V
+                    end,
+                case is_list(Decoded) of
+                    true -> Acc ++ Decoded;
+                    false -> Acc
+                end
+            end,
+            [],
+            StreamRows
+        ),
+    {Coordinates, Coordinates =/= []}.
+
+format_distance_km(null) -> null;
+format_distance_km(Distance) when is_number(Distance) ->
+    (Distance / 1000).
+
+format_speed_kmh(null) -> null;
+format_speed_kmh(Speed) when is_number(Speed) ->
+    (Speed * 3.6).
+
+format_duration(null) -> null;
+format_duration(Seconds) when is_number(Seconds) ->
+    Total = trunc(Seconds),
+    Hours = Total div 3600,
+    Minutes = (Total rem 3600) div 60,
+    Secs = Total rem 60,
+    iolist_to_binary(io_lib:format("~2..0w:~2..0w:~2..0w", [Hours, Minutes, Secs])).
 
 %%--------------------------------------------------------------------
 %% @private

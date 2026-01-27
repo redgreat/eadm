@@ -45,6 +45,12 @@
 
 {% block content %}
 
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">信息看板</a></li>
+        <li class="breadcrumb-item active" aria-current="page">运动数据设置</li>
+    </ol>
+</nav>
 <h2 class="mb-4"><i class="fas fa-cog"></i> 运动数据设置</h2>
 
 <!-- Garmin账户关联 -->

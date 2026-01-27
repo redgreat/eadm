@@ -151,6 +151,7 @@ function loadPermission(roleId) {
             $('#finance-imp').prop('checked', resdata.finance.finimp);
             $('#finance-del').prop('checked', resdata.finance.findel);
             $('#crontab').prop('checked', resdata.crontab);
+            $('#sports').prop('checked', resdata.sports || false);
             $('#usermanage').prop('checked', resdata.usermanage);
 
             // 设备管理权限
@@ -183,6 +184,7 @@ function editPermission(roleId) {
             findel: $('#finance-del').is(':checked'),
             crontab: $('#crontab').is(':checked'),
             userManage: $('#usermanage').is(':checked'),
+            sports: $('#sports').is(':checked'),
             // 设备管理权限
             devlist: $('#device').is(':checked'),
             devadd: $('#device-add').is(':checked'),

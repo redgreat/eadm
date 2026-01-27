@@ -399,7 +399,8 @@ init_roles() ->
                     <<"finlist">> => true
                 },
                 <<"dashboard">> => true,
-                <<"usermanage">> => true
+                <<"usermanage">> => true,
+                <<"sports">> => true
             },
             rolestatus = 0,
             createduser = <<"wangcw">>,
@@ -418,7 +419,8 @@ init_roles() ->
                     <<"finlist">> => false
                 },
                 <<"dashboard">> => true,
-                <<"usermanage">> => false
+                <<"usermanage">> => false,
+                <<"sports">> => false
             },
             rolestatus = 0,
             createduser = <<"wangcw">>,
@@ -437,7 +439,8 @@ init_roles() ->
                     <<"finlist">> => false
                 },
                 <<"dashboard">> => true,
-                <<"usermanage">> => false
+                <<"usermanage">> => false,
+                <<"sports">> => false
             },
             rolestatus = 0,
             createduser = <<"wangcw">>,

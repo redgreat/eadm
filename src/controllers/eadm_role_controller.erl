@@ -125,8 +125,8 @@ updatepermission(#{auth_data := #{<<"authed">> := true, <<"loginname">> := Login
         params := #{<<"roleId">> := RoleId, <<"dashBoard">> := DashBoard, <<"health">> := Health,
         <<"locate">> := Locate, <<"finance">> := Finance, <<"finimp">> := Finimp,
         <<"findel">> := Findel, <<"crontab">> := Crontab, <<"userManage">> := Usermanage,
-        <<"devlist">> := Devlist, <<"devadd">> := Devadd, <<"devedit">> := Devedit,
-        <<"devdel">> := Devdel, <<"devassign">> := Devassign}}) ->
+        <<"sports">> := Sports, <<"devlist">> := Devlist, <<"devadd">> := Devadd,
+        <<"devedit">> := Devedit, <<"devdel">> := Devdel, <<"devassign">> := Devassign}}) ->
     try
         RolePermissionMap = #{<<"dashboard">> => erlang:binary_to_atom(DashBoard),
             <<"health">> => erlang:binary_to_atom(Health),
@@ -144,6 +144,7 @@ updatepermission(#{auth_data := #{<<"authed">> := true, <<"loginname">> := Login
                 <<"devassign">> => erlang:binary_to_atom(Devassign)
             },
             <<"crontab">> => erlang:binary_to_atom(Crontab),
+            <<"sports">> => erlang:binary_to_atom(Sports),
             <<"usermanage">> => erlang:binary_to_atom(Usermanage)
         },
         ok = eadm_mnesia_api:update(eadm_role, RoleId, fun(R) ->
