@@ -51,7 +51,8 @@ index(#{auth_data := #{<<"authed">> := false}}) ->
 %% @end
 search(#{auth_data := #{<<"authed">> := true, <<"permission">> := #{<<"usermanage">> := true}}}) ->
     try
-        Users = eadm_mnesia_api:query_all(eadm_user),
+        % 使用缓存包装器，TTL 10分钟
+        Users = eadm_mnesia_api_cached:query_all(eadm_user, 600),
         % 过滤已删除的用户并转换格式
         ActiveUsers = [
             #{
@@ -131,7 +132,9 @@ add(#{
                                     createduser = CreatedUser,
                                     createdat = erlang:system_time(second)
                                 },
-                                ok = eadm_mnesia_api:create(eadm_user, User),
+                                ok = eadm_mnesia_api_cached:create(eadm_user, User),
+                                % 失效用户列表缓存
+                                eadm_cache:clear(mnesia_query_all),
                                 A = unicode:characters_to_binary("用户【", utf8),
                                 B = unicode:characters_to_binary("】新增成功！", utf8),
                                 {json, [#{<<"Alert">> => <<A/binary, UserName/binary, B/binary>>}]};
@@ -195,7 +198,7 @@ edit(#{
             case re:run(Email, "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$") of
                 {match, _} ->
                     try
-                        ok = eadm_mnesia_api:update(eadm_user, UserId, fun(U) ->
+                        ok = eadm_mnesia_api_cached:update(eadm_user, UserId, fun(U) ->
                             U#eadm_user{
                                 loginname = LoginName,
                                 username = UserName,
@@ -204,6 +207,9 @@ edit(#{
                                 updatedat = erlang:system_time(second)
                             }
                         end),
+                        % 失效相关缓存
+                        eadm_cache:clear(mnesia_query_all),
+                        eadm_cache:invalidate(user_permission, LoginName),
                         A = unicode:characters_to_binary("用户【", utf8),
                         B = unicode:characters_to_binary("】编辑成功！", utf8),
                         {json, [#{<<"Alert">> => <<A/binary, UserName/binary, B/binary>>}]}
@@ -258,7 +264,7 @@ reset(#{
     CryptoGram = eadm_utils:pass_encrypt(<<"123456">>),
     lager:info("用户~p重置了密码~n", [LoginName]),
     try
-        ok = eadm_mnesia_api:update(eadm_user, UserId, fun(U) ->
+        ok = eadm_mnesia_api_cached:update(eadm_user, UserId, fun(U) ->
             U#eadm_user{
                 passwd = CryptoGram,
                 updateduser = LoginName,
@@ -288,13 +294,15 @@ disable(#{
     bindings := #{<<"userId">> := UserId}
 }) ->
     try
-        ok = eadm_mnesia_api:update(eadm_user, UserId, fun(U) ->
+        ok = eadm_mnesia_api_cached:update(eadm_user, UserId, fun(U) ->
             U#eadm_user{
                 userstatus = 1 - U#eadm_user.userstatus,
                 updateduser = LoginName,
                 updatedat = erlang:system_time(second)
             }
         end),
+        % 失效用户列表缓存
+        eadm_cache:clear(mnesia_query_all),
         {json, [#{<<"Alert">> => unicode:characters_to_binary("用户启禁用成功！", utf8)}]}
     catch
         _:Error ->
@@ -318,13 +326,24 @@ delete(#{
     bindings := #{<<"userId">> := UserId}
 }) ->
     try
-        ok = eadm_mnesia_api:update(eadm_user, UserId, fun(U) ->
+        % 先读取用户信息，用于失效缓存
+        DeletedLoginName = case eadm_mnesia_api_cached:read(eadm_user, UserId) of
+            [#eadm_user{loginname = LName}] -> LName;
+            _ -> <<>>
+        end,
+        ok = eadm_mnesia_api_cached:update(eadm_user, UserId, fun(U) ->
             U#eadm_user{
                 deleted = true,
                 deleteduser = LoginName,
                 deletedat = erlang:system_time(second)
             }
         end),
+        % 失效相关缓存
+        eadm_cache:clear(mnesia_query_all),
+        case DeletedLoginName of
+            <<>> -> ok;
+            _ -> eadm_cache:invalidate(user_permission, DeletedLoginName)
+        end,
         {json, [#{<<"Alert">> => unicode:characters_to_binary("用户删除成功！", utf8)}]}
     catch
         _:Error ->
@@ -349,8 +368,10 @@ userrole(#{
     try
         {ok, ResCol, ResData} = eadm_pgpool:equery(
             pool_pg,
-            "select id, rolename, updatedat\n"
-            "            from vi_userrole\n"
+            "select id, rolename, updatedat
+\n"
+            "            from vi_userrole
+\n"
             "            where userid = $1;",
             [UserId]
         ),
@@ -415,10 +436,14 @@ userroledel(#{
     try
         eadm_pgpool:equery(
             pool_pg,
-            "update eadm_userrole\n"
-            "                                  set deleteduser = $1,\n"
-            "                                  deletedat = current_timestamp,\n"
-            "                                  deleted = true\n"
+            "update eadm_userrole
+\n"
+            "                                  set deleteduser = $1,
+\n"
+            "                                  deletedat = current_timestamp,
+\n"
+            "                                  deleted = true
+\n"
             "                                  where id = $2;",
             [LoginName, erlang:binary_to_integer(UserRoleId)]
         ),
@@ -566,38 +591,51 @@ validate_password(_) ->
     {error, "密码格式错误！"}.
 
 %% @doc
-%% 获取用户权限
+%% 获取用户权限（带缓存）
 %% @end
 get_permission(LoginName) ->
-    try
-        case eadm_mnesia_api:find_by_field(eadm_user, loginname, LoginName) of
-            [#eadm_user{id = UserId}] ->
-                UserRoles = eadm_mnesia_api:find_by_field(eadm_userrole, userid, UserId),
-                case UserRoles of
+    % 使用缓存包装器，TTL 30分钟
+    CacheType = user_permission,
+    CacheKey = LoginName,
+    TTL = 1800, % 30分钟
+    
+    eadm_cache:get_or_set(
+        CacheType,
+        CacheKey,
+        fun() ->
+            try
+                case eadm_mnesia_api_cached:find_by_field(eadm_user, loginname, LoginName, 1800) of
+                    [#eadm_user{id = UserId}] ->
+                        UserRoles = eadm_mnesia_api_cached:find_by_field(eadm_userrole, userid, UserId, 1800),
+                        case UserRoles of
+                            [] ->
+                                #{<<"data">> => #{}};
+                            [#eadm_userrole{roleid = RoleId} | _] ->
+                                case eadm_mnesia_api_cached:read(eadm_role, RoleId, 1800) of
+                                    [#eadm_role{rolepermission = Permission, rolestatus = 0}] ->
+                                        #{<<"data">> => Permission};
+                                    _ ->
+                                        #{<<"data">> => #{}}
+                                end
+                        end;
                     [] ->
-                        #{<<"data">> => #{}};
-                    [#eadm_userrole{roleid = RoleId} | _] ->
-                        case eadm_mnesia_api:read(eadm_role, RoleId) of
-                            [#eadm_role{rolepermission = Permission, rolestatus = 0}] ->
-                                #{<<"data">> => Permission};
-                            _ ->
-                                #{<<"data">> => #{}}
-                        end
-                end;
-            [] ->
-                #{<<"data">> => #{}}
-        end
-    catch
-        _:Error ->
-            lager:error("用户权限获取失败：~p~n", [Error]),
-            #{<<"data">> => #{}}
-    end.
+                        #{<<"data">> => #{}}
+                end
+            catch
+                _:Error ->
+                    lager:error("用户权限获取失败：~p~n", [Error]),
+                    #{<<"data">> => #{}}
+            end
+        end,
+        TTL
+    ).
 
 %% @doc
-%% 获取租户名称
+%% 获取租户名称（带缓存）
 %% @end
 get_tenant_name(TenantId) ->
-    case eadm_mnesia_api:read(eadm_tenant, TenantId) of
+    % 使用缓存包装器，TTL 60分钟
+    case eadm_mnesia_api_cached:read(eadm_tenant, TenantId, 3600) of
         [#eadm_tenant{tenantname = Name}] -> Name;
         _ -> <<"未知租户"/utf8>>
     end.

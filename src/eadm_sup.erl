@@ -57,7 +57,18 @@ init([]) ->
         end,
         Pools
     ),
-    {ok, {{one_for_one, 10, 10}, PoolSpec}}.
+    
+    % 添加缓存管理器子进程
+    CacheManagerSpec = {
+        eadm_cache_manager,
+        {eadm_cache_manager, start_link, []},
+        permanent,
+        5000,
+        worker,
+        [eadm_cache_manager]
+    },
+    
+    {ok, {{one_for_one, 10, 10}, [CacheManagerSpec | PoolSpec]}}.
 
 %% @doc
 %% 添加数据库连接池

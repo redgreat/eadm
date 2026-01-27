@@ -57,7 +57,8 @@ search(#{
     }
 }) ->
     try
-        Roles = eadm_mnesia_api:query_all(eadm_role),
+        % 使用缓存包装器，TTL 10分钟
+        Roles = eadm_mnesia_api_cached:query_all(eadm_role, 600),
         ActiveRoles = [
             #{
                 <<"id">> => Id,
@@ -284,8 +285,9 @@ getrolelist(#{
     bindings := #{<<"userId">> := UserId}
 }) ->
     try
-        Roles = eadm_mnesia_api:query_all(eadm_role),
-        UserRoles = eadm_mnesia_api:find_by_field(eadm_userrole, userid, UserId),
+        % 使用缓存包装器
+        Roles = eadm_mnesia_api_cached:query_all(eadm_role, 600),
+        UserRoles = eadm_mnesia_api_cached:find_by_field(eadm_userrole, userid, UserId, 600),
         AssignedRoleIds = [RoleId || #eadm_userrole{roleid = RoleId, deleted = false} <- UserRoles],
 
         AvailableRoles = [
