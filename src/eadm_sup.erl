@@ -68,7 +68,17 @@ init([]) ->
         [eadm_cache_manager]
     },
     
-    {ok, {{one_for_one, 10, 10}, [CacheManagerSpec | PoolSpec]}}.
+    % 添加EMQX同步服务
+    EmqxSyncServiceSpec = {
+        emqx_sync_service,
+        {emqx_sync_service, start_link, []},
+        permanent,
+        5000,
+        worker,
+        [emqx_sync_service]
+    },
+    
+    {ok, {{one_for_one, 10, 10}, [CacheManagerSpec, EmqxSyncServiceSpec | PoolSpec]}}.
 
 %% @doc
 %% 添加数据库连接池

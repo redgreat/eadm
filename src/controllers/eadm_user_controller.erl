@@ -603,28 +603,28 @@ get_permission(LoginName) ->
         CacheType,
         CacheKey,
         fun() ->
-            try
+    try
                 case eadm_mnesia_api_cached:find_by_field(eadm_user, loginname, LoginName, 1800) of
-                    [#eadm_user{id = UserId}] ->
+            [#eadm_user{id = UserId}] ->
                         UserRoles = eadm_mnesia_api_cached:find_by_field(eadm_userrole, userid, UserId, 1800),
-                        case UserRoles of
-                            [] ->
-                                #{<<"data">> => #{}};
-                            [#eadm_userrole{roleid = RoleId} | _] ->
-                                case eadm_mnesia_api_cached:read(eadm_role, RoleId, 1800) of
-                                    [#eadm_role{rolepermission = Permission, rolestatus = 0}] ->
-                                        #{<<"data">> => Permission};
-                                    _ ->
-                                        #{<<"data">> => #{}}
-                                end
-                        end;
+                case UserRoles of
                     [] ->
-                        #{<<"data">> => #{}}
-                end
-            catch
-                _:Error ->
-                    lager:error("用户权限获取失败：~p~n", [Error]),
-                    #{<<"data">> => #{}}
+                        #{<<"data">> => #{}};
+                    [#eadm_userrole{roleid = RoleId} | _] ->
+                                case eadm_mnesia_api_cached:read(eadm_role, RoleId, 1800) of
+                            [#eadm_role{rolepermission = Permission, rolestatus = 0}] ->
+                                #{<<"data">> => Permission};
+                            _ ->
+                                #{<<"data">> => #{}}
+                        end
+                end;
+            [] ->
+                #{<<"data">> => #{}}
+        end
+    catch
+        _:Error ->
+            lager:error("用户权限获取失败：~p~n", [Error]),
+            #{<<"data">> => #{}}
             end
         end,
         TTL

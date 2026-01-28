@@ -10,14 +10,21 @@
 -module(eadm_settings_controller).
 -author("wangcw").
 
+%%%===================================================================
+%%% 头文件引用
+%%%===================================================================
+-include("eadm_mnesia.hrl").
+
 -export([
     index/1,
+    search/1,
     link_garmin/1,
     unlink_garmin/1,
     garmin_status/1,
     update_sync_config/1,
     update_share_config/1,
-    sync_history/1
+    sync_history/1,
+    trigger_sync/1
 ]).
 
 %%====================================================================
@@ -29,12 +36,40 @@ index(#{
         <<"authed">> := true,
         <<"username">> := UserName,
         <<"permission">> := Permission
-    },
-    req := Req
+    }
 }) ->
     case maps:get(<<"sports">>, Permission, false) of
         true ->
-            UserId = get_user_id(Req),
+            lager:info("Settings index called for user: ~ts", [UserName]),
+            {ok, [{username, UserName}]};
+        false ->
+            lager:warning("User ~ts does not have sports permission", [UserName]),
+            {json, [#{<<"Alert">> => unicode:characters_to_binary("API鉴权失败！", utf8)}]}
+    end;
+index(#{auth_data := #{<<"authed">> := false}}) ->
+    lager:info("User not authenticated, redirecting to login"),
+    {redirect, "/login"};
+index(Params) ->
+    lager:error("Unexpected params in index: ~p", [Params]),
+    {json, [#{<<"Alert">> => unicode:characters_to_binary("参数错误！", utf8)}]}.
+
+%%--------------------------------------------------------------------
+%% @doc
+%% 查询设置数据（AJAX调用）
+%% @end
+%%--------------------------------------------------------------------
+search(#{
+    auth_data := #{
+        <<"authed">> := true,
+        <<"username">> := UserName,
+        <<"loginname">> := LoginName,
+        <<"permission">> := Permission
+    }
+}) ->   
+    case maps:get(<<"sports">>, Permission, false) of
+        true ->
+            UserId = get_user_id_from_loginname(LoginName),
+            
             SQL =
                 <<
                     "SELECT garminemail, lastsynctime, syncenable, autosync, syncdays\n"
@@ -42,7 +77,7 @@ index(#{
                     "                    WHERE userid = $1"
                 >>,
             {Linked, Email, LastSync, AutoSync, SyncDays} =
-                case eadm_pgpool:equery(SQL, [UserId]) of
+                case eadm_pgpool:equery(pool_pg, SQL, [UserId]) of
                     {ok, _, [{Email0, LastSync0, _SyncEnabled0, AutoSync0, SyncDays0}]} ->
                         {true, Email0, format_timestamp(LastSync0), AutoSync0, SyncDays0};
                     {ok, _, []} ->
@@ -58,28 +93,31 @@ index(#{
                     "                        LIMIT 20"
                 >>,
             Logs =
-                case eadm_pgpool:equery(LogSql, [UserId]) of
+                case eadm_pgpool:equery(pool_pg, LogSql, [UserId]) of
                     {ok, _, Rows} ->
                         lists:map(fun format_sync_log_view/1, Rows);
                     _ ->
                         []
                 end,
-            {ok,
-                [
-                    {username, UserName},
-                    {garmin_linked, Linked},
-                    {garmin_email, Email},
-                    {last_sync_time, LastSync},
-                    {auto_sync, AutoSync},
-                    {sync_days, SyncDays},
-                    {sync_logs, Logs}
-                ],
-                #{view => eadm_settings}};
+            {json, #{
+                <<"code">> => 200,
+                <<"data">> => #{
+                    <<"username">> => UserName,
+                    <<"garmin_linked">> => Linked,
+                    <<"garmin_email">> => Email,
+                    <<"last_sync_time">> => LastSync,
+                    <<"auto_sync">> => AutoSync,
+                    <<"sync_days">> => SyncDays,
+                    <<"sync_logs">> => Logs
+                }
+            }};
         false ->
-            {json, [#{<<"Alert">> => unicode:characters_to_binary("API鉴权失败！", utf8)}]}
+            {json, #{<<"code">> => 403, <<"message">> => <<"API鉴权失败！">>}}
     end;
-index(#{auth_data := #{<<"authed">> := false}}) ->
-    {redirect, "/login"}.
+search(#{auth_data := #{<<"authed">> := false}}) ->
+    {json, #{<<"code">> => 401, <<"message">> => <<"未认证">>}};
+search(Params) ->
+    {json, #{<<"code">> => 400, <<"message">> => <<"参数错误">>}}.
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -105,19 +143,28 @@ link_garmin(#{req := Req} = _Params) ->
             %% 保存到数据库
             SQL =
                 <<
-                    "INSERT INTO sp_garminconf \n"
-                    "                    (userid, garminemail, oauth1token, oauth2token, syncenable, autosync)\n"
-                    "                    VALUES ($1, $2, $3, $4, true, true)\n"
-                    "                    ON CONFLICT (userid) \n"
-                    "                    DO UPDATE SET \n"
-                    "                        garminemail = EXCLUDED.garminemail,\n"
-                    "                        oauth1token = EXCLUDED.oauth1token,\n"
-                    "                        oauth2token = EXCLUDED.oauth2token,\n"
-                    "                        syncenable = true,\n"
+                    "INSERT INTO sp_garminconf 
+\n"
+                    "                    (userid, garminemail, oauth1token, oauth2token, syncenable, autosync)
+\n"
+                    "                    VALUES ($1, $2, $3, $4, true, true)
+\n"
+                    "                    ON CONFLICT (userid) 
+\n"
+                    "                    DO UPDATE SET 
+\n"
+                    "                        garminemail = EXCLUDED.garminemail,
+\n"
+                    "                        oauth1token = EXCLUDED.oauth1token,
+\n"
+                    "                        oauth2token = EXCLUDED.oauth2token,
+\n"
+                    "                        syncenable = true,
+\n"
                     "                        updatedat = CURRENT_TIMESTAMP"
                 >>,
 
-            case eadm_pgpool:equery(SQL, [UserId, Email, OAuth1Json, OAuth2Json]) of
+            case eadm_pgpool:equery(pool_pg, SQL, [UserId, Email, OAuth1Json, OAuth2Json]) of
                 {ok, _} ->
                     eadm_scheduler:schedule_user_sync(UserId),
 
@@ -152,7 +199,7 @@ unlink_garmin(#{req := Req} = _Params) ->
     %% 删除集成配置
     SQL = <<"DELETE FROM sp_garminconf WHERE userid = $1 RETURNING id">>,
 
-    case eadm_pgpool:equery(SQL, [UserId]) of
+    case eadm_pgpool:equery(pool_pg, SQL, [UserId]) of
         {ok, _, [{_}]} ->
             {json, #{
                 <<"code">> => 200,
@@ -180,12 +227,14 @@ garmin_status(#{req := Req} = _Params) ->
 
     SQL =
         <<
-            "SELECT garminemail, lastsynctime, syncenable, autosync, syncdays\n"
-            "            FROM sp_garminconf \n"
+            "SELECT garminemail, lastsynctime, syncenable, autosync, syncdays
+\n"
+            "            FROM sp_garminconf 
+\n"
             "            WHERE userid = $1"
         >>,
 
-    case eadm_pgpool:equery(SQL, [UserId]) of
+    case eadm_pgpool:equery(pool_pg, SQL, [UserId]) of
         {ok, _, [{Email, LastSync, SyncEnabled, AutoSync, SyncDays}]} ->
             {ok, SyncStatus} = eadm_scheduler:get_sync_status(UserId),
 
@@ -233,13 +282,16 @@ update_sync_config(#{req := Req} = _Params) ->
 
     SQL =
         <<
-            "UPDATE sp_garminconf \n"
-            "            SET syncenable = $1, autosync = $2, syncdays = $3, updatedat = CURRENT_TIMESTAMP\n"
-            "            WHERE userid = $4 \n"
+            "UPDATE sp_garminconf 
+\n"
+            "            SET syncenable = $1, autosync = $2, syncdays = $3, updatedat = CURRENT_TIMESTAMP
+\n"
+            "            WHERE userid = $4 
+\n"
             "            RETURNING id"
         >>,
 
-    case eadm_pgpool:equery(SQL, [SyncEnabled, AutoSync, SyncDays, UserId]) of
+    case eadm_pgpool:equery(pool_pg, SQL, [SyncEnabled, AutoSync, SyncDays, UserId]) of
         {ok, _, [{_}]} ->
             case {SyncEnabled, AutoSync} of
                 {true, true} ->
@@ -283,22 +335,26 @@ update_share_config(#{req := Req} = _Params) ->
 
     SQL =
         <<
-            "UPDATE sp_activity \n"
-            "            SET ispublic = $1, hidemap = $2, hidestats = $3, hidelocation = $4,\n"
-            "                updatedat = CURRENT_TIMESTAMP\n"
-            "            WHERE id = $5 AND userid = $6 \n"
+            "UPDATE sp_activity 
+\n"
+            "            SET ispublic = $1, hidemap = $2, hidestats = $3, hidelocation = $4,
+\n"
+            "                updatedat = CURRENT_TIMESTAMP
+\n"
+            "            WHERE id = $5 AND userid = $6 
+\n"
             "            RETURNING sharetoken"
         >>,
 
     case
-        eadm_pgpool:equery(SQL, [IsPublic, HideMap, HideStats, HideLocation, ActivityId, UserId])
+        eadm_pgpool:equery(pool_pg, SQL, [IsPublic, HideMap, HideStats, HideLocation, ActivityId, UserId])
     of
         {ok, _, [{ShareToken}]} ->
             {json, #{
                 <<"code">> => 200,
                 <<"data">> => #{
                     <<"shareToken">> => ShareToken,
-                    <<"shareUrl">> => <<"/share/sports/", ShareToken/binary>>
+                    <<"shareUrl">> => <<"/share/", ShareToken/binary>>
                 }
             }};
         {ok, _, []} ->
@@ -323,15 +379,20 @@ sync_history(#{req := Req} = _Params) ->
 
     SQL =
         <<
-            "SELECT starttime, endtime, synccount, \n"
-            "                   newcount, syncstatus, errmsg\n"
-            "            FROM sp_garminlog \n"
-            "            WHERE userid = $1 \n"
-            "            ORDER BY starttime DESC \n"
+            "SELECT starttime, endtime, synccount, 
+\n"
+            "                   newcount, syncstatus, errmsg
+\n"
+            "            FROM sp_garminlog 
+\n"
+            "            WHERE userid = $1 
+\n"
+            "            ORDER BY starttime DESC 
+\n"
             "            LIMIT 20"
         >>,
 
-    case eadm_pgpool:equery(SQL, [UserId]) of
+    case eadm_pgpool:equery(pool_pg, SQL, [UserId]) of
         {ok, _, Rows} ->
             Logs = lists:map(fun format_sync_log/1, Rows),
             {json, #{
@@ -351,11 +412,27 @@ sync_history(#{req := Req} = _Params) ->
 
 %%--------------------------------------------------------------------
 %% @private
-%% @doc 获取当前用户ID
+%% @doc 获取当前用户ID（从Req中获取）
 %%--------------------------------------------------------------------
 get_user_id(Req) ->
-    #{<<"userid">> := UserId} = nova_session:get(Req),
-    UserId.
+    case nova_session:get(Req, <<"loginname">>) of
+        {ok, LoginName} ->
+            get_user_id_from_loginname(LoginName);
+        {error, _} ->
+            erlang:error(no_loginname_in_session)
+    end.
+
+%%--------------------------------------------------------------------
+%% @private
+%% @doc 根据登录名获取用户ID
+%%--------------------------------------------------------------------
+get_user_id_from_loginname(LoginName) ->
+    case eadm_mnesia_api_cached:find_by_field(eadm_user, loginname, LoginName, 600) of
+        [#eadm_user{id = UserId}] ->
+            UserId;
+        [] ->
+            erlang:error({user_not_found, LoginName})
+    end.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -396,3 +473,43 @@ format_timestamp({{Y, M, D}, {H, Mi, S}}) ->
     );
 format_timestamp(Timestamp) when is_binary(Timestamp) ->
     Timestamp.
+
+%%--------------------------------------------------------------------
+%% @doc
+%% 触发手动同步
+%% @end
+%%--------------------------------------------------------------------
+trigger_sync(#{req := Req} = _Params) ->
+    UserId = get_user_id_from_req(Req),
+
+    %% 解析请求体
+    {ok, Body, _} = cowboy_req:read_body(Req),
+    Params = jsx:decode(Body, [return_maps]),
+
+    DaysBack = maps:get(<<"daysBack">>, Params, 30),
+
+    %% 触发同步
+    case eadm_scheduler:trigger_manual_sync(UserId, DaysBack) of
+        {ok, _Pid} ->
+            {json, #{<<"code">> => 200, <<"message">> => <<"Sync started successfully">>}};
+        {error, sync_already_running} ->
+            {json, #{<<"code">> => 409, <<"message">> => <<"Sync already in progress">>}};
+        {error, Reason} ->
+            {json, #{
+                <<"code">> => 500, <<"message">> => iolist_to_binary(io_lib:format("~p", [Reason]))
+            }}
+    end.
+
+%%--------------------------------------------------------------------
+%% @private
+%% @doc 从请求中获取用户ID
+%%--------------------------------------------------------------------
+get_user_id_from_req(Req) ->
+    %% 从session或token中获取用户ID，这里需要根据实际的认证机制来实现
+    %% 暂时返回一个默认值，实际使用时需要替换为真实的用户ID获取逻辑
+    case cowboy_req:header(<<"authorization">>, Req) of
+        undefined -> <<"default_user">>;
+        _Token -> 
+            %% 这里需要解析token获取用户ID
+            <<"default_user">>
+    end.

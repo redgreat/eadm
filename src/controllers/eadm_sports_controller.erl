@@ -16,7 +16,6 @@
     activity_detail/1,
     public_activity/1,
     share_page/1,
-    trigger_sync/1,
     delete_activity/1
 ]).
 
@@ -193,7 +192,7 @@ share_page(#{bindings := #{<<"shareId">> := ShareToken}} = _Params) ->
                     true ->
                         {[], false}
                 end,
-            ShareUrl = <<"/share/sports/", ShareToken/binary>>,
+            ShareUrl = <<"/share/", ShareToken/binary>>,
             {ok,
                 [
                     {activity, ActivityView},
@@ -206,32 +205,6 @@ share_page(#{bindings := #{<<"shareId">> := ShareToken}} = _Params) ->
             {status, 404};
         {error, _Reason} ->
             {status, 500}
-    end.
-
-%%--------------------------------------------------------------------
-%% @doc
-%% 触发手动同步
-%% @end
-%%--------------------------------------------------------------------
-trigger_sync(#{req := Req} = _Params) ->
-    UserId = get_user_id(Req),
-
-    %% 解析请求体
-    {ok, Body, _} = cowboy_req:read_body(Req),
-    Params = jsx:decode(Body, [return_maps]),
-
-    DaysBack = maps:get(<<"daysBack">>, Params, 30),
-
-    %% 触发同步
-    case eadm_scheduler:trigger_manual_sync(UserId, DaysBack) of
-        {ok, _Pid} ->
-            {json, #{<<"code">> => 200, <<"message">> => <<"Sync started successfully">>}};
-        {error, sync_already_running} ->
-            {json, #{<<"code">> => 409, <<"message">> => <<"Sync already in progress">>}};
-        {error, Reason} ->
-            {json, #{
-                <<"code">> => 500, <<"message">> => iolist_to_binary(io_lib:format("~p", [Reason]))
-            }}
     end.
 
 %%--------------------------------------------------------------------
@@ -300,7 +273,7 @@ format_activity_row(
         <<"shareUrl">> =>
             case IsPublic of
                 true ->
-                    <<"/share/sports/", ShareToken/binary>>;
+                    <<"/share/", ShareToken/binary>>;
                 false ->
                     null
             end

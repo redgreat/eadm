@@ -60,7 +60,7 @@ routes(_Environment) ->
                     {"/user", fun eadm_user_controller:index/1, #{methods => [get]}},
                     {"/role", fun eadm_role_controller:index/1, #{methods => [get]}},
                     {"/device", fun eadm_device_controller:index/1, #{methods => [get]}},
-                    {"/sports", fun eadm_settings_controller:index/1, #{methods => [get]}}
+                    {"/settings", fun eadm_settings_controller:index/1, #{methods => [get]}}
                 ]
         },
         #{
@@ -82,27 +82,28 @@ routes(_Environment) ->
                 ]
         },
         #{
-            prefix => "sports",
+            prefix => "settings",
             security => fun eadm_auth:auth/1,
             routes =>
                 [
-                    {"/settings/garmin/link", fun eadm_settings_controller:link_garmin/1, #{
+                    {"/", fun eadm_settings_controller:search/1, #{methods => [get]}},
+                    {"/garmin/link", fun eadm_settings_controller:link_garmin/1, #{
                         methods => [post]
                     }},
-                    {"/settings/garmin/unlink", fun eadm_settings_controller:unlink_garmin/1, #{
+                    {"/garmin/unlink", fun eadm_settings_controller:unlink_garmin/1, #{
                         methods => [delete]
                     }},
-                    {"/settings/sync_config", fun eadm_settings_controller:update_sync_config/1, #{
+                    {"/sync_config", fun eadm_settings_controller:update_sync_config/1, #{
                         methods => [post]
                     }},
-                    {"/sync", fun eadm_sports_controller:trigger_sync/1, #{methods => [post]}},
+                    {"/sync", fun eadm_settings_controller:trigger_sync/1, #{methods => [post]}},
                     {"/sync_history", fun eadm_settings_controller:sync_history/1, #{
                         methods => [get]
                     }}
                 ]
         },
         #{
-            prefix => "share/sports",
+            prefix => "share",
             security => false,
             routes =>
                 [{"/:shareId", fun eadm_sports_controller:share_page/1, #{methods => [get]}}]

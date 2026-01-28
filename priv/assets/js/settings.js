@@ -10,7 +10,7 @@ async function linkGarmin(event) {
     const password = document.getElementById('garminPasswordInput').value;
     
     try {
-        const response = await fetch('/sports/settings/garmin/link', {
+        const response = await fetch('/settings/garmin/link', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({email, password})
@@ -34,7 +34,7 @@ async function unlinkGarmin() {
     if (!confirm('确定要解除Garmin账户关联吗?')) return;
     
     try {
-        const response = await fetch('/sports/settings/garmin/unlink', {
+        const response = await fetch('/settings/garmin/unlink', {
             method: 'DELETE'
         });
         
@@ -60,7 +60,7 @@ async function updateSyncConfig() {
     };
     
     try {
-        const response = await fetch('/sports/settings/sync_config', {
+        const response = await fetch('/settings/sync_config', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(config)
@@ -84,7 +84,7 @@ async function triggerManualSync() {
     statusSpan.innerHTML = '<span class="text-primary"><i class="fas fa-spinner fa-spin"></i> 同步中...</span>';
     
     try {
-        const response = await fetch('/sports/sync', {
+        const response = await fetch('/settings/sync', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({daysBack: syncDays})
