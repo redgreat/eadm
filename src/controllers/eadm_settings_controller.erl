@@ -116,7 +116,7 @@ search(#{
     end;
 search(#{auth_data := #{<<"authed">> := false}}) ->
     {json, #{<<"code">> => 401, <<"message">> => <<"未认证">>}};
-search(Params) ->
+search(_Params) ->
     {json, #{<<"code">> => 400, <<"message">> => <<"参数错误">>}}.
 
 %%--------------------------------------------------------------------
@@ -124,21 +124,21 @@ search(Params) ->
 %% 关联Garmin账户
 %% @end
 %%--------------------------------------------------------------------
-link_garmin(#{req := Req} = _Params) ->
+link_garmin(#{req := Req}) ->
     UserId = get_user_id(Req),
 
     %% 解析请求体
     {ok, Body, _} = cowboy_req:read_body(Req),
-    #{<<"email">> := Email, <<"password">> := Password} = jsx:decode(Body, [return_maps]),
+    #{<<"email">> := Email, <<"password">> := Password} = json:decode(Body),
 
     %% 登录Garmin
     case garmin_client_service:login(Email, Password) of
         {ok, #{oauth1 := OAuth1Token, oauth2 := OAuth2Token}} ->
             %% 加密并保存tokens
-            OAuth1Encrypted = garmin_client_service:encrypt_token(jsx:encode(OAuth1Token)),
-            OAuth2Encrypted = garmin_client_service:encrypt_token(jsx:encode(OAuth2Token)),
-            OAuth1Json = jsx:encode(#{<<"enc">> => OAuth1Encrypted}),
-            OAuth2Json = jsx:encode(#{<<"enc">> => OAuth2Encrypted}),
+            OAuth1Encrypted = garmin_client_service:encrypt_token(json:encode(OAuth1Token)),
+            OAuth2Encrypted = garmin_client_service:encrypt_token(json:encode(OAuth2Token)),
+            OAuth1Json = json:encode(#{<<"enc">> => OAuth1Encrypted}),
+            OAuth2Json = json:encode(#{<<"enc">> => OAuth2Encrypted}),
 
             %% 保存到数据库
             SQL =
@@ -274,7 +274,7 @@ update_sync_config(#{req := Req} = _Params) ->
 
     %% 解析请求体
     {ok, Body, _} = cowboy_req:read_body(Req),
-    Config = jsx:decode(Body, [return_maps]),
+    Config = json:decode(Body),
 
     SyncEnabled = maps:get(<<"syncEnabled">>, Config, true),
     AutoSync = maps:get(<<"autoSync">>, Config, true),
@@ -326,7 +326,7 @@ update_share_config(#{req := Req} = _Params) ->
 
     %% 解析请求体
     {ok, Body, _} = cowboy_req:read_body(Req),
-    #{<<"activityId">> := ActivityId} = Config = jsx:decode(Body, [return_maps]),
+    #{<<"activityId">> := ActivityId} = Config = json:decode(Body),
 
     IsPublic = maps:get(<<"isPublic">>, Config, false),
     HideMap = maps:get(<<"hideMap">>, Config, false),
@@ -484,7 +484,7 @@ trigger_sync(#{req := Req} = _Params) ->
 
     %% 解析请求体
     {ok, Body, _} = cowboy_req:read_body(Req),
-    Params = jsx:decode(Body, [return_maps]),
+    Params = json:decode(Body),
 
     DaysBack = maps:get(<<"daysBack">>, Params, 30),
 

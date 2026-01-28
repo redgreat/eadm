@@ -3,7 +3,7 @@
 %%% @copyright (C) 2026, REDGREAT
 %%% @doc
 %%% EMQX消息接收服务
-%%% 从EMQX实时接收设备数据并存储到TDengine（HTTP方式）
+%%% 从EMQX实时接收设备数据并存储到PostgreSQL（使用pgpool连接池）
 %%% @end
 %%% Created : 2026-01-28
 %%%-------------------------------------------------------------------
@@ -27,13 +27,8 @@
     emqx_username,
     emqx_password,
     emqx_client_id,
-    emqx_client,
-    td_host,
-    td_port,
-    td_username,
-    td_password,
-    td_database,
-    td_token
+    emqx_topic,
+    emqx_client
 }).
 
 %%%===================================================================
@@ -67,22 +62,14 @@ init([]) ->
     
     %% 读取配置
     {ok, EmqxConfig} = application:get_env(eadm, emqx),
-    {ok, TdConfig} = application:get_env(eadm, tdengine),
     
     #{
         host := EmqxHost,
         port := EmqxPort,
         username := EmqxUsername,
-        password := EmqxPassword
+        password := EmqxPassword,
+        topic := EmqxTopic
     } = EmqxConfig,
-    
-    #{
-        host := TdHost,
-        port := TdPort,
-        username := TdUsername,
-        password := TdPassword,
-        database := TdDatabase
-    } = TdConfig,
     
     EmqxClientId = <<"eadm_emqx_client_", (integer_to_binary(erlang:system_time()))/binary>>,
     
@@ -91,31 +78,17 @@ init([]) ->
         emqx_port = EmqxPort,
         emqx_username = EmqxUsername,
         emqx_password = EmqxPassword,
-        emqx_client_id = EmqxClientId,
-        td_host = TdHost,
-        td_port = TdPort,
-        td_username = TdUsername,
-        td_password = TdPassword,
-        td_database = TdDatabase
+        emqx_topic = EmqxTopic,
+        emqx_client_id = EmqxClientId
     },
     
-    %% 获取TDengine认证token
-    case get_tdengine_token(State) of
-        {ok, TdToken} ->
-            lager:info("Got TDengine auth token successfully"),
-            NewState = State#state{td_token = TdToken},
-            
-            %% 连接EMQX
-            case connect_emqx(NewState) of
-                {ok, EmqxClient} ->
-                    lager:info("Connected to EMQX successfully"),
-                    {ok, NewState#state{emqx_client = EmqxClient}};
-                {error, Reason} ->
-                    lager:error("Failed to connect to EMQX: ~p", [Reason]),
-                    {stop, Reason}
-            end;
+    %% 连接EMQX
+    case connect_emqx(State) of
+        {ok, EmqxClient} ->
+            lager:info("Connected to EMQX successfully"),
+            {ok, State#state{emqx_client = EmqxClient}};
         {error, Reason} ->
-            lager:error("Failed to get TDengine token: ~p", [Reason]),
+            lager:error("Failed to connect to EMQX: ~p", [Reason]),
             {stop, Reason}
     end.
 
@@ -132,7 +105,7 @@ handle_cast(_Msg, State) ->
 %% @private
 handle_info({mqtt_message, Topic, Payload}, State) ->
     lager:info("Received message from topic: ~s", [Topic]),
-    case handle_device_data(Payload, State) of
+    case handle_device_data(Payload) of
         ok ->
             {noreply, State};
         {error, Reason} ->
@@ -161,42 +134,27 @@ code_change(_OldVsn, State, _Extra) ->
 
 %% @private
 %% @doc
-%% 获取TDengine认证token
+%% 使用pgpool插入设备数据到PostgreSQL
 %% @end
-get_tdengine_token(#state{
-    td_host = Host,
-    td_port = Port,
-    td_username = Username,
-    td_password = Password
-}) ->
-    %% 构造TDengine RESTful API URL
-    Url = iolist_to_binary([
-        "http://", Host, ":", integer_to_binary(Port), "/rest/login/"
-    ]),
+insert_device_data(Imei, Imsi, Lat, Lng, AgpsLat, AgpsLng, 
+                   Uptime, Rsrp, Csq, Vbat, AgpsTs, GpsTs, Rssi, Rsrq, Snr) ->
+    %% 构造SQL插入语句
+    Sql = "INSERT INTO emqx_device_data (imei, imsi, lat, lng, agps_lat, agps_lng, " ++
+          "uptime, rsrp, csq, vbat, agps_ts, gps_ts, rssi, rsrq, snr, receivetime) " ++
+          "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, NOW())",
     
-    %% 构造认证请求体
-    AuthBody = jsx:encode(#{
-        <<"username">> => Username,
-        <<"password">> => Password
-    }),
+    %% 参数列表
+    Params = [
+        Imei, Imsi, Lat, Lng, AgpsLat, AgpsLng, 
+        Uptime, Rsrp, Csq, Vbat, AgpsTs, GpsTs, Rssi, Rsrq, Snr
+    ],
     
-    %% 发送HTTP请求
-    case httpc:request(post, {
-        Url, 
-        [{"Content-Type", "application/json"}], 
-        "application/json", 
-        AuthBody
-    }, [], []) of
-        {ok, {{_, 200, _}, _, ResponseBody}} ->
-            case jsx:decode(ResponseBody, [return_maps]) of
-                #{<<"status">> := <<"succ">>, <<"code">> := 0, <<"desc">> := Token} ->
-                    {ok, Token};
-                Response ->
-                    lager:error("TDengine auth response: ~p", [Response]),
-                    {error, invalid_response}
-            end;
+    %% 使用pgpool执行SQL
+    case pgpool:query(Sql, Params) of
+        {ok, _Result} ->
+            ok;
         {error, Reason} ->
-            lager:error("TDengine auth request failed: ~p", [Reason]),
+            lager:error("Failed to insert device data to PostgreSQL: ~p", [Reason]),
             {error, Reason}
     end.
 
@@ -209,7 +167,8 @@ connect_emqx(#state{
     emqx_port = Port,
     emqx_username = Username,
     emqx_password = Password,
-    emqx_client_id = ClientId
+    emqx_client_id = ClientId,
+    emqx_topic = Topic
 }) ->
     Options = [
         {host, Host},
@@ -224,12 +183,14 @@ connect_emqx(#state{
     case emqttc:start_link(Options) of
         {ok, Client} ->
             %% 订阅设备数据主题
-            case emqttc:subscribe(Client, <<"devices/+/data">>, 1) of
+            TopicBinary = erlang:list_to_binary(Topic),
+            lager:info("Subscribing to topic: ~s", [TopicBinary]),
+            case emqttc:subscribe(Client, TopicBinary, 1) of
                 {ok, _Props, _ReasonCodes} ->
-                    lager:info("Subscribed to device data topic"),
+                    lager:info("Subscribed to topic: ~s successfully", [TopicBinary]),
                     {ok, Client};
                 {error, Reason} ->
-                    lager:error("Failed to subscribe to topic: ~p", [Reason]),
+                    lager:error("Failed to subscribe to topic ~s: ~p", [TopicBinary, Reason]),
                     {error, Reason}
             end;
         {error, Reason} ->
@@ -240,9 +201,9 @@ connect_emqx(#state{
 %% @doc
 %% 处理设备数据
 %% @end
-handle_device_data(Payload, #state{td_token = Token} = State) ->
+handle_device_data(Payload) ->
     try
-        Data = jsx:decode(Payload, [return_maps]),
+        Data = json:decode(Payload),
         
         %% 提取需要的字段
         Imei = maps:get(<<"imei">>, Data, <<>>),
@@ -261,8 +222,8 @@ handle_device_data(Payload, #state{td_token = Token} = State) ->
         Rsrq = maps:get(<<"rsrq">>, Data, 0),
         Snr = maps:get(<<"snr">>, Data, 0),
         
-        %% 插入TDengine超级表
-        insert_device_data(State, Token, Imei, Imsi, Lat, Lng, AgpsLat, AgpsLng, 
+        %% 插入PostgreSQL数据库
+        insert_device_data(Imei, Imsi, Lat, Lng, AgpsLat, AgpsLng, 
                           Uptime, Rsrp, Csq, Vbat, AgpsTs, GpsTs, Rssi, Rsrq, Snr),
         
         lager:info("Device data processed for IMEI: ~s", [Imei]),
@@ -273,53 +234,3 @@ handle_device_data(Payload, #state{td_token = Token} = State) ->
             {error, Reason}
     end.
 
-%% @private
-%% @doc
-%% 使用HTTP方式插入设备数据到TDengine
-%% @end
-insert_device_data(#state{
-    td_host = Host,
-    td_port = Port,
-    td_database = Database
-}, Token, Imei, Imsi, Lat, Lng, AgpsLat, AgpsLng, 
- Uptime, Rsrp, Csq, Vbat, AgpsTs, GpsTs, Rssi, Rsrq, Snr) ->
-    %% 构造TDengine RESTful API URL
-    Url = iolist_to_binary([
-        "http://", Host, ":", integer_to_binary(Port), "/rest/sql/", Database
-    ]),
-    
-    %% 构造SQL插入语句
-    Sql = io_lib:format(
-        "INSERT INTO device_data USING device_data TAGS('~s', '~s') VALUES "
-        "(NOW, ~f, ~f, ~f, ~f, ~p, ~p, ~p, ~p, ~p, ~p, ~p, ~p, ~p)",
-        [Imei, Imsi, Lat, Lng, AgpsLat, AgpsLng, Uptime, Rsrp, Csq, Vbat, 
-         AgpsTs, GpsTs, Rssi, Rsrq, Snr]
-    ),
-    
-    SqlBin = iolist_to_binary(Sql),
-    
-    %% 发送HTTP请求
-    Headers = [
-        {"Content-Type", "application/json"},
-        {"Authorization", "Basic " ++ binary_to_list(base64:encode(Token))}
-    ],
-    
-    Body = jsx:encode(#{
-        <<"sql">> => SqlBin
-    }),
-    
-    case httpc:request(post, {
-        Url, Headers, "application/json", Body
-    }, [], []) of
-        {ok, {{_, 200, _}, _, ResponseBody}} ->
-            case jsx:decode(ResponseBody, [return_maps]) of
-                #{<<"status">> := <<"succ">>, <<"code">> := 0} ->
-                    ok;
-                Response ->
-                    lager:error("TDengine insert response: ~p", [Response]),
-                    {error, insert_failed}
-            end;
-        {error, Reason} ->
-            lager:error("TDengine insert request failed: ~p", [Reason]),
-            {error, Reason}
-    end.

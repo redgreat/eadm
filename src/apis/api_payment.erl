@@ -55,7 +55,7 @@ fetch_alipay_transactions(StartDate, EndDate) ->
                     sign_type => "RSA2",
                     timestamp => format_datetime(erlang:localtime()),
                     version => "1.0",
-                    biz_content => thoas:encode(#{
+                    biz_content => json:encode(#{
                         start_time => StartDate,
                         end_time => EndDate
                     })
@@ -83,7 +83,7 @@ fetch_alipay_transactions(StartDate, EndDate) ->
 
                 % 解析响应
                 {_, _, Body} = Response,
-                JsonResponse = thoas:decode(Body),
+                JsonResponse = json:decode(Body),
 
                 % 处理响应数据
                 case maps:get(<<"alipay_trade_query_response">>, JsonResponse, undefined) of
@@ -162,7 +162,7 @@ fetch_wechat_transactions(StartDate, _EndDate) ->
 
                 % 解析响应
                 {_, _, Body} = Response,
-                JsonResponse = thoas:decode(Body),
+                JsonResponse = json:decode(Body),
 
                 % 处理响应数据
                 case maps:get(<<"download_url">>, JsonResponse, undefined) of

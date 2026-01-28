@@ -1349,3 +1349,55 @@ comment on column sp_garminlog.syncstatus is '同步状态(running/success/faile
 comment on column sp_garminlog.errmsg is '错误信息';
 comment on column sp_garminlog.inserttime is '日志记录时间';
 comment on table sp_garminlog is '运动域_Garmin同步日志';
+
+-- EMQX设备数据表
+drop table if exists emqx_device_data cascade;
+create table emqx_device_data (
+  id serial,
+  imei varchar(50) not null,
+  imsi varchar(50),
+  lat numeric(9,6),
+  lng numeric(9,6),
+  agps_lat numeric(9,6),
+  agps_lng numeric(9,6),
+  uptime bigint,
+  rsrp smallint,
+  csq smallint,
+  vbat smallint,
+  agps_ts bigint,
+  gps_ts bigint,
+  rssi smallint,
+  rsrq smallint,
+  snr smallint,
+  receivetime timestamptz,
+  inserttime timestamptz not null default current_timestamp
+);
+
+alter table emqx_device_data owner to user_eadm;
+alter table emqx_device_data drop constraint if exists pk_emqx_device_data_id cascade;
+alter table emqx_device_data add constraint pk_emqx_device_data_id primary key (id);
+
+drop index if exists non_emqx_device_data_imei;
+create index non_emqx_device_data_imei on emqx_device_data using btree (imei asc nulls last);
+drop index if exists non_emqx_device_data_inserttime;
+create index non_emqx_device_data_inserttime on emqx_device_data using btree (inserttime desc nulls last);
+
+comment on column emqx_device_data.id is '自增主键';
+comment on column emqx_device_data.imei is '设备IMEI号';
+comment on column emqx_device_data.imsi is '设备IMSI号';
+comment on column emqx_device_data.lat is 'GPS纬度';
+comment on column emqx_device_data.lng is 'GPS经度';
+comment on column emqx_device_data.agps_lat is 'AGPS纬度';
+comment on column emqx_device_data.agps_lng is 'AGPS经度';
+comment on column emqx_device_data.uptime is '设备运行时间(秒)';
+comment on column emqx_device_data.rsrp is '参考信号接收功率(dBm)';
+comment on column emqx_device_data.csq is '信号质量(0-31)';
+comment on column emqx_device_data.vbat is '电池电压(mV)';
+comment on column emqx_device_data.agps_ts is 'AGPS时间戳';
+comment on column emqx_device_data.gps_ts is 'GPS时间戳';
+comment on column emqx_device_data.rssi is '接收信号强度指示(dBm)';
+comment on column emqx_device_data.rsrq is '参考信号接收质量(dB)';
+comment on column emqx_device_data.snr is '信噪比(dB)';
+comment on column emqx_device_data.receivetime is '数据接收时间';
+comment on column emqx_device_data.inserttime is '数据写入时间';
+comment on table emqx_device_data is 'EMQX设备数据表';

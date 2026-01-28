@@ -54,28 +54,17 @@
 
 %% @private
 %% @doc
-%% 将Erlang数据结构转换为JSON兼容格式
+%% 将Erlang数据结构转换为JSON二进制字符串（使用json模块编码）
 %% @end
-to_json([Hd | Tl]) ->
-    [to_json(Hd) | to_json(Tl)];
-to_json(Tuple) when erlang:is_tuple(Tuple) ->
-    to_json(erlang:tuple_to_list(Tuple));
-to_json(Map) when erlang:is_map(Map) ->
-    %% What should we do here? Nothing?
-    maps:map(
-        fun(_, Value) ->
-            to_json(Value)
-        end,
-        Map
-    );
-to_json(Pid) when erlang:is_pid(Pid) ->
-    erlang:list_to_binary(erlang:pid_to_list(Pid));
-to_json(Port) when erlang:is_port(Port) ->
-    erlang:list_to_binary(erlang:port_to_list(Port));
-to_json(Ref) when erlang:is_reference(Ref) ->
-    erlang:list_to_binary(erlang:ref_to_list(Ref));
-to_json(Element) ->
-    Element.
+to_json(Data) ->
+    try
+        {ok, JsonBinary} = json:encode(Data),
+        JsonBinary
+    catch
+        _:Error ->
+            lager:error("JSON编码失败: ~p, 数据: ~p", [Error, Data]),
+            <<"{}">>
+    end.
 
 %% @doc
 %% 获取session过期时间
@@ -159,7 +148,7 @@ pg_as_jsonmap(ResData) ->
 pg_as_jsondata(ResData) ->
     case erlang:hd(ResData) of
         {ResBin} when is_binary(ResBin) ->
-            {ok, RetuenData} = thoas:decode(ResBin),
+            {ok, RetuenData} = json:decode(ResBin),
             RetuenData;
         _ ->
             #{}

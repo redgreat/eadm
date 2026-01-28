@@ -12,7 +12,6 @@
 
 -export([
     sync_user_activities/2,
-    sync_activity_detail/3,
     save_activity/2,
     parse_garmin_activity/1,
     map_activity_type/1
@@ -53,25 +52,6 @@ sync_user_activities(UserId, DaysBack) ->
         _:Reason2 ->
             logger:error("Sync failed: ~p", [Reason2]),
             {error, Reason2}
-    end.
-
-%%--------------------------------------------------------------------
-%% @doc
-%% 同步活动详情和轨迹数据
-%% @end
-%%--------------------------------------------------------------------
-sync_activity_detail(UserId, ActivityId, OAuth2Token) ->
-    case garmin_client_service:get_activity_detail(OAuth2Token, ActivityId) of
-        {ok, Detail} ->
-            case garmin_client_service:get_activity_streams(OAuth2Token, ActivityId) of
-                {ok, Streams} ->
-                    save_activity_streams(ActivityId, Streams),
-                    {ok, Detail};
-                Error ->
-                    Error
-            end;
-        Error ->
-            Error
     end.
 
 %%--------------------------------------------------------------------
@@ -134,14 +114,6 @@ save_activity(UserId, ActivityData) ->
             logger:error("Failed to save activity: ~p", [Reason]),
             {error, Reason}
     end.
-
-%%--------------------------------------------------------------------
-%% @doc
-%% 保存活动轨迹数据流
-%% @end
-%%--------------------------------------------------------------------
-save_activity_streams(_UserId, _ActivityDetail) ->
-    ok.
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -217,7 +189,7 @@ format_date(Timestamp) when is_binary(Timestamp) ->
 %% 给时间戳添加秒数
 %% @end
 %%--------------------------------------------------------------------
-add_seconds(Timestamp, Duration) when is_binary(Timestamp) ->
+add_seconds(Timestamp, _Duration) when is_binary(Timestamp) ->
     Timestamp;
 add_seconds(DateTime, Duration) ->
     Seconds = calendar:datetime_to_gregorian_seconds(DateTime),
@@ -231,12 +203,12 @@ add_seconds(DateTime, Duration) ->
 %%--------------------------------------------------------------------
 decode_token_field(Json) ->
     try
-        Map = jsx:decode(Json, [return_maps]),
+        Map = json:decode(Json),
         case maps:get(<<"enc">>, Map, undefined) of
             undefined -> Map;
-            Enc -> jsx:decode(garmin_client_service:decrypt_token(Enc), [return_maps])
+            Enc -> json:decode(garmin_client_service:decrypt_token(Enc))
         end
     catch
-        _:Reason2 ->
-            jsx:decode(Json, [return_maps])
+        _: _Reason2 ->
+            json:decode(Json)
     end.

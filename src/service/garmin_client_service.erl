@@ -74,11 +74,11 @@ get_activities(OAuth1Token, OAuth2Token, StartDate, EndDate) ->
         [?GARMIN_MODERN_URL]
     ),
     Headers = build_oauth_headers(OAuth1Token, OAuth2Token),
-    Body = jsx:encode(#{<<"startDate">> => StartDate, <<"endDate">> => EndDate}),
+    Body = json:encode(#{<<"startDate">> => StartDate, <<"endDate">> => EndDate}),
 
     case http_request(post, Url, Headers, Body) of
         {ok, ResponseBody} ->
-            Activities = jsx:decode(ResponseBody, [return_maps]),
+            Activities = json:decode(ResponseBody),
             {ok, Activities};
         Error ->
             Error
@@ -97,7 +97,7 @@ get_activity_detail(OAuth2Token, ActivityId) ->
 
     case http_request(get, Url, Headers, "") of
         {ok, ResponseBody} ->
-            Activity = jsx:decode(ResponseBody, [return_maps]),
+            Activity = json:decode(ResponseBody),
             {ok, Activity};
         Error ->
             Error
@@ -116,7 +116,7 @@ get_activity_streams(OAuth2Token, ActivityId) ->
 
     case http_request(get, Url, Headers, "") of
         {ok, ResponseBody} ->
-            Streams = jsx:decode(ResponseBody, [return_maps]),
+            Streams = json:decode(ResponseBody),
             {ok, Streams};
         Error ->
             Error
@@ -134,7 +134,7 @@ refresh_oauth2_token(OAuth2Token) ->
 
     case http_request(post, Url, Headers, "") of
         {ok, ResponseBody} ->
-            NewToken = jsx:decode(ResponseBody, [return_maps]),
+            NewToken = json:decode(ResponseBody),
             {ok, NewToken};
         Error ->
             Error
@@ -224,7 +224,7 @@ get_oauth_tokens(Ticket) ->
 
     case http_request(post, Url, Headers, Body) of
         {ok, ResponseBody} ->
-            Tokens = jsx:decode(ResponseBody, [return_maps]),
+            Tokens = json:decode(ResponseBody),
             {ok, Tokens};
         Error ->
             Error

@@ -302,7 +302,7 @@ search(#{
             300,
             {crontab_list, CronName}
         ),
-        {json, eadm_utils:pg_as_json(Columns, ResData)}
+        {json, eadm_utils:to_json(eadm_utils:pg_as_json(Columns, ResData))}
     catch
         ErrorType:ErrorReason:Stacktrace ->
             lager:error("任务查询失败：~p:~p~n~p~n", [ErrorType, ErrorReason, Stacktrace]),
@@ -338,7 +338,7 @@ detail(#{
             "            order by a.exectime desc;",
             [CronId]
         ),
-        {json, eadm_utils:pg_as_json([], ResData)}
+        {json, eadm_utils:to_json(eadm_utils:pg_as_json([], ResData))}
     catch
         _:ErrorReason:_ ->
             lager:error("任务查询失败：~p~n", [ErrorReason]),

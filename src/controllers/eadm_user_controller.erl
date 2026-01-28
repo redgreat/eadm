@@ -375,7 +375,7 @@ userrole(#{
             "            where userid = $1;",
             [UserId]
         ),
-        {json, eadm_utils:pg_as_json(ResCol, ResData)}
+        {json, eadm_utils:to_json(eadm_utils:pg_as_json(ResCol, ResData))}
     catch
         _:Error ->
             lager:error("用户角色查询失败：~p~n", [Error]),
@@ -398,7 +398,7 @@ userroleadd(#{
     params := RoleIdMap
 }) ->
     [{RoleIds, _Value}] = maps:to_list(RoleIdMap),
-    {ok, RoleIdList} = thoas:decode(RoleIds),
+    {ok, RoleIdList} = json:decode(RoleIds),
     InsertQuery = "insert into eadm_userrole(userid, roleid, createduser) values($1, $2, $3);",
     try
         lists:foreach(

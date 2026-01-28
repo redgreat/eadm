@@ -12,7 +12,8 @@
         epgsql,
         poolboy,
         lager,
-        ecron
+        ecron,
+        emqttc
     ]},
     {env, []},
     {modules, []},

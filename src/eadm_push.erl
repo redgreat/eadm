@@ -34,7 +34,7 @@
 %% @end
 send_msg(Content) ->
     try
-        JsonData = thoas:encode(#{
+        JsonData = json:encode(#{
             token => ?PUSH_TOKEN,
             title => unicode:characters_to_binary("手表提醒消息"),
             content => Content

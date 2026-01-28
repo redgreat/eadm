@@ -35,7 +35,7 @@
 %% @end
 send_msg(Content) ->
     try
-        JsonData = thoas:encode(#{
+        JsonData = json:encode(#{
             msgtype => 'text',
             text => #{content => Content, mentioned_list => ?WX_MENTIONS}
         }),

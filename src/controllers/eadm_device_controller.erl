@@ -57,7 +57,7 @@ search(#{
             300,
             {device_list, DeviceNo}
         ),
-        {json, eadm_utils:pg_as_json(Columns, ResData)}
+        {json, eadm_utils:to_json(eadm_utils:pg_as_json(Columns, ResData))}
     catch
         _:Error ->
             lager:info("设备查询失败：~p", [Error]),
@@ -85,7 +85,7 @@ search(#{
             300,
             {device_list, all}
         ),
-        {json, eadm_utils:pg_as_json(Columns, ResData)}
+        {json, eadm_utils:to_json(eadm_utils:pg_as_json(Columns, ResData))}
     catch
         _:Error ->
             lager:info("设备查询失败：~p", [Error]),
@@ -451,7 +451,7 @@ device_users(#{
             "            order by ud.createdat desc;",
             [DeviceNo]
         ),
-        {json, eadm_utils:pg_as_json(Columns, ResData)}
+        {json, eadm_utils:to_json(eadm_utils:pg_as_json(Columns, ResData))}
     catch
         _:Error ->
             lager:info("设备用户查询失败：~p", [Error]),
@@ -492,7 +492,7 @@ user_devices(#{
             "            order by d.createdat desc;",
             [LoginName]
         ),
-        {json, eadm_utils:pg_as_json(Columns, ResData)}
+        {json, eadm_utils:to_json(eadm_utils:pg_as_json(Columns, ResData))}
     catch
         _:Error ->
             lager:info("用户设备查询失败：~p", [Error]),

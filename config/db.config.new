@@ -26,15 +26,14 @@
                 {username, "user_eadm"},
                 {password, "iyS62bvt"}
             ]}
-        ]}
+        ]
     ]
 },
-{emqx, [
-        {emqx, #{
-            host => "localhost",
-            port => 1883,
-            username => "your_emqx_username",
-            password => "your_emqx_password"
-        }}
-]}
+{emqx, #{
+    host => "me06f566.ala.cn-hangzhou.emqxsl.cn",
+    port => 8883,
+    username => "user_eadm",
+    password => "Mm19890425",
+    topic => "/tracker/864269060008576/up/stat"
+}}
 ].

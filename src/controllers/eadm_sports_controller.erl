@@ -197,7 +197,7 @@ share_page(#{bindings := #{<<"shareId">> := ShareToken}} = _Params) ->
                 [
                     {activity, ActivityView},
                     {has_map_data, HasMapData},
-                    {map_coordinates, jsx:encode(MapCoordinates)},
+                    {map_coordinates, json:encode(MapCoordinates)},
                     {share_url, ShareUrl}
                 ],
                 #{view => eadm_share}};
@@ -341,7 +341,7 @@ decode_stream_coordinates(StreamRows) ->
                 Decoded =
                     case Data of
                         Bin when is_binary(Bin) ->
-                            try jsx:decode(Bin, [return_maps]) of
+                            try json:decode(Bin) of
                                 V -> V
                             catch
                                 _:_ -> []

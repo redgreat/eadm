@@ -1,0 +1,55 @@
+/* 运动数据设置页面样式 */
+.settings-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    padding: 30px;
+    margin-bottom: 20px;
+}
+
+.settings-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.settings-header i {
+    font-size: 24px;
+    margin-right: 12px;
+    color: #667eea;
+}
+
+.status-badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.status-linked { 
+    background: #4CAF50; 
+    color: white; 
+}
+
+.status-not-linked { 
+    background: #9E9E9E; 
+    color: white; 
+}
+
+.sync-log-item {
+    padding: 12px;
+    border-left: 3px solid #667eea;
+    background: #f8f9fa;
+    margin-bottom: 10px;
+    border-radius: 4px;
+}
+
+.sync-log-success { 
+    border-left-color: #4CAF50; 
+}
+
+.sync-log-failed { 
+    border-left-color: #f44336; 
+}
