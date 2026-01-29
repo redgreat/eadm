@@ -50,16 +50,20 @@ preload_all() ->
 preload_tenants() ->
     try
         Tenants = eadm_mnesia_api:query_all(eadm_tenant),
-        Count = lists:foldl(fun(Tenant, Acc) ->
-            case Tenant of
-                #eadm_tenant{id = TenantId, deleted = false} ->
-                    % 使用缓存包装器预加载，TTL 60分钟
-                    eadm_mnesia_api_cached:read(eadm_tenant, TenantId, 3600),
-                    Acc + 1;
-                _ ->
-                    Acc
-            end
-        end, 0, Tenants),
+        Count = lists:foldl(
+            fun(Tenant, Acc) ->
+                case Tenant of
+                    #eadm_tenant{id = TenantId, deleted = false} ->
+                        % 使用缓存包装器预加载，TTL 60分钟
+                        eadm_mnesia_api_cached:read(eadm_tenant, TenantId, 3600),
+                        Acc + 1;
+                    _ ->
+                        Acc
+                end
+            end,
+            0,
+            Tenants
+        ),
         lager:info("预热了 ~p 个租户信息缓存", [Count]),
         ok
     catch
@@ -80,6 +84,6 @@ preload_roles() ->
         ok
     catch
         Error:Reason ->
-        lager:error("预热角色信息缓存失败: ~p:~p", [Error, Reason]),
-        ok
+            lager:error("预热角色信息缓存失败: ~p:~p", [Error, Reason]),
+            ok
     end.

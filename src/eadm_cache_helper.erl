@@ -27,7 +27,9 @@
 %%%===================================================================
 %%% 宏定义
 %%%===================================================================
--define(MAX_TTL, 86400). % 最大TTL：24小时
+
+% 最大TTL：24小时
+-define(MAX_TTL, 86400).
 
 %%%===================================================================
 %%% API 函数
@@ -64,7 +66,8 @@ make_global_key(CacheType) ->
 %% @end
 -spec check_expired(ExpiresAt :: integer()) -> boolean().
 check_expired(0) ->
-    false; % 0表示永不过期
+    % 0表示永不过期
+    false;
 check_expired(ExpiresAt) when is_integer(ExpiresAt) ->
     Now = erlang:system_time(second),
     Now >= ExpiresAt.
@@ -74,7 +77,8 @@ check_expired(ExpiresAt) when is_integer(ExpiresAt) ->
 %% @end
 -spec calculate_expires_at(TTL :: integer()) -> integer().
 calculate_expires_at(0) ->
-    0; % 0表示永不过期
+    % 0表示永不过期
+    0;
 calculate_expires_at(TTL) when is_integer(TTL), TTL > 0, TTL =< ?MAX_TTL ->
     erlang:system_time(second) + TTL;
 calculate_expires_at(TTL) when is_integer(TTL), TTL > ?MAX_TTL ->

@@ -289,14 +289,14 @@ search(#{
         % 使用缓存包装器，TTL 5分钟
         {ok, Columns, ResData} = eadm_pgpool_cached:equery_cached(
             pool_pg,
-            "select id, cronname, cronexp, cronmfa,
-\n"
-            "            starttime, endtime, cronstatus, createdat
-\n"
-            "            from vi_crontab
-\n"
-            "            where cronname like $1
-\n"
+            "select id, cronname, cronexp, cronmfa,\n"
+            "\n"
+            "            starttime, endtime, cronstatus, createdat\n"
+            "\n"
+            "            from vi_crontab\n"
+            "\n"
+            "            where cronname like $1\n"
+            "\n"
             "            order by createdat desc;",
             [<<"%", CronName/binary, "%">>],
             300,
@@ -323,18 +323,18 @@ detail(#{
     try
         {ok, _, ResData} = eadm_pgpool:equery(
             pool_pg,
-            "select b.cronname, a.cronlog, to_char(a.exectime, 'yyyy-mm-dd hh24:mi:ss') as exectime
-\n"
-            "            from sys_cronlog a,
-\n"
-            "                 eadm_crontab b
-\n"
-            "            where a.cronid = b.id
-\n"
-            "              and a.cronid = $1
-\n"
-            "              and b.deleted is false
-\n"
+            "select b.cronname, a.cronlog, to_char(a.exectime, 'yyyy-mm-dd hh24:mi:ss') as exectime\n"
+            "\n"
+            "            from sys_cronlog a,\n"
+            "\n"
+            "                 eadm_crontab b\n"
+            "\n"
+            "            where a.cronid = b.id\n"
+            "\n"
+            "              and a.cronid = $1\n"
+            "\n"
+            "              and b.deleted is false\n"
+            "\n"
             "            order by a.exectime desc;",
             [CronId]
         ),
@@ -373,10 +373,10 @@ add(#{
                 <<>> ->
                     eadm_pgpool:equery(
                         pool_pg,
-                        "insert into eadm_crontab(cronname, cronexp, cronmfa,
-\n"
-                        "                        starttime, createduser, updateduser)
-\n"
+                        "insert into eadm_crontab(cronname, cronexp, cronmfa,\n"
+                        "\n"
+                        "                        starttime, createduser, updateduser)\n"
+                        "\n"
                         "                    values($1, $2, $3, $4, $5, $6) returning id;",
                         [
                             CronName,
@@ -390,10 +390,10 @@ add(#{
                 _ ->
                     eadm_pgpool:equery(
                         pool_pg,
-                        "insert into eadm_crontab(cronname, cronexp, cronmfa,
-\n"
-                        "                        starttime, endtime, createduser, updateduser)
-\n"
+                        "insert into eadm_crontab(cronname, cronexp, cronmfa,\n"
+                        "\n"
+                        "                        starttime, endtime, createduser, updateduser)\n"
+                        "\n"
                         "                    values($1, $2, $3, $4, $5, $6, $7) returning id;",
                         [
                             CronName,
@@ -474,8 +474,8 @@ edit(#{
                 ParameterStartTime = eadm_utils:parse_date_time(StartTime),
                 eadm_pgpool:equery(
                     pool_pg,
-                    "update eadm_crontab set cronname=$1,cronexp=$2,
-\n"
+                    "update eadm_crontab set cronname=$1,cronexp=$2,\n"
+                    "\n"
                     "                  cronmfa=$3,starttime=$4,updateduser=$5,updatedat=now() where id=$6;",
                     [CronName, CronExp, CronModule, ParameterStartTime, LoginName, CronId]
                 );
@@ -484,8 +484,8 @@ edit(#{
                 ParameterEndTime = eadm_utils:parse_date_time(EndTime),
                 eadm_pgpool:equery(
                     pool_pg,
-                    "update eadm_crontab set cronname=$1,cronexp=$2,
-\n"
+                    "update eadm_crontab set cronname=$1,cronexp=$2,\n"
+                    "\n"
                     "                  cronmfa=$3,starttime=$4,endtime=$5,updateduser=$6,updatedat=now() where id=$7;",
                     [
                         CronName,
@@ -568,12 +568,12 @@ delete(#{
         % 然后在数据库中标记为删除
         Result = eadm_pgpool:equery(
             pool_pg,
-            "update eadm_crontab set deleted = true,
-\n"
-            "             updateduser = $1, updatedat = now(),
-\n"
-            "             deleteduser = $1, deletedat = now()
-\n"
+            "update eadm_crontab set deleted = true,\n"
+            "\n"
+            "             updateduser = $1, updatedat = now(),\n"
+            "\n"
+            "             deleteduser = $1, deletedat = now()\n"
+            "\n"
             "             where id = $2;",
             [UpdatedUser, CronId]
         ),
@@ -657,8 +657,8 @@ toggle(#{
         % 更新任务状态
         Result = eadm_pgpool:equery(
             pool_pg,
-            "update eadm_crontab set cronstatus = $1, updateduser = $2, updatedat = now()
-\n"
+            "update eadm_crontab set cronstatus = $1, updateduser = $2, updatedat = now()\n"
+            "\n"
             "             where id = $3 returning cronexp, cronmfa, starttime, endtime;",
             [StatusInt, LoginName, CronId]
         ),

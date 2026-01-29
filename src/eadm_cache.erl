@@ -58,7 +58,7 @@
 get(CacheType, Key) ->
     NormalizedKey = eadm_cache_helper:normalize_key(Key),
     CacheKey = {NormalizedKey, CacheType},
-    
+
     case ets:lookup(?CACHE_TABLE, CacheKey) of
         [{CacheKey, #cache_entry{value = Value, expires_at = ExpiresAt}}] ->
             case eadm_cache_helper:check_expired(ExpiresAt) of
@@ -97,7 +97,7 @@ set(CacheType, Key, Value, TTL) ->
     CacheKey = {NormalizedKey, CacheType},
     Now = erlang:system_time(second),
     ExpiresAt = eadm_cache_helper:calculate_expires_at(TTL),
-    
+
     Entry = #cache_entry{
         key = CacheKey,
         value = Value,
@@ -107,7 +107,7 @@ set(CacheType, Key, Value, TTL) ->
         hit_count = 0,
         last_access = Now
     },
-    
+
     ets:insert(?CACHE_TABLE, {CacheKey, Entry}),
     update_set_count(CacheType),
     ok.
@@ -160,27 +160,31 @@ invalidate_pattern({CacheType, Scope, '_'}) ->
     ],
     AllKeys = ets:select(?CACHE_TABLE, MatchSpec),
     % 过滤出符合Scope的键
-    FilteredKeys = lists:filter(fun(CacheKey) ->
-        case CacheKey of
-            {NormalizedKey, _Type} ->
-                case NormalizedKey of
-                    {S, _} when S =:= Scope -> true;
-                    _ -> false
-                end;
-            _ ->
-                false
-        end
-    end, AllKeys),
+    FilteredKeys = lists:filter(
+        fun(CacheKey) ->
+            case CacheKey of
+                {NormalizedKey, _Type} ->
+                    case NormalizedKey of
+                        {S, _} when S =:= Scope -> true;
+                        _ -> false
+                    end;
+                _ ->
+                    false
+            end
+        end,
+        AllKeys
+    ),
     lists:foreach(fun(CacheKey) -> ets:delete(?CACHE_TABLE, CacheKey) end, FilteredKeys),
     length(FilteredKeys);
 invalidate_pattern({CacheType, Scope, Identifier}) ->
     % 精确匹配失效
     NormalizedKey = eadm_cache_helper:normalize_key(Identifier),
-    Key = case Scope of
-        user -> eadm_cache_helper:make_user_key(CacheType, NormalizedKey);
-        global -> eadm_cache_helper:make_global_key(CacheType);
-        _ -> {CacheType, Scope, NormalizedKey}
-    end,
+    Key =
+        case Scope of
+            user -> eadm_cache_helper:make_user_key(CacheType, NormalizedKey);
+            global -> eadm_cache_helper:make_global_key(CacheType);
+            _ -> {CacheType, Scope, NormalizedKey}
+        end,
     CacheKey = {Key, CacheType},
     case ets:lookup(?CACHE_TABLE, CacheKey) of
         [_] ->
@@ -219,7 +223,13 @@ get_or_set(CacheType, Key, FetchFun, TTL) ->
 %% @doc
 %% 获取或设置缓存（带默认值）
 %% @end
--spec get_or_set(CacheType :: atom(), Key :: any(), FetchFun :: fun(() -> any()), TTL :: integer(), Default :: any()) ->
+-spec get_or_set(
+    CacheType :: atom(),
+    Key :: any(),
+    FetchFun :: fun(() -> any()),
+    TTL :: integer(),
+    Default :: any()
+) ->
     any().
 get_or_set(CacheType, Key, FetchFun, TTL, Default) ->
     case get(CacheType, Key) of
@@ -261,7 +271,8 @@ stats(CacheType) ->
         hit_rate => float(),
         entry_count => integer(),
         memory_size => integer()
-    }} | {error, not_found}.
+    }}
+    | {error, not_found}.
 stats_detail(CacheType) ->
     case stats(CacheType) of
         {ok, #cache_stats{
@@ -273,11 +284,12 @@ stats_detail(CacheType) ->
         }} ->
             % 计算命中率
             Total = Hits + Misses,
-            HitRate = case Total > 0 of
-                true -> (Hits / Total) * 100.0;
-                false -> 0.0
-            end,
-            
+            HitRate =
+                case Total > 0 of
+                    true -> (Hits / Total) * 100.0;
+                    false -> 0.0
+                end,
+
             % 统计该类型的缓存条目数
             MatchSpec = [
                 {
@@ -287,10 +299,12 @@ stats_detail(CacheType) ->
                 }
             ],
             EntryCount = length(ets:select(?CACHE_TABLE, MatchSpec)),
-            
+
             % 估算内存使用（粗略计算）
-            MemorySize = EntryCount * 1024, % 假设每个条目约1KB
-            
+
+            % 假设每个条目约1KB
+            MemorySize = EntryCount * 1024,
+
             {ok, #{
                 cache_type => Type,
                 total_hits => Hits,
@@ -318,41 +332,49 @@ all_stats() ->
 -spec all_stats_detail() -> [#{}].
 all_stats_detail() ->
     AllTypes = [Type || {Type, _} <- ets:tab2list(?STATS_TABLE)],
-    lists:foldl(fun(Type, Acc) ->
-        case stats_detail(Type) of
-            {ok, Detail} -> [Detail | Acc];
-            {error, _} -> Acc
-        end
-    end, [], AllTypes).
+    lists:foldl(
+        fun(Type, Acc) ->
+            case stats_detail(Type) of
+                {ok, Detail} -> [Detail | Acc];
+                {error, _} -> Acc
+            end
+        end,
+        [],
+        AllTypes
+    ).
 
 %% @doc
 %% 获取缓存总体信息（所有类型的汇总）
 %% @end
--spec cache_info() -> #{
-    total_entries => integer(),
-    total_memory => integer(),
-    cache_types => integer(),
-    overall_hit_rate => float()
-}.
+-spec cache_info() ->
+    #{
+        total_entries => integer(),
+        total_memory => integer(),
+        cache_types => integer(),
+        overall_hit_rate => float()
+    }.
 cache_info() ->
     % 获取所有缓存条目
     TotalEntries = ets:info(?CACHE_TABLE, size),
-    
+
     % 获取所有统计信息
     AllStats = all_stats(),
     TotalHits = lists:sum([S#cache_stats.total_hits || S <- AllStats]),
     TotalMisses = lists:sum([S#cache_stats.total_misses || S <- AllStats]),
-    
+
     % 计算总体命中率
     TotalRequests = TotalHits + TotalMisses,
-    OverallHitRate = case TotalRequests > 0 of
-        true -> (TotalHits / TotalRequests) * 100.0;
-        false -> 0.0
-    end,
-    
+    OverallHitRate =
+        case TotalRequests > 0 of
+            true -> (TotalHits / TotalRequests) * 100.0;
+            false -> 0.0
+        end,
+
     % 估算总内存使用
-    TotalMemory = TotalEntries * 1024, % 假设每个条目约1KB
-    
+
+    % 假设每个条目约1KB
+    TotalMemory = TotalEntries * 1024,
+
     #{
         total_entries => TotalEntries,
         total_memory => TotalMemory,
@@ -366,9 +388,12 @@ cache_info() ->
 %% @end
 -spec mget(Keys :: [{atom(), any()}]) -> [{ok, any()} | {error, not_found | expired}].
 mget(Keys) ->
-    lists:map(fun({CacheType, Key}) ->
-        get(CacheType, Key)
-    end, Keys).
+    lists:map(
+        fun({CacheType, Key}) ->
+            get(CacheType, Key)
+        end,
+        Keys
+    ).
 
 %% @doc
 %% 批量设置缓存值
@@ -376,9 +401,12 @@ mget(Keys) ->
 %% @end
 -spec mset(Entries :: [{atom(), any(), any(), integer()}]) -> ok.
 mset(Entries) ->
-    lists:foreach(fun({CacheType, Key, Value, TTL}) ->
-        set(CacheType, Key, Value, TTL)
-    end, Entries),
+    lists:foreach(
+        fun({CacheType, Key, Value, TTL}) ->
+            set(CacheType, Key, Value, TTL)
+        end,
+        Entries
+    ),
     ok.
 
 %% @doc
@@ -387,9 +415,12 @@ mset(Entries) ->
 %% @end
 -spec mdelete(Keys :: [{atom(), any()}]) -> ok.
 mdelete(Keys) ->
-    lists:foreach(fun({CacheType, Key}) ->
-        delete(CacheType, Key)
-    end, Keys),
+    lists:foreach(
+        fun({CacheType, Key}) ->
+            delete(CacheType, Key)
+        end,
+        Keys
+    ),
     ok.
 
 %%%===================================================================
@@ -413,21 +444,23 @@ update_access_time(CacheKey) ->
 update_hit_count(CacheType, Hit) ->
     case ets:lookup(?STATS_TABLE, CacheType) of
         [{CacheType, Stats}] ->
-            NewStats = case Hit of
-                true ->
-                    Stats#cache_stats{total_hits = Stats#cache_stats.total_hits + 1};
-                false ->
-                    Stats#cache_stats{total_misses = Stats#cache_stats.total_misses + 1}
-            end,
+            NewStats =
+                case Hit of
+                    true ->
+                        Stats#cache_stats{total_hits = Stats#cache_stats.total_hits + 1};
+                    false ->
+                        Stats#cache_stats{total_misses = Stats#cache_stats.total_misses + 1}
+                end,
             ets:insert(?STATS_TABLE, {CacheType, NewStats});
         [] ->
             % 创建新的统计记录
-            NewStats = case Hit of
-                true ->
-                    #cache_stats{cache_type = CacheType, total_hits = 1, total_misses = 0};
-                false ->
-                    #cache_stats{cache_type = CacheType, total_hits = 0, total_misses = 1}
-            end,
+            NewStats =
+                case Hit of
+                    true ->
+                        #cache_stats{cache_type = CacheType, total_hits = 1, total_misses = 0};
+                    false ->
+                        #cache_stats{cache_type = CacheType, total_hits = 0, total_misses = 1}
+                end,
             ets:insert(?STATS_TABLE, {CacheType, NewStats})
     end.
 

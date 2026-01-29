@@ -27,7 +27,9 @@
 %%%===================================================================
 %%% 宏定义
 %%%===================================================================
--define(DEFAULT_TTL_QUERY, 300). % 默认查询缓存TTL：5分钟
+
+% 默认查询缓存TTL：5分钟
+-define(DEFAULT_TTL_QUERY, 300).
 
 %%%===================================================================
 %%% API 函数
@@ -54,7 +56,9 @@ equery(PoolName, Sql, Params, TTL) ->
 %% @doc
 %% 执行参数化SQL查询（带缓存，使用默认TTL和自动生成的缓存键）
 %% @end
--spec equery_cached(PoolName :: atom(), Sql :: epgsql:sql_query(), Params :: list(), TTL :: integer()) ->
+-spec equery_cached(
+    PoolName :: atom(), Sql :: epgsql:sql_query(), Params :: list(), TTL :: integer()
+) ->
     epgsql:reply(epgsql:equery_row()) | {error, Reason :: any()}.
 equery_cached(PoolName, Sql, Params, TTL) ->
     equery_cached(PoolName, Sql, Params, TTL, undefined).
@@ -79,16 +83,17 @@ equery_cached(PoolName, Sql, Params, TTL, CacheKey) ->
             eadm_pgpool:equery(PoolName, Sql, Params);
         false ->
             % 读操作，使用缓存
-            FinalCacheKey = case CacheKey of
-                undefined ->
-                    % 基于SQL和参数生成缓存键
-                    {pg_query, PoolName, erlang:phash2({Sql, Params})};
-                _ ->
-                    {pg_query, PoolName, CacheKey}
-            end,
-            
+            FinalCacheKey =
+                case CacheKey of
+                    undefined ->
+                        % 基于SQL和参数生成缓存键
+                        {pg_query, PoolName, erlang:phash2({Sql, Params})};
+                    _ ->
+                        {pg_query, PoolName, CacheKey}
+                end,
+
             CacheType = pg_query,
-            
+
             case eadm_cache:get(CacheType, FinalCacheKey) of
                 {ok, CachedResult} ->
                     CachedResult;

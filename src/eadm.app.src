@@ -13,7 +13,7 @@
         poolboy,
         lager,
         ecron,
-        emqttc
+        emqtt
     ]},
     {env, []},
     {modules, []},

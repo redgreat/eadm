@@ -44,14 +44,14 @@ search(#{
         % 使用缓存包装器，TTL 5分钟
         {ok, Columns, ResData} = eadm_pgpool_cached:equery_cached(
             pool_pg,
-            "select deviceno, imei, simno, remark, enable, createdat
-\n"
-            "            from eadm_device
-\n"
-            "            where deviceno like $1
-\n"
-            "              and deleted is false
-\n"
+            "select deviceno, imei, simno, remark, enable, createdat\n"
+            "\n"
+            "            from eadm_device\n"
+            "\n"
+            "            where deviceno like $1\n"
+            "\n"
+            "              and deleted is false\n"
+            "\n"
             "            order by createdat desc;",
             [<<"%", DeviceNo/binary, "%">>],
             300,
@@ -74,12 +74,12 @@ search(#{
         % 使用缓存包装器，TTL 5分钟
         {ok, Columns, ResData} = eadm_pgpool_cached:equery_cached(
             pool_pg,
-            "select deviceno, imei, simno, remark, enable, createdat
-\n"
-            "            from eadm_device
-\n"
-            "            where deleted is false
-\n"
+            "select deviceno, imei, simno, remark, enable, createdat\n"
+            "\n"
+            "            from eadm_device\n"
+            "\n"
+            "            where deleted is false\n"
+            "\n"
             "            order by createdat desc;",
             [],
             300,
@@ -122,8 +122,8 @@ add(#{
                 % 使用匹配任意返回值的模式，因为插入操作可能返回 {ok, RowCount} 或 {ok, _, _}
                 {ok, _} = eadm_pgpool:equery(
                     pool_pg,
-                    "insert into eadm_device(deviceno, imei, simno, remark, createduser, updateduser)
-\n"
+                    "insert into eadm_device(deviceno, imei, simno, remark, createduser, updateduser)\n"
+                    "\n"
                     "                    values($1, $2, $3, $4, $5, $6);",
                     [DeviceNo, Imei, SimNo, Remark, LoginName, LoginName]
                 ),
@@ -172,8 +172,8 @@ edit(#{
                 % 使用匹配任意返回值的模式，因为更新操作可能返回 {ok, RowCount} 或 {ok, _, _}
                 {ok, _} = eadm_pgpool:equery(
                     pool_pg,
-                    "update eadm_device set imei = $1, simno = $2, remark = $3, enable = $4, updateduser = $5
-\n"
+                    "update eadm_device set imei = $1, simno = $2, remark = $3, enable = $4, updateduser = $5\n"
+                    "\n"
                     "                    where deviceno = $6 and deleted is false;",
                     [Imei, SimNo, Remark, Enable, LoginName, DeviceNo]
                 ),
@@ -216,8 +216,8 @@ delete(#{
                 % 使用匹配任意返回值的模式，因为更新操作可能返回 {ok, RowCount} 或 {ok, _, _}
                 {ok, _} = eadm_pgpool:equery(
                     pool_pg,
-                    "update eadm_device set deleted = true, deleteduser = $1, deletedat = current_timestamp
-\n"
+                    "update eadm_device set deleted = true, deleteduser = $1, deletedat = current_timestamp\n"
+                    "\n"
                     "                    where deviceno = $2 and deleted is false;",
                     [LoginName, DeviceNo]
                 ),
@@ -262,8 +262,8 @@ toggle_status(#{
                 case
                     eadm_pgpool:equery(
                         pool_pg,
-                        "update eadm_device set enable = $1, updateduser = $2, updatedat = current_timestamp
-\n"
+                        "update eadm_device set enable = $1, updateduser = $2, updatedat = current_timestamp\n"
+                        "\n"
                         "                    where deviceno = $3 and deleted is false;",
                         [NewStatus, LoginName, DeviceNo]
                     )
@@ -334,8 +334,8 @@ assign(#{
         % 检查设备是否已分配给该用户
         {ok, _, ExistData} = eadm_pgpool:equery(
             pool_pg,
-            "select count(*) from eadm_userdevice
-\n"
+            "select count(*) from eadm_userdevice\n"
+            "\n"
             "            where deviceno = $1 and userid = $2 and loginname = $3 and deleted is false;",
             [DeviceNo, UserId, UserLoginName]
         ),
@@ -345,8 +345,8 @@ assign(#{
                 % 使用匹配任意返回值的模式，因为插入操作可能返回 {ok, RowCount} 或 {ok, _, _}
                 {ok, _} = eadm_pgpool:equery(
                     pool_pg,
-                    "insert into eadm_userdevice(userid, loginname, deviceno, createduser, updateduser)
-\n"
+                    "insert into eadm_userdevice(userid, loginname, deviceno, createduser, updateduser)\n"
+                    "\n"
                     "                    values($1, $2, $3, $4, $5);",
                     [UserId, UserLoginName, DeviceNo, LoginName, LoginName]
                 ),
@@ -404,8 +404,8 @@ unassign(#{
                 % 使用匹配任意返回值的模式，因为更新操作可能返回 {ok, RowCount} 或 {ok, _, _}
                 {ok, _} = eadm_pgpool:equery(
                     pool_pg,
-                    "update eadm_userdevice set deleted = true, deleteduser = $1, deletedat = current_timestamp
-\n"
+                    "update eadm_userdevice set deleted = true, deleteduser = $1, deletedat = current_timestamp\n"
+                    "\n"
                     "                    where id = $2 and deleted is false;",
                     [LoginName, IdInt]
                 ),
@@ -440,14 +440,14 @@ device_users(#{
     try
         {ok, Columns, ResData} = eadm_pgpool:equery(
             pool_pg,
-            "select ud.id, ud.userid, ud.loginname, u.username
-\n"
-            "            from eadm_userdevice ud
-\n"
-            "            join eadm_user u on ud.userid = u.id and ud.loginname = u.loginname
-\n"
-            "            where ud.deviceno = $1 and ud.deleted is false
-\n"
+            "select ud.id, ud.userid, ud.loginname, u.username\n"
+            "\n"
+            "            from eadm_userdevice ud\n"
+            "\n"
+            "            join eadm_user u on ud.userid = u.id and ud.loginname = u.loginname\n"
+            "\n"
+            "            where ud.deviceno = $1 and ud.deleted is false\n"
+            "\n"
             "            order by ud.createdat desc;",
             [DeviceNo]
         ),
@@ -475,20 +475,20 @@ user_devices(#{
     try
         {ok, Columns, ResData} = eadm_pgpool:equery(
             pool_pg,
-            "select d.deviceno, d.imei, d.remark
-\n"
-            "            from eadm_device d
-\n"
-            "            join eadm_userdevice ud on d.deviceno = ud.deviceno
-\n"
-            "            where ud.loginname = $1
-\n"
-            "              and ud.deleted is false
-\n"
-            "              and d.deleted is false
-\n"
-            "              and d.enable is true
-\n"
+            "select d.deviceno, d.imei, d.remark\n"
+            "\n"
+            "            from eadm_device d\n"
+            "\n"
+            "            join eadm_userdevice ud on d.deviceno = ud.deviceno\n"
+            "\n"
+            "            where ud.loginname = $1\n"
+            "\n"
+            "              and ud.deleted is false\n"
+            "\n"
+            "              and d.deleted is false\n"
+            "\n"
+            "              and d.enable is true\n"
+            "\n"
             "            order by d.createdat desc;",
             [LoginName]
         ),

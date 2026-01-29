@@ -26,7 +26,7 @@
                 {username, "user_eadm"},
                 {password, "iyS62bvt"}
             ]}
-        ]
+        ]}
     ]
 },
 {emqx, #{
@@ -34,6 +34,22 @@
     port => 8883,
     username => "user_eadm",
     password => "Mm19890425",
-    topic => "/tracker/864269060008576/up/stat"
-}}
-].
+    client_id_prefix => "eadm_",
+    keepalive => 60,
+    clean_start => true,
+    topics => [
+        <<"/tracker/864269060008576/up/stat">>,
+        <<"devices/+/data">>,
+        <<"devices/+/status">>
+    ]
+}},
+{tdengine, #{
+    host => "localhost",
+    port => 6041,
+    username => "root",
+    password => "taosdata",
+    database => "eadm_iot",
+    rest_api => true,
+    connect_timeout => 5000,
+    request_timeout => 3000
+}}].

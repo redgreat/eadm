@@ -432,7 +432,7 @@ table_info(Table) ->
 
 %% @private
 %% 创建单个表
-create_table(TableName, RecordFields, Options) ->
+create_table(TableName, _RecordFields, Options) ->
     case mnesia:create_table(TableName, Options) of
         {atomic, ok} ->
             lager:info("表 ~p 创建成功", [TableName]),
@@ -446,7 +446,7 @@ create_table(TableName, RecordFields, Options) ->
     end.
 
 %% @private
-%% 生成ID
+%% 生成ID（未使用，保留备用）
 generate_id(Prefix, Seq) ->
     SeqStr = integer_to_list(Seq),
     Padded = string:pad(SeqStr, 10, leading, $0),

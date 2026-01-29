@@ -65,11 +65,11 @@ search(#{
         <<"loginname">> := LoginName,
         <<"permission">> := Permission
     }
-}) ->   
+}) ->
     case maps:get(<<"sports">>, Permission, false) of
         true ->
             UserId = get_user_id_from_loginname(LoginName),
-            
+
             SQL =
                 <<
                     "SELECT garminemail, lastsynctime, syncenable, autosync, syncdays\n"
@@ -143,24 +143,24 @@ link_garmin(#{req := Req}) ->
             %% 保存到数据库
             SQL =
                 <<
-                    "INSERT INTO sp_garminconf 
-\n"
-                    "                    (userid, garminemail, oauth1token, oauth2token, syncenable, autosync)
-\n"
-                    "                    VALUES ($1, $2, $3, $4, true, true)
-\n"
-                    "                    ON CONFLICT (userid) 
-\n"
-                    "                    DO UPDATE SET 
-\n"
-                    "                        garminemail = EXCLUDED.garminemail,
-\n"
-                    "                        oauth1token = EXCLUDED.oauth1token,
-\n"
-                    "                        oauth2token = EXCLUDED.oauth2token,
-\n"
-                    "                        syncenable = true,
-\n"
+                    "INSERT INTO sp_garminconf \n"
+                    "\n"
+                    "                    (userid, garminemail, oauth1token, oauth2token, syncenable, autosync)\n"
+                    "\n"
+                    "                    VALUES ($1, $2, $3, $4, true, true)\n"
+                    "\n"
+                    "                    ON CONFLICT (userid) \n"
+                    "\n"
+                    "                    DO UPDATE SET \n"
+                    "\n"
+                    "                        garminemail = EXCLUDED.garminemail,\n"
+                    "\n"
+                    "                        oauth1token = EXCLUDED.oauth1token,\n"
+                    "\n"
+                    "                        oauth2token = EXCLUDED.oauth2token,\n"
+                    "\n"
+                    "                        syncenable = true,\n"
+                    "\n"
                     "                        updatedat = CURRENT_TIMESTAMP"
                 >>,
 
@@ -227,10 +227,10 @@ garmin_status(#{req := Req} = _Params) ->
 
     SQL =
         <<
-            "SELECT garminemail, lastsynctime, syncenable, autosync, syncdays
-\n"
-            "            FROM sp_garminconf 
-\n"
+            "SELECT garminemail, lastsynctime, syncenable, autosync, syncdays\n"
+            "\n"
+            "            FROM sp_garminconf \n"
+            "\n"
             "            WHERE userid = $1"
         >>,
 
@@ -282,12 +282,12 @@ update_sync_config(#{req := Req} = _Params) ->
 
     SQL =
         <<
-            "UPDATE sp_garminconf 
-\n"
-            "            SET syncenable = $1, autosync = $2, syncdays = $3, updatedat = CURRENT_TIMESTAMP
-\n"
-            "            WHERE userid = $4 
-\n"
+            "UPDATE sp_garminconf \n"
+            "\n"
+            "            SET syncenable = $1, autosync = $2, syncdays = $3, updatedat = CURRENT_TIMESTAMP\n"
+            "\n"
+            "            WHERE userid = $4 \n"
+            "\n"
             "            RETURNING id"
         >>,
 
@@ -335,19 +335,21 @@ update_share_config(#{req := Req} = _Params) ->
 
     SQL =
         <<
-            "UPDATE sp_activity 
-\n"
-            "            SET ispublic = $1, hidemap = $2, hidestats = $3, hidelocation = $4,
-\n"
-            "                updatedat = CURRENT_TIMESTAMP
-\n"
-            "            WHERE id = $5 AND userid = $6 
-\n"
+            "UPDATE sp_activity \n"
+            "\n"
+            "            SET ispublic = $1, hidemap = $2, hidestats = $3, hidelocation = $4,\n"
+            "\n"
+            "                updatedat = CURRENT_TIMESTAMP\n"
+            "\n"
+            "            WHERE id = $5 AND userid = $6 \n"
+            "\n"
             "            RETURNING sharetoken"
         >>,
 
     case
-        eadm_pgpool:equery(pool_pg, SQL, [IsPublic, HideMap, HideStats, HideLocation, ActivityId, UserId])
+        eadm_pgpool:equery(pool_pg, SQL, [
+            IsPublic, HideMap, HideStats, HideLocation, ActivityId, UserId
+        ])
     of
         {ok, _, [{ShareToken}]} ->
             {json, #{
@@ -379,16 +381,16 @@ sync_history(#{req := Req} = _Params) ->
 
     SQL =
         <<
-            "SELECT starttime, endtime, synccount, 
-\n"
-            "                   newcount, syncstatus, errmsg
-\n"
-            "            FROM sp_garminlog 
-\n"
-            "            WHERE userid = $1 
-\n"
-            "            ORDER BY starttime DESC 
-\n"
+            "SELECT starttime, endtime, synccount, \n"
+            "\n"
+            "                   newcount, syncstatus, errmsg\n"
+            "\n"
+            "            FROM sp_garminlog \n"
+            "\n"
+            "            WHERE userid = $1 \n"
+            "\n"
+            "            ORDER BY starttime DESC \n"
+            "\n"
             "            LIMIT 20"
         >>,
 
@@ -508,8 +510,9 @@ get_user_id_from_req(Req) ->
     %% 从session或token中获取用户ID，这里需要根据实际的认证机制来实现
     %% 暂时返回一个默认值，实际使用时需要替换为真实的用户ID获取逻辑
     case cowboy_req:header(<<"authorization">>, Req) of
-        undefined -> <<"default_user">>;
-        _Token -> 
+        undefined ->
+            <<"default_user">>;
+        _Token ->
             %% 这里需要解析token获取用户ID
             <<"default_user">>
     end.

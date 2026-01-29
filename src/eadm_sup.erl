@@ -45,6 +45,12 @@ start_link() ->
 %% @end
 init([]) ->
     Pools = application:get_env(epgsql, pools, []),
+    case Pools of
+        [] ->
+            lager:warning("PG pools config is empty");
+        _ ->
+            lager:info("PG pools config loaded: ~p", [Pools])
+    end,
     %% lager:info("数据库连接参数：~p~n", [Pools]),
     PoolSpec = lists:map(
         fun({PoolName, SizeArgs, WorkerArgs}) ->
@@ -57,7 +63,7 @@ init([]) ->
         end,
         Pools
     ),
-    
+
     % 添加缓存管理器子进程
     CacheManagerSpec = {
         eadm_cache_manager,
@@ -67,7 +73,7 @@ init([]) ->
         worker,
         [eadm_cache_manager]
     },
-    
+
     % 添加EMQX同步服务
     EmqxSyncServiceSpec = {
         emqx_sync_service,
@@ -77,7 +83,7 @@ init([]) ->
         worker,
         [emqx_sync_service]
     },
-    
+
     {ok, {{one_for_one, 10, 10}, [CacheManagerSpec, EmqxSyncServiceSpec | PoolSpec]}}.
 
 %% @doc

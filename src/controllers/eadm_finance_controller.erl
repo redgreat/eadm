@@ -86,16 +86,16 @@ search(#{
                             {0, 0} ->
                                 {ok, ResCol, ResData} = eadm_pgpool:equery(
                                     pool_pg,
-                                    "select id, sourcetype, inorout, tradetype, amount, tradetime
-\n"
-                                    "                                    from fn_paybilldetail
-\n"
-                                    "                                    where tradetime >= $1
-\n"
-                                    "                                      and tradetime < $2
-\n"
-                                    "                                      and deleted is false
-\n"
+                                    "select id, sourcetype, inorout, tradetype, amount, tradetime\n"
+                                    "\n"
+                                    "                                    from fn_paybilldetail\n"
+                                    "\n"
+                                    "                                    where tradetime >= $1\n"
+                                    "\n"
+                                    "                                      and tradetime < $2\n"
+                                    "\n"
+                                    "                                      and deleted is false\n"
+                                    "\n"
                                     "                                    order by tradetime;",
                                     [ParameterStartTime, ParameterEndTime]
                                 ),
@@ -103,18 +103,18 @@ search(#{
                             {0, _} ->
                                 {ok, ResCol, ResData} = eadm_pgpool:equery(
                                     pool_pg,
-                                    "select id, sourcetype, inorout, tradetype, amount, tradetime
-\n"
-                                    "                                    from fn_paybilldetail
-\n"
-                                    "                                    where tradetime >= $1
-\n"
-                                    "                                      and tradetime < $2
-\n"
-                                    "                                      and inorout = $3
-\n"
-                                    "                                      and deleted is false
-\n"
+                                    "select id, sourcetype, inorout, tradetype, amount, tradetime\n"
+                                    "\n"
+                                    "                                    from fn_paybilldetail\n"
+                                    "\n"
+                                    "                                    where tradetime >= $1\n"
+                                    "\n"
+                                    "                                      and tradetime < $2\n"
+                                    "\n"
+                                    "                                      and inorout = $3\n"
+                                    "\n"
+                                    "                                      and deleted is false\n"
+                                    "\n"
                                     "                                    order by tradetime;",
                                     [ParameterStartTime, ParameterEndTime, ParameterInOrOut]
                                 ),
@@ -122,18 +122,18 @@ search(#{
                             {_, 0} ->
                                 {ok, ResCol, ResData} = eadm_pgpool:equery(
                                     pool_pg,
-                                    "select id, sourcetype, inorout, tradetype, amount, tradetime
-\n"
-                                    "                                    from fn_paybilldetail
-\n"
-                                    "                                    where tradetime >= $1
-\n"
-                                    "                                      and tradetime < $2
-\n"
-                                    "                                      and sourcetype = $3
-\n"
-                                    "                                      and deleted is false
-\n"
+                                    "select id, sourcetype, inorout, tradetype, amount, tradetime\n"
+                                    "\n"
+                                    "                                    from fn_paybilldetail\n"
+                                    "\n"
+                                    "                                    where tradetime >= $1\n"
+                                    "\n"
+                                    "                                      and tradetime < $2\n"
+                                    "\n"
+                                    "                                      and sourcetype = $3\n"
+                                    "\n"
+                                    "                                      and deleted is false\n"
+                                    "\n"
                                     "                                    order by tradetime;",
                                     [ParameterStartTime, ParameterEndTime, ParameterSourceType]
                                 ),
@@ -141,20 +141,20 @@ search(#{
                             _ ->
                                 {ok, ResCol, ResData} = eadm_pgpool:equery(
                                     pool_pg,
-                                    "select id, sourcetype, inorout, tradetype, amount, tradetime
-\n"
-                                    "                                    from fn_paybilldetail
-\n"
-                                    "                                    where tradetime >= $1
-\n"
-                                    "                                      and tradetime < $2
-\n"
-                                    "                                      and sourcetype = $3
-\n"
-                                    "                                      and inorout = $4
-\n"
-                                    "                                      and deleted is false
-\n"
+                                    "select id, sourcetype, inorout, tradetype, amount, tradetime\n"
+                                    "\n"
+                                    "                                    from fn_paybilldetail\n"
+                                    "\n"
+                                    "                                    where tradetime >= $1\n"
+                                    "\n"
+                                    "                                      and tradetime < $2\n"
+                                    "\n"
+                                    "                                      and sourcetype = $3\n"
+                                    "\n"
+                                    "                                      and inorout = $4\n"
+                                    "\n"
+                                    "                                      and deleted is false\n"
+                                    "\n"
                                     "                                    order by tradetime;",
                                     [
                                         ParameterStartTime,
@@ -194,14 +194,14 @@ delete(#{
     try
         eadm_pgpool:equery(
             pool_pg,
-            "update fn_paybilldetail
-\n"
-            "                                      set deleteduser = $1,
-\n"
-            "                                      deletedat = current_timestamp,
-\n"
-            "                                      deleted = true
-\n"
+            "update fn_paybilldetail\n"
+            "\n"
+            "                                      set deleteduser = $1,\n"
+            "\n"
+            "                                      deletedat = current_timestamp,\n"
+            "\n"
+            "                                      deleted = true\n"
+            "\n"
             "                                      where id = $2;",
             [LoginName, ParameterDetailId]
         ),
@@ -229,16 +229,16 @@ searchdetail(#{
     try
         {ok, ResCol, ResData} = eadm_pgpool:equery(
             pool_pg,
-            "select owner, sourcetype, inorout, counterparty, counterbank, counteraccount,
-\n"
-            "               goodscomment, paymethod, amount, balance, currency, paystatus,
-\n"
-            "               tradetype, tradeorderno, counterorderno, tradetime, billcomment
-\n"
-            "             from fn_paybilldetail
-\n"
-            "             where deleted is false
-\n"
+            "select owner, sourcetype, inorout, counterparty, counterbank, counteraccount,\n"
+            "\n"
+            "               goodscomment, paymethod, amount, balance, currency, paystatus,\n"
+            "\n"
+            "               tradetype, tradeorderno, counterorderno, tradetime, billcomment\n"
+            "\n"
+            "             from fn_paybilldetail\n"
+            "\n"
+            "             where deleted is false\n"
+            "\n"
             "               and id = $1;",
             [erlang:binary_to_integer(DetailId)]
         ),
@@ -270,12 +270,12 @@ upload(#{
                     try
                         eadm_pgpool:equery(
                             pool_pg,
-                            "insert into fn_paybilldetail(owner, sourcetype, inorout, counterparty, counterbank,
-\n"
-                            "                             counteraccount, goodscomment, paymethod, amount, balance, currency, paystatus,
-\n"
-                            "                             tradetype, tradeorderno, counterorderno, tradetime, billcomment)
-\n"
+                            "insert into fn_paybilldetail(owner, sourcetype, inorout, counterparty, counterbank,\n"
+                            "\n"
+                            "                             counteraccount, goodscomment, paymethod, amount, balance, currency, paystatus,\n"
+                            "\n"
+                            "                             tradetype, tradeorderno, counterorderno, tradetime, billcomment)\n"
+                            "\n"
                             "                            values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17);",
                             [
                                 maps:get(<<"Owner">>, Map, null),
@@ -322,10 +322,10 @@ upload(#{
                     try
                         eadm_pgpool:equery(
                             pool_pg,
-                            "insert into fn_paybilldetail(owner, sourcetype, tradetime, tradetype, counterparty, goodscomment,
-\n"
-                            "                            inorout, amount, paymethod, paystatus, tradeorderno, counterorderno, billcomment)
-\n"
+                            "insert into fn_paybilldetail(owner, sourcetype, tradetime, tradetype, counterparty, goodscomment,\n"
+                            "\n"
+                            "                            inorout, amount, paymethod, paystatus, tradeorderno, counterorderno, billcomment)\n"
+                            "\n"
                             "                            values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13);",
                             [
                                 maps:get(<<"Owner">>, Map, null),
@@ -368,10 +368,10 @@ upload(#{
                     try
                         eadm_pgpool:equery(
                             pool_pg,
-                            "insert into fn_paybilldetail(owner, sourcetype, tradeorderno, counterorderno, tradetime,
-\n"
-                            "                            paymethod, counterparty, goodscomment, amount, inorout, paystatus, billcomment)
-\n"
+                            "insert into fn_paybilldetail(owner, sourcetype, tradeorderno, counterorderno, tradetime,\n"
+                            "\n"
+                            "                            paymethod, counterparty, goodscomment, amount, inorout, paystatus, billcomment)\n"
+                            "\n"
                             "                            values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12);",
                             [
                                 maps:get(<<"Owner">>, Map, null),
@@ -420,10 +420,10 @@ upload(#{
                     try
                         eadm_pgpool:equery(
                             pool_pg,
-                            "insert into fn_paybilldetail(owner, sourcetype, tradetime, counterparty,
-\n"
-                            "                            counterbank, counteraccount, goodscomment, amount, balance, inorout)
-\n"
+                            "insert into fn_paybilldetail(owner, sourcetype, tradetime, counterparty,\n"
+                            "\n"
+                            "                            counterbank, counteraccount, goodscomment, amount, balance, inorout)\n"
+                            "\n"
                             "                            values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10);",
                             [
                                 maps:get(<<"Owner">>, Map, null),

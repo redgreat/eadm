@@ -286,7 +286,7 @@ run_user_sync(UserId) ->
 
 %%--------------------------------------------------------------------
 %% @private
-%% @doc 计算下次运行时间
+%% @doc 计算下次运行时间（未使用，保留备用）
 %%--------------------------------------------------------------------
 calculate_next_run_time(_Hour) ->
     {{1970, 1, 1}, {0, 0, 0}}.
@@ -298,7 +298,8 @@ calculate_next_run_time(_Hour) ->
 schedule_all_auto_sync_users() ->
     SQL =
         <<
-            "SELECT userid FROM sp_garminconf \n"
+            "SELECT userid FROM sp_garminconf \n"
+            "\n"
             "            WHERE syncenable = true AND autosync = true"
         >>,
 
@@ -338,9 +339,12 @@ get_user_sync_days(UserId) ->
 log_sync_start(UserId) ->
     SQL =
         <<
-            "INSERT INTO sp_garminlog \n"
-            "            (userid, starttime, syncstatus)\n"
-            "            VALUES ($1, CURRENT_TIMESTAMP, 'running')\n"
+            "INSERT INTO sp_garminlog \n"
+            "\n"
+            "            (userid, starttime, syncstatus)\n"
+            "\n"
+            "            VALUES ($1, CURRENT_TIMESTAMP, 'running')\n"
+            "\n"
             "            RETURNING id"
         >>,
 
@@ -359,11 +363,16 @@ log_sync_start(UserId) ->
 log_sync_complete(LogId, Stats) ->
     SQL =
         <<
-            "UPDATE sp_garminlog \n"
-            "            SET endtime = CURRENT_TIMESTAMP,\n"
-            "                synccount = $1,\n"
-            "                newcount = $2,\n"
-            "                syncstatus = 'success'\n"
+            "UPDATE sp_garminlog \n"
+            "\n"
+            "            SET endtime = CURRENT_TIMESTAMP,\n"
+            "\n"
+            "                synccount = $1,\n"
+            "\n"
+            "                newcount = $2,\n"
+            "\n"
+            "                syncstatus = 'success'\n"
+            "\n"
             "            WHERE id = $3"
         >>,
 
@@ -380,10 +389,14 @@ log_sync_complete(LogId, Stats) ->
 log_sync_failed(LogId, Reason) ->
     SQL =
         <<
-            "UPDATE sp_garminlog \n"
-            "            SET endtime = CURRENT_TIMESTAMP,\n"
-            "                syncstatus = 'failed',\n"
-            "                errmsg = $1\n"
+            "UPDATE sp_garminlog \n"
+            "\n"
+            "            SET endtime = CURRENT_TIMESTAMP,\n"
+            "\n"
+            "                syncstatus = 'failed',\n"
+            "\n"
+            "                errmsg = $1\n"
+            "\n"
             "            WHERE id = $2"
         >>,
 

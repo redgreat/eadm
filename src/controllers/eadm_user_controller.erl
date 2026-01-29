@@ -327,10 +327,11 @@ delete(#{
 }) ->
     try
         % 先读取用户信息，用于失效缓存
-        DeletedLoginName = case eadm_mnesia_api_cached:read(eadm_user, UserId) of
-            [#eadm_user{loginname = LName}] -> LName;
-            _ -> <<>>
-        end,
+        DeletedLoginName =
+            case eadm_mnesia_api_cached:read(eadm_user, UserId) of
+                [#eadm_user{loginname = LName}] -> LName;
+                _ -> <<>>
+            end,
         ok = eadm_mnesia_api_cached:update(eadm_user, UserId, fun(U) ->
             U#eadm_user{
                 deleted = true,
@@ -368,10 +369,10 @@ userrole(#{
     try
         {ok, ResCol, ResData} = eadm_pgpool:equery(
             pool_pg,
-            "select id, rolename, updatedat
-\n"
-            "            from vi_userrole
-\n"
+            "select id, rolename, updatedat\n"
+            "\n"
+            "            from vi_userrole\n"
+            "\n"
             "            where userid = $1;",
             [UserId]
         ),
@@ -436,14 +437,14 @@ userroledel(#{
     try
         eadm_pgpool:equery(
             pool_pg,
-            "update eadm_userrole
-\n"
-            "                                  set deleteduser = $1,
-\n"
-            "                                  deletedat = current_timestamp,
-\n"
-            "                                  deleted = true
-\n"
+            "update eadm_userrole\n"
+            "\n"
+            "                                  set deleteduser = $1,\n"
+            "\n"
+            "                                  deletedat = current_timestamp,\n"
+            "\n"
+            "                                  deleted = true\n"
+            "\n"
             "                                  where id = $2;",
             [LoginName, erlang:binary_to_integer(UserRoleId)]
         ),
@@ -597,34 +598,37 @@ get_permission(LoginName) ->
     % 使用缓存包装器，TTL 30分钟
     CacheType = user_permission,
     CacheKey = LoginName,
-    TTL = 1800, % 30分钟
-    
+    % 30分钟
+    TTL = 1800,
+
     eadm_cache:get_or_set(
         CacheType,
         CacheKey,
         fun() ->
-    try
+            try
                 case eadm_mnesia_api_cached:find_by_field(eadm_user, loginname, LoginName, 1800) of
-            [#eadm_user{id = UserId}] ->
-                        UserRoles = eadm_mnesia_api_cached:find_by_field(eadm_userrole, userid, UserId, 1800),
-                case UserRoles of
-                    [] ->
-                        #{<<"data">> => #{}};
-                    [#eadm_userrole{roleid = RoleId} | _] ->
+                    [#eadm_user{id = UserId}] ->
+                        UserRoles = eadm_mnesia_api_cached:find_by_field(
+                            eadm_userrole, userid, UserId, 1800
+                        ),
+                        case UserRoles of
+                            [] ->
+                                #{<<"data">> => #{}};
+                            [#eadm_userrole{roleid = RoleId} | _] ->
                                 case eadm_mnesia_api_cached:read(eadm_role, RoleId, 1800) of
-                            [#eadm_role{rolepermission = Permission, rolestatus = 0}] ->
-                                #{<<"data">> => Permission};
-                            _ ->
-                                #{<<"data">> => #{}}
-                        end
-                end;
-            [] ->
-                #{<<"data">> => #{}}
-        end
-    catch
-        _:Error ->
-            lager:error("用户权限获取失败：~p~n", [Error]),
-            #{<<"data">> => #{}}
+                                    [#eadm_role{rolepermission = Permission, rolestatus = 0}] ->
+                                        #{<<"data">> => Permission};
+                                    _ ->
+                                        #{<<"data">> => #{}}
+                                end
+                        end;
+                    [] ->
+                        #{<<"data">> => #{}}
+                end
+            catch
+                _:Error ->
+                    lager:error("用户权限获取失败：~p~n", [Error]),
+                    #{<<"data">> => #{}}
             end
         end,
         TTL

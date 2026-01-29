@@ -32,9 +32,13 @@
 %%%===================================================================
 %%% 宏定义
 %%%===================================================================
--define(DEFAULT_TTL_READ, 1800).      % 默认读取缓存TTL：30分钟
--define(DEFAULT_TTL_QUERY_ALL, 600).  % 默认查询所有缓存TTL：10分钟
--define(DEFAULT_TTL_FIND_BY_FIELD, 600). % 默认字段查询缓存TTL：10分钟
+
+% 默认读取缓存TTL：30分钟
+-define(DEFAULT_TTL_READ, 1800).
+% 默认查询所有缓存TTL：10分钟
+-define(DEFAULT_TTL_QUERY_ALL, 600).
+% 默认字段查询缓存TTL：10分钟
+-define(DEFAULT_TTL_FIND_BY_FIELD, 600).
 
 %%%===================================================================
 %%% API 函数
@@ -55,7 +59,7 @@ read(Table, Key) ->
 read(Table, Key, TTL) ->
     CacheType = mnesia_read,
     CacheKey = {mnesia, Table, Key},
-    
+
     case eadm_cache:get(CacheType, CacheKey) of
         {ok, CachedValue} ->
             CachedValue;
@@ -97,7 +101,7 @@ query_all(Table) ->
 query_all(Table, TTL) ->
     CacheType = mnesia_query_all,
     CacheKey = {mnesia, Table, all},
-    
+
     case eadm_cache:get(CacheType, CacheKey) of
         {ok, CachedValue} ->
             CachedValue;
@@ -137,7 +141,7 @@ find_by_field(Table, FieldName, Value) ->
 find_by_field(Table, FieldName, Value, TTL) ->
     CacheType = mnesia_find_by_field,
     CacheKey = {mnesia, Table, FieldName, Value},
-    
+
     case eadm_cache:get(CacheType, CacheKey) of
         {ok, CachedValue} ->
             CachedValue;
@@ -218,8 +222,9 @@ delete(Table, Key) ->
 count(Table) ->
     CacheType = mnesia_count,
     CacheKey = {mnesia, Table, count},
-    TTL = 300, % 5分钟TTL
-    
+    % 5分钟TTL
+    TTL = 300,
+
     case eadm_cache:get(CacheType, CacheKey) of
         {ok, CachedValue} ->
             CachedValue;
@@ -241,8 +246,9 @@ count(Table) ->
 count(Table, MatchSpec) ->
     CacheType = mnesia_count,
     CacheKey = {mnesia, Table, count, erlang:phash2(MatchSpec)},
-    TTL = 300, % 5分钟TTL
-    
+    % 5分钟TTL
+    TTL = 300,
+
     case eadm_cache:get(CacheType, CacheKey) of
         {ok, CachedValue} ->
             CachedValue;

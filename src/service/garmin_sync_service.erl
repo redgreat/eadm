@@ -209,6 +209,6 @@ decode_token_field(Json) ->
             Enc -> json:decode(garmin_client_service:decrypt_token(Enc))
         end
     catch
-        _: _Reason2 ->
+        _:_Reason2 ->
             json:decode(Json)
     end.

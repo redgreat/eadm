@@ -16,8 +16,14 @@
 -export([start_link/0, stop/0]).
 
 %% gen_server callbacks
--export([init/1, handle_call/3, handle_cast/2, handle_info/2,
-         terminate/2, code_change/3]).
+-export([
+    init/1,
+    handle_call/3,
+    handle_cast/2,
+    handle_info/2,
+    terminate/2,
+    code_change/3
+]).
 
 -define(SERVER, ?MODULE).
 
@@ -59,10 +65,10 @@ stop() ->
 %% @end
 init([]) ->
     lager:info("Starting EMQX sync service..."),
-    
+
     %% 读取配置
     {ok, EmqxConfig} = application:get_env(eadm, emqx),
-    
+
     #{
         host := EmqxHost,
         port := EmqxPort,
@@ -70,9 +76,9 @@ init([]) ->
         password := EmqxPassword,
         topic := EmqxTopic
     } = EmqxConfig,
-    
+
     EmqxClientId = <<"eadm_emqx_client_", (integer_to_binary(erlang:system_time()))/binary>>,
-    
+
     State = #state{
         emqx_host = EmqxHost,
         emqx_port = EmqxPort,
@@ -81,7 +87,7 @@ init([]) ->
         emqx_topic = EmqxTopic,
         emqx_client_id = EmqxClientId
     },
-    
+
     %% 连接EMQX
     case connect_emqx(State) of
         {ok, EmqxClient} ->
@@ -136,19 +142,48 @@ code_change(_OldVsn, State, _Extra) ->
 %% @doc
 %% 使用pgpool插入设备数据到PostgreSQL
 %% @end
-insert_device_data(Imei, Imsi, Lat, Lng, AgpsLat, AgpsLng, 
-                   Uptime, Rsrp, Csq, Vbat, AgpsTs, GpsTs, Rssi, Rsrq, Snr) ->
+insert_device_data(
+    Imei,
+    Imsi,
+    Lat,
+    Lng,
+    AgpsLat,
+    AgpsLng,
+    Uptime,
+    Rsrp,
+    Csq,
+    Vbat,
+    AgpsTs,
+    GpsTs,
+    Rssi,
+    Rsrq,
+    Snr
+) ->
     %% 构造SQL插入语句
-    Sql = "INSERT INTO emqx_device_data (imei, imsi, lat, lng, agps_lat, agps_lng, " ++
-          "uptime, rsrp, csq, vbat, agps_ts, gps_ts, rssi, rsrq, snr, receivetime) " ++
-          "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, NOW())",
-    
+    Sql =
+        "INSERT INTO emqx_device_data (imei, imsi, lat, lng, agps_lat, agps_lng, " ++
+            "uptime, rsrp, csq, vbat, agps_ts, gps_ts, rssi, rsrq, snr, receivetime) " ++
+            "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, NOW())",
+
     %% 参数列表
     Params = [
-        Imei, Imsi, Lat, Lng, AgpsLat, AgpsLng, 
-        Uptime, Rsrp, Csq, Vbat, AgpsTs, GpsTs, Rssi, Rsrq, Snr
+        Imei,
+        Imsi,
+        Lat,
+        Lng,
+        AgpsLat,
+        AgpsLng,
+        Uptime,
+        Rsrp,
+        Csq,
+        Vbat,
+        AgpsTs,
+        GpsTs,
+        Rssi,
+        Rsrq,
+        Snr
     ],
-    
+
     %% 使用pgpool执行SQL
     case pgpool:query(Sql, Params) of
         {ok, _Result} ->
@@ -179,7 +214,7 @@ connect_emqx(#state{
         {clean_start, true},
         {keepalive, 60}
     ],
-    
+
     case emqttc:start_link(Options) of
         {ok, Client} ->
             %% 订阅设备数据主题
@@ -204,7 +239,7 @@ connect_emqx(#state{
 handle_device_data(Payload) ->
     try
         Data = json:decode(Payload),
-        
+
         %% 提取需要的字段
         Imei = maps:get(<<"imei">>, Data, <<>>),
         Imsi = maps:get(<<"imsi">>, Data, <<>>),
@@ -221,11 +256,26 @@ handle_device_data(Payload) ->
         Rssi = maps:get(<<"rssi">>, Data, 0),
         Rsrq = maps:get(<<"rsrq">>, Data, 0),
         Snr = maps:get(<<"snr">>, Data, 0),
-        
+
         %% 插入PostgreSQL数据库
-        insert_device_data(Imei, Imsi, Lat, Lng, AgpsLat, AgpsLng, 
-                          Uptime, Rsrp, Csq, Vbat, AgpsTs, GpsTs, Rssi, Rsrq, Snr),
-        
+        insert_device_data(
+            Imei,
+            Imsi,
+            Lat,
+            Lng,
+            AgpsLat,
+            AgpsLng,
+            Uptime,
+            Rsrp,
+            Csq,
+            Vbat,
+            AgpsTs,
+            GpsTs,
+            Rssi,
+            Rsrq,
+            Snr
+        ),
+
         lager:info("Device data processed for IMEI: ~s", [Imei]),
         ok
     catch
@@ -233,4 +283,3 @@ handle_device_data(Payload) ->
             lager:error("Failed to process device data: ~p, Payload: ~s", [Reason, Payload]),
             {error, Reason}
     end.
-
