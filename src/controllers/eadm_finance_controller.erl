@@ -99,7 +99,7 @@ search(#{
                                     "                                    order by tradetime;",
                                     [ParameterStartTime, ParameterEndTime]
                                 ),
-                                {json, eadm_utils:to_json(eadm_utils:pg_as_json(ResCol, ResData))};
+                                {json, eadm_utils:pg_as_json(ResCol, ResData)};
                             {0, _} ->
                                 {ok, ResCol, ResData} = eadm_pgpool:equery(
                                     pool_pg,
@@ -118,7 +118,7 @@ search(#{
                                     "                                    order by tradetime;",
                                     [ParameterStartTime, ParameterEndTime, ParameterInOrOut]
                                 ),
-                                {json, eadm_utils:to_json(eadm_utils:pg_as_json(ResCol, ResData))};
+                                {json, eadm_utils:pg_as_json(ResCol, ResData)};
                             {_, 0} ->
                                 {ok, ResCol, ResData} = eadm_pgpool:equery(
                                     pool_pg,
@@ -137,7 +137,7 @@ search(#{
                                     "                                    order by tradetime;",
                                     [ParameterStartTime, ParameterEndTime, ParameterSourceType]
                                 ),
-                                {json, eadm_utils:to_json(eadm_utils:pg_as_json(ResCol, ResData))};
+                                {json, eadm_utils:pg_as_json(ResCol, ResData)};
                             _ ->
                                 {ok, ResCol, ResData} = eadm_pgpool:equery(
                                     pool_pg,

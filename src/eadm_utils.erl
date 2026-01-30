@@ -58,11 +58,16 @@
 %% @end
 to_json(Data) ->
     try
-        {ok, JsonBinary} = json:encode(Data),
-        JsonBinary
+        Encoded = json:encode(Data),
+        case Encoded of
+            {ok, Bin} when is_binary(Bin) -> Bin;
+            Bin when is_binary(Bin) -> Bin;
+            Iolist when is_list(Iolist) -> iolist_to_binary(Iolist);
+            Other -> iolist_to_binary(Other)
+        end
     catch
-        _:Error ->
-            lager:error("JSON编码失败: ~p, 数据: ~p", [Error, Data]),
+        ErrorType:ErrorReason ->
+            lager:error("JSON编码失败: ~p:~p, 数据: ~p", [ErrorType, ErrorReason, Data]),
             <<"{}">>
     end.
 
