@@ -3,7 +3,7 @@
 %%% @copyright (C) 2026, REDGREAT
 %%% @doc
 %%% EMQX消息接收服务
-%%% 从EMQX实时接收设备数据并存储到PostgreSQL（使用pgpool连接池）
+%%% 从EMQX实时接收设备数据并存储到PostgreSQL
 %%% @end
 %%% Created : 2026-01-28
 %%%-------------------------------------------------------------------
@@ -12,10 +12,8 @@
 
 -behaviour(gen_server).
 
-%% API
 -export([start_link/0, stop/0]).
 
-%% gen_server callbacks
 -export([
     init/1,
     handle_call/3,
@@ -33,14 +31,17 @@
     emqx_username,
     emqx_password,
     emqx_client_id,
-    emqx_topic,
+    emqx_topics,
+    emqx_ssl,
+    emqx_ssl_opts,
+    emqx_proto_ver,
+    emqx_connect_timeout,
     emqx_client
 }).
 
 %%%===================================================================
 %%% API functions
 %%%===================================================================
-
 %% @doc
 %% 启动服务
 %% @end
@@ -55,62 +56,56 @@ start_link() ->
 stop() ->
     gen_server:call(?SERVER, stop).
 
-%%%===================================================================
-%%% gen_server callbacks
-%%%===================================================================
-
 %% @private
 %% @doc
 %% 初始化服务
 %% @end
 init([]) ->
     lager:info("Starting EMQX sync service..."),
-
-    %% 读取配置
-    {ok, EmqxConfig} = application:get_env(eadm, emqx),
-
-    #{
-        host := EmqxHost,
-        port := EmqxPort,
-        username := EmqxUsername,
-        password := EmqxPassword,
-        topic := EmqxTopic
-    } = EmqxConfig,
-
-    EmqxClientId = <<"eadm_emqx_client_", (integer_to_binary(erlang:system_time()))/binary>>,
-
-    State = #state{
-        emqx_host = EmqxHost,
-        emqx_port = EmqxPort,
-        emqx_username = EmqxUsername,
-        emqx_password = EmqxPassword,
-        emqx_topic = EmqxTopic,
-        emqx_client_id = EmqxClientId
-    },
-
-    %% 连接EMQX
-    case connect_emqx(State) of
-        {ok, EmqxClient} ->
-            lager:info("Connected to EMQX successfully"),
-            {ok, State#state{emqx_client = EmqxClient}};
+    process_flag(trap_exit, true),
+    case get_emqx_env() of
+        {ok, EmqxEnv} ->
+            State = build_state(EmqxEnv),
+            case connect_emqx(State) of
+                {ok, EmqxClient} ->
+                    lager:info(
+                        "EMQX connected: client_id=~s",
+                        [State#state.emqx_client_id]
+                    ),
+                    {ok, State#state{emqx_client = EmqxClient}};
+                {error, Reason} ->
+                    lager:error("Failed to connect to EMQX: ~p", [Reason]),
+                    {stop, {failed_to_connect, Reason}}
+            end;
         {error, Reason} ->
-            lager:error("Failed to connect to EMQX: ~p", [Reason]),
-            {stop, Reason}
+            lager:error("EMQX config not found: ~p", [Reason]),
+            {ok, #state{emqx_client = undefined}}
     end.
 
 %% @private
+%% @doc
+%% 处理同步停止请求
+%% @end
 handle_call(stop, _From, State) ->
     {stop, normal, ok, State};
+%% @doc
+%% 忽略未知同步调用
+%% @end
 handle_call(_Request, _From, State) ->
     {reply, ignored, State}.
 
 %% @private
+%% @doc
+%% 忽略未知异步消息
+%% @end
 handle_cast(_Msg, State) ->
     {noreply, State}.
 
 %% @private
-handle_info({mqtt_message, Topic, Payload}, State) ->
-    lager:info("Received message from topic: ~s", [Topic]),
+%% @doc
+%% 处理 mqtt_message 消息格式
+%% @end
+handle_info({mqtt_message, Payload}, State) ->
     case handle_device_data(Payload) of
         ok ->
             {noreply, State};
@@ -118,19 +113,39 @@ handle_info({mqtt_message, Topic, Payload}, State) ->
             lager:error("Failed to handle device data: ~p", [Reason]),
             {noreply, State}
     end;
+%% @doc
+%% 处理 publish 消息格式
+%% @end
+handle_info({publish, #{payload := Payload}}, State) ->
+    case handle_device_data(Payload) of
+        ok ->
+            {noreply, State};
+        {error, Reason} ->
+            lager:error("Failed to handle device data: ~p", [Reason]),
+            {noreply, State}
+    end;
+%% @doc
+%% 忽略其他未知消息
+%% @end
 handle_info(_Info, State) ->
     {noreply, State}.
 
 %% @private
+%% @doc
+%% 终止时关闭 MQTT 客户端
+%% @end
 terminate(_Reason, #state{emqx_client = EmqxClient}) ->
     lager:info("EMQX sync service stopped"),
     case EmqxClient of
         undefined -> ok;
-        _ -> emqttc:disconnect(EmqxClient)
+        _ -> emqtt:stop(EmqxClient)
     end,
     ok.
 
 %% @private
+%% @doc
+%% 热升级回调
+%% @end
 code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
 
@@ -185,7 +200,7 @@ insert_device_data(
     ],
 
     %% 使用pgpool执行SQL
-    case pgpool:query(Sql, Params) of
+    case eadm_pgpool:equery(pool_pg, Sql, Params) of
         {ok, _Result} ->
             ok;
         {error, Reason} ->
@@ -203,32 +218,51 @@ connect_emqx(#state{
     emqx_username = Username,
     emqx_password = Password,
     emqx_client_id = ClientId,
-    emqx_topic = Topic
+    emqx_topics = Topics,
+    emqx_ssl = SslEnabled,
+    emqx_ssl_opts = SslOpts,
+    emqx_proto_ver = ProtoVer,
+    emqx_connect_timeout = ConnectTimeout
 }) ->
-    Options = [
+    lager:info("Connecting to EMQX: ~s:~p ssl=~p proto=~p", [Host, Port, SslEnabled, ProtoVer]),
+    BaseOptions = [
         {host, Host},
         {port, Port},
         {username, Username},
         {password, Password},
         {clientid, ClientId},
         {clean_start, true},
-        {keepalive, 60}
+        {keepalive, 60},
+        {connect_timeout, ConnectTimeout}
     ],
-
-    case emqttc:start_link(Options) of
+    OptionsWithSsl =
+        case SslEnabled =:= true orelse SslOpts =/= [] of
+            true ->
+                BaseOptions ++ [{ssl, true}, {ssl_opts, SslOpts}];
+            false ->
+                BaseOptions
+        end,
+    Options =
+        case ProtoVer of
+            undefined -> OptionsWithSsl;
+            _ -> OptionsWithSsl ++ [{proto_ver, ProtoVer}]
+        end,
+    case catch emqtt:start_link(Options) of
         {ok, Client} ->
-            %% 订阅设备数据主题
-            TopicBinary = erlang:list_to_binary(Topic),
-            lager:info("Subscribing to topic: ~s", [TopicBinary]),
-            case emqttc:subscribe(Client, TopicBinary, 1) of
-                {ok, _Props, _ReasonCodes} ->
-                    lager:info("Subscribed to topic: ~s successfully", [TopicBinary]),
-                    {ok, Client};
+            ConnectResult = catch emqtt:connect(Client),
+            case ConnectResult of
+                {ok, _Props} ->
+                    subscribe_topics(Client, Topics);
                 {error, Reason} ->
-                    lager:error("Failed to subscribe to topic ~s: ~p", [TopicBinary, Reason]),
-                    {error, Reason}
+                    {error, Reason};
+                {'EXIT', Reason} ->
+                    {error, Reason};
+                Other ->
+                    {error, Other}
             end;
         {error, Reason} ->
+            {error, Reason};
+        {'EXIT', Reason} ->
             {error, Reason}
     end.
 
@@ -258,28 +292,204 @@ handle_device_data(Payload) ->
         Snr = maps:get(<<"snr">>, Data, 0),
 
         %% 插入PostgreSQL数据库
-        insert_device_data(
-            Imei,
-            Imsi,
-            Lat,
-            Lng,
-            AgpsLat,
-            AgpsLng,
-            Uptime,
-            Rsrp,
-            Csq,
-            Vbat,
-            AgpsTs,
-            GpsTs,
-            Rssi,
-            Rsrq,
-            Snr
-        ),
-
-        lager:info("Device data processed for IMEI: ~s", [Imei]),
-        ok
+        case
+            insert_device_data(
+                Imei,
+                Imsi,
+                Lat,
+                Lng,
+                AgpsLat,
+                AgpsLng,
+                Uptime,
+                Rsrp,
+                Csq,
+                Vbat,
+                AgpsTs,
+                GpsTs,
+                Rssi,
+                Rsrq,
+                Snr
+            )
+        of
+            ok ->
+                ok;
+            {error, InsertReason} ->
+                lager:error("Failed to insert device data for IMEI ~s: ~p", [Imei, InsertReason]),
+                {error, InsertReason}
+        end
     catch
-        error:Reason ->
-            lager:error("Failed to process device data: ~p, Payload: ~s", [Reason, Payload]),
-            {error, Reason}
+        error:ProcessReason ->
+            lager:error("Failed to process device data: ~p, Payload: ~s", [ProcessReason, Payload]),
+            {error, ProcessReason}
     end.
+
+%% @private
+%% @doc
+%% 解析并生成客户端ID
+%% @end
+resolve_client_id(ClientId, Prefix) ->
+    case ClientId of
+        undefined ->
+            iolist_to_binary([Prefix, integer_to_binary(erlang:system_time())]);
+        Id when is_binary(Id) ->
+            Id;
+        Id when is_list(Id) ->
+            list_to_binary(Id);
+        Id ->
+            iolist_to_binary(Id)
+    end.
+
+%% @private
+%% @doc
+%% 规范化单个主题为二进制
+%% @end
+normalize_topic(undefined) ->
+    undefined;
+normalize_topic(Topic) when is_binary(Topic) ->
+    Topic;
+normalize_topic(Topic) when is_list(Topic) ->
+    list_to_binary(Topic);
+normalize_topic(Topic) ->
+    iolist_to_binary(Topic).
+
+%% @private
+%% @doc
+%% 规范化主题列表为二进制列表
+%% @end
+normalize_topics(undefined) ->
+    [];
+normalize_topics(Topics) when is_list(Topics) ->
+    case is_string_topic(Topics) of
+        true -> [list_to_binary(Topics)];
+        false -> [normalize_topic(Topic) || Topic <- Topics]
+    end;
+normalize_topics(Topic) ->
+    [normalize_topic(Topic)].
+
+%% @private
+%% @doc
+%% 判断是否为单个字符串主题
+%% @end
+is_string_topic(Topic) ->
+    is_list(Topic) andalso lists:all(fun is_integer/1, Topic).
+
+%% @private
+%% @doc
+%% 获取 EMQX 配置（优先 eadm 应用环境）
+%% @end
+get_emqx_env() ->
+    case application:get_env(eadm, emqx_host) of
+        {ok, EmqxHost} ->
+            {ok, EmqxPort} = application:get_env(eadm, emqx_port),
+            {ok, EmqxUsername} = application:get_env(eadm, emqx_username),
+            {ok, EmqxPassword} = application:get_env(eadm, emqx_password),
+            {ok, EmqxClientId} = application:get_env(eadm, emqx_client_id),
+            {ok, EmqxTopics} = application:get_env(eadm, emqx_topics),
+            EmqxSsl = get_env_default(eadm, emqx_ssl, false),
+            EmqxSslOpts = get_env_default(eadm, emqx_ssl_opts, []),
+            EmqxProtoVer = get_env_default(eadm, emqx_proto_ver, undefined),
+            EmqxConnectTimeout = get_env_default(eadm, emqx_connect_timeout, 10),
+            {ok, #{
+                host => EmqxHost,
+                port => EmqxPort,
+                username => EmqxUsername,
+                password => EmqxPassword,
+                client_id => EmqxClientId,
+                topics => EmqxTopics,
+                ssl => EmqxSsl,
+                ssl_opts => EmqxSslOpts,
+                proto_ver => EmqxProtoVer,
+                connect_timeout => EmqxConnectTimeout
+            }};
+        _ ->
+            case application:get_env(emqx, pools) of
+                {ok, EmqxPools} when is_list(EmqxPools), EmqxPools =/= [] ->
+                    {pool_emqx, _EmqxPoolOpts, EmqxConnOpts} = hd(EmqxPools),
+                    EmqxHost = proplists:get_value(host, EmqxConnOpts),
+                    EmqxPort = proplists:get_value(port, EmqxConnOpts),
+                    EmqxUsername = proplists:get_value(username, EmqxConnOpts),
+                    EmqxPassword = proplists:get_value(password, EmqxConnOpts),
+                    EmqxClientId =
+                        resolve_client_id(
+                            proplists:get_value(client_id, EmqxConnOpts, undefined),
+                            proplists:get_value(client_id_prefix, EmqxConnOpts, "eadm_")
+                        ),
+                    EmqxTopics =
+                        normalize_topics(
+                            proplists:get_value(
+                                topics,
+                                EmqxConnOpts,
+                                proplists:get_value(topic, EmqxConnOpts)
+                            )
+                        ),
+                    EmqxSsl = proplists:get_value(ssl, EmqxConnOpts, false),
+                    EmqxSslOpts = proplists:get_value(ssl_opts, EmqxConnOpts, []),
+                    EmqxProtoVer = proplists:get_value(proto_ver, EmqxConnOpts, undefined),
+                    EmqxConnectTimeout =
+                        proplists:get_value(connect_timeout, EmqxConnOpts, 10),
+                    {ok, #{
+                        host => EmqxHost,
+                        port => EmqxPort,
+                        username => EmqxUsername,
+                        password => EmqxPassword,
+                        client_id => EmqxClientId,
+                        topics => EmqxTopics,
+                        ssl => EmqxSsl,
+                        ssl_opts => EmqxSslOpts,
+                        proto_ver => EmqxProtoVer,
+                        connect_timeout => EmqxConnectTimeout
+                    }};
+                Other ->
+                    {error, Other}
+            end
+    end.
+
+%% @private
+%% @doc
+%% 读取应用环境默认值
+%% @end
+get_env_default(App, Key, Default) ->
+    case application:get_env(App, Key) of
+        {ok, Value} -> Value;
+        _ -> Default
+    end.
+
+%% @private
+%% @doc
+%% 构建内部状态记录
+%% @end
+build_state(EmqxEnv) ->
+    #state{
+        emqx_host = maps:get(host, EmqxEnv),
+        emqx_port = maps:get(port, EmqxEnv),
+        emqx_username = maps:get(username, EmqxEnv),
+        emqx_password = maps:get(password, EmqxEnv),
+        emqx_client_id = maps:get(client_id, EmqxEnv),
+        emqx_topics = normalize_topics(maps:get(topics, EmqxEnv, [])),
+        emqx_ssl = maps:get(ssl, EmqxEnv, false),
+        emqx_ssl_opts = maps:get(ssl_opts, EmqxEnv, []),
+        emqx_proto_ver = maps:get(proto_ver, EmqxEnv, undefined),
+        emqx_connect_timeout = maps:get(connect_timeout, EmqxEnv, 10)
+    }.
+
+%% @private
+%% @doc
+%% 订阅主题列表
+%% @end
+subscribe_topics(Client, Topics) ->
+    lists:foreach(
+        fun(Topic) ->
+            case emqtt:subscribe(Client, Topic, 0) of
+                {ok, _Props, _ReasonCodes} ->
+                    lager:info("Subscribed to topic: ~p", [Topic]);
+                {ok, _ReasonCodes} ->
+                    lager:info("Subscribed to topic: ~p", [Topic]);
+                ok ->
+                    lager:info("Subscribed to topic: ~p", [Topic]);
+                {error, Reason} ->
+                    lager:error("Failed to subscribe to topic ~p: ~p", [Topic, Reason])
+            end
+        end,
+        Topics
+    ),
+    {ok, Client}.
