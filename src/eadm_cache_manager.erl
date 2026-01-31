@@ -80,8 +80,6 @@ init([]) ->
         {write_concurrency, false}
     ]),
 
-    lager:info("缓存管理器启动成功，缓存表: ~p, 统计表: ~p", [CacheTable, StatsTable]),
-
     % 启动定时清理进程
     timer:send_interval(?CLEANUP_INTERVAL, cleanup_expired),
     % 启动内存检查进程

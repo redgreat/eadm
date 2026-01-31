@@ -1,13 +1,13 @@
 %%%-------------------------------------------------------------------
 %%% @author wangcw
-%%% @copyright (C) 2024, REDGREAT
+%%% @copyright (C) 2026, REDGREAT
 %%% @doc
 %%%
 %%% PostgreSQL API缓存包装器
 %%% 在eadm_pgpool基础上添加缓存功能
 %%%
 %%% @end
-%%% Created : 2024-01-XX
+%%% Created : 2026-01-31
 %%%-------------------------------------------------------------------
 -module(eadm_pgpool_cached).
 -author("wangcw").

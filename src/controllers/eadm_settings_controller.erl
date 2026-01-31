@@ -13,7 +13,6 @@
 %%%===================================================================
 %%% 头文件引用
 %%%===================================================================
--include("eadm_mnesia.hrl").
 
 -export([
     index/1,
@@ -143,23 +142,32 @@ link_garmin(#{req := Req}) ->
             %% 保存到数据库
             SQL =
                 <<
-                    "INSERT INTO sp_garminconf \n"
+                    "INSERT INTO sp_garminconf \n"
                     "\n"
-                    "                    (userid, garminemail, oauth1token, oauth2token, syncenable, autosync)\n"
                     "\n"
-                    "                    VALUES ($1, $2, $3, $4, true, true)\n"
+                    "                    (userid, garminemail, oauth1token, oauth2token, syncenable, autosync)\n"
                     "\n"
-                    "                    ON CONFLICT (userid) \n"
                     "\n"
-                    "                    DO UPDATE SET \n"
+                    "                    VALUES ($1, $2, $3, $4, true, true)\n"
                     "\n"
-                    "                        garminemail = EXCLUDED.garminemail,\n"
                     "\n"
-                    "                        oauth1token = EXCLUDED.oauth1token,\n"
+                    "                    ON CONFLICT (userid) \n"
                     "\n"
-                    "                        oauth2token = EXCLUDED.oauth2token,\n"
                     "\n"
-                    "                        syncenable = true,\n"
+                    "                    DO UPDATE SET \n"
+                    "\n"
+                    "\n"
+                    "                        garminemail = EXCLUDED.garminemail,\n"
+                    "\n"
+                    "\n"
+                    "                        oauth1token = EXCLUDED.oauth1token,\n"
+                    "\n"
+                    "\n"
+                    "                        oauth2token = EXCLUDED.oauth2token,\n"
+                    "\n"
+                    "\n"
+                    "                        syncenable = true,\n"
+                    "\n"
                     "\n"
                     "                        updatedat = CURRENT_TIMESTAMP"
                 >>,
@@ -227,9 +235,11 @@ garmin_status(#{req := Req} = _Params) ->
 
     SQL =
         <<
-            "SELECT garminemail, lastsynctime, syncenable, autosync, syncdays\n"
+            "SELECT garminemail, lastsynctime, syncenable, autosync, syncdays\n"
             "\n"
-            "            FROM sp_garminconf \n"
+            "\n"
+            "            FROM sp_garminconf \n"
+            "\n"
             "\n"
             "            WHERE userid = $1"
         >>,
@@ -282,11 +292,14 @@ update_sync_config(#{req := Req} = _Params) ->
 
     SQL =
         <<
-            "UPDATE sp_garminconf \n"
+            "UPDATE sp_garminconf \n"
             "\n"
-            "            SET syncenable = $1, autosync = $2, syncdays = $3, updatedat = CURRENT_TIMESTAMP\n"
             "\n"
-            "            WHERE userid = $4 \n"
+            "            SET syncenable = $1, autosync = $2, syncdays = $3, updatedat = CURRENT_TIMESTAMP\n"
+            "\n"
+            "\n"
+            "            WHERE userid = $4 \n"
+            "\n"
             "\n"
             "            RETURNING id"
         >>,
@@ -335,13 +348,17 @@ update_share_config(#{req := Req} = _Params) ->
 
     SQL =
         <<
-            "UPDATE sp_activity \n"
+            "UPDATE sp_activity \n"
             "\n"
-            "            SET ispublic = $1, hidemap = $2, hidestats = $3, hidelocation = $4,\n"
             "\n"
-            "                updatedat = CURRENT_TIMESTAMP\n"
+            "            SET ispublic = $1, hidemap = $2, hidestats = $3, hidelocation = $4,\n"
             "\n"
-            "            WHERE id = $5 AND userid = $6 \n"
+            "\n"
+            "                updatedat = CURRENT_TIMESTAMP\n"
+            "\n"
+            "\n"
+            "            WHERE id = $5 AND userid = $6 \n"
+            "\n"
             "\n"
             "            RETURNING sharetoken"
         >>,
@@ -381,15 +398,20 @@ sync_history(#{req := Req} = _Params) ->
 
     SQL =
         <<
-            "SELECT starttime, endtime, synccount, \n"
+            "SELECT starttime, endtime, synccount, \n"
             "\n"
-            "                   newcount, syncstatus, errmsg\n"
             "\n"
-            "            FROM sp_garminlog \n"
+            "                   newcount, syncstatus, errmsg\n"
             "\n"
-            "            WHERE userid = $1 \n"
             "\n"
-            "            ORDER BY starttime DESC \n"
+            "            FROM sp_garminlog \n"
+            "\n"
+            "\n"
+            "            WHERE userid = $1 \n"
+            "\n"
+            "\n"
+            "            ORDER BY starttime DESC \n"
+            "\n"
             "\n"
             "            LIMIT 20"
         >>,
@@ -429,10 +451,11 @@ get_user_id(Req) ->
 %% @doc 根据登录名获取用户ID
 %%--------------------------------------------------------------------
 get_user_id_from_loginname(LoginName) ->
-    case eadm_mnesia_api_cached:find_by_field(eadm_user, loginname, LoginName, 600) of
-        [#eadm_user{id = UserId}] ->
+    Sql = "select id from eadm_user where loginname = $1 and deleted is false limit 1;",
+    case eadm_pgpool:equery(pool_pg, Sql, [LoginName]) of
+        {ok, _, [{UserId}]} ->
             UserId;
-        [] ->
+        _ ->
             erlang:error({user_not_found, LoginName})
     end.
 

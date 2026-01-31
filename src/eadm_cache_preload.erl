@@ -13,11 +13,6 @@
 -author("wangcw").
 
 %%%===================================================================
-%%% 头文件引用
-%%%===================================================================
--include("eadm_mnesia.hrl").
-
-%%%===================================================================
 %%% 函数导出
 %%%===================================================================
 -export([preload_all/0, preload_tenants/0, preload_roles/0]).
@@ -31,11 +26,9 @@
 %% @end
 -spec preload_all() -> ok.
 preload_all() ->
-    lager:info("开始缓存预热..."),
     try
         preload_tenants(),
         preload_roles(),
-        lager:info("缓存预热完成"),
         ok
     catch
         Error:Reason ->
@@ -49,22 +42,14 @@ preload_all() ->
 -spec preload_tenants() -> ok.
 preload_tenants() ->
     try
-        Tenants = eadm_mnesia_api:query_all(eadm_tenant),
-        Count = lists:foldl(
-            fun(Tenant, Acc) ->
-                case Tenant of
-                    #eadm_tenant{id = TenantId, deleted = false} ->
-                        % 使用缓存包装器预加载，TTL 60分钟
-                        eadm_mnesia_api_cached:read(eadm_tenant, TenantId, 3600),
-                        Acc + 1;
-                    _ ->
-                        Acc
-                end
-            end,
-            0,
-            Tenants
+        eadm_pgpool_cached:equery_cached(
+            pool_pg,
+            "select id, tenantname from eadm_tenant where deleted is false;",
+            [],
+            3600,
+            {tenant_list, all}
         ),
-        lager:info("预热了 ~p 个租户信息缓存", [Count]),
+        lager:info("预热了租户列表缓存"),
         ok
     catch
         Error:Reason ->
@@ -78,8 +63,13 @@ preload_tenants() ->
 -spec preload_roles() -> ok.
 preload_roles() ->
     try
-        % 预加载角色列表，TTL 10分钟
-        eadm_mnesia_api_cached:query_all(eadm_role, 600),
+        eadm_pgpool_cached:equery_cached(
+            pool_pg,
+            "select id, rolename, rolestatus, createdat from eadm_role where deleted is false order by createdat desc;",
+            [],
+            600,
+            {role_list, all}
+        ),
         lager:info("预热了角色列表缓存"),
         ok
     catch

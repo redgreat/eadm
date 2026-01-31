@@ -45,12 +45,6 @@ start_link() ->
 %% @end
 init([]) ->
     Pools = application:get_env(epgsql, pools, []),
-    case Pools of
-        [] ->
-            lager:warning("PG pools config is empty");
-        _ ->
-            lager:info("PG pools config loaded: ~p", [Pools])
-    end,
     %% lager:info("数据库连接参数：~p~n", [Pools]),
     PoolSpec = lists:map(
         fun({PoolName, SizeArgs, WorkerArgs}) ->

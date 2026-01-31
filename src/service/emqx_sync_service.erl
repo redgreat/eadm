@@ -61,7 +61,6 @@ stop() ->
 %% 初始化服务
 %% @end
 init([]) ->
-    lager:info("Starting EMQX sync service..."),
     process_flag(trap_exit, true),
     case get_emqx_env() of
         {ok, EmqxEnv} ->
@@ -224,7 +223,6 @@ connect_emqx(#state{
     emqx_proto_ver = ProtoVer,
     emqx_connect_timeout = ConnectTimeout
 }) ->
-    lager:info("Connecting to EMQX: ~s:~p ssl=~p proto=~p", [Host, Port, SslEnabled, ProtoVer]),
     BaseOptions = [
         {host, Host},
         {port, Port},

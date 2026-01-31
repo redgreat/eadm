@@ -11,7 +11,6 @@
 -module(eadm_user_controller).
 -author("wangcw").
 
--include("eadm_mnesia.hrl").
 -export([
     index/1,
     search/1,
@@ -51,42 +50,15 @@ index(#{auth_data := #{<<"authed">> := false}}) ->
 %% @end
 search(#{auth_data := #{<<"authed">> := true, <<"permission">> := #{<<"usermanage">> := true}}}) ->
     try
-        % 使用缓存包装器，TTL 10分钟
-        Users = eadm_mnesia_api_cached:query_all(eadm_user, 600),
-        % 过滤已删除的用户并转换格式
-        ActiveUsers = [
-            #{
-                <<"id">> => Id,
-                <<"tenantname">> => get_tenant_name(TenantId),
-                <<"loginname">> => LoginName,
-                <<"username">> => UserName,
-                <<"email">> => Email,
-                <<"userstatus">> => Status,
-                <<"createdat">> => CreatedAt
-            }
-         || #eadm_user{
-                id = Id,
-                tenantid = TenantId,
-                loginname = LoginName,
-                username = UserName,
-                email = Email,
-                userstatus = Status,
-                createdat = CreatedAt,
-                deleted = false
-            } <- Users
-        ],
-        {json, #{
-            <<"columns">> => [
-                <<"id">>,
-                <<"tenantname">>,
-                <<"loginname">>,
-                <<"username">>,
-                <<"email">>,
-                <<"userstatus">>,
-                <<"createdat">>
-            ],
-            <<"data">> => ActiveUsers
-        }}
+        {ok, Columns, ResData} =
+            eadm_pgpool_cached:equery_cached(
+                pool_pg,
+                "select id, tenantname, loginname, username, email, userstatus, createdat from vi_user order by createdat desc;",
+                [],
+                600,
+                {user_list, all}
+            ),
+        {json, eadm_utils:to_json(eadm_utils:pg_as_json(Columns, ResData))}
     catch
         _:Error ->
             lager:error("用户查询失败：~p~n", [Error]),
@@ -121,20 +93,22 @@ add(#{
                         case re:run(Email, "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$") of
                             {match, _} ->
                                 CryptoGram = eadm_utils:pass_encrypt(PassWord),
-                                NewId = eadm_mnesia_api:get_next_id(eadm_user),
-                                User = #eadm_user{
-                                    id = NewId,
-                                    tenantid = <<"et0000000002">>,
-                                    loginname = LoginName,
-                                    username = UserName,
-                                    email = Email,
-                                    passwd = CryptoGram,
-                                    createduser = CreatedUser,
-                                    createdat = erlang:system_time(second)
-                                },
-                                ok = eadm_mnesia_api_cached:create(eadm_user, User),
-                                % 失效用户列表缓存
-                                eadm_cache:clear(mnesia_query_all),
+                                Sql =
+                                    "insert into eadm_user(tenantid, loginname, username, email, passwd, createduser, updateduser) values($1,$2,$3,$4,$5,$6,$6);",
+                                {ok, _} =
+                                    eadm_pgpool:equery(
+                                        pool_pg,
+                                        Sql,
+                                        [
+                                            <<"et0000000002">>,
+                                            LoginName,
+                                            UserName,
+                                            Email,
+                                            CryptoGram,
+                                            CreatedUser
+                                        ]
+                                    ),
+                                eadm_pgpool_cached:invalidate_pg_cache(pool_pg, {user_list, all}),
                                 A = unicode:characters_to_binary("用户【", utf8),
                                 B = unicode:characters_to_binary("】新增成功！", utf8),
                                 {json, [#{<<"Alert">> => <<A/binary, UserName/binary, B/binary>>}]};
@@ -198,17 +172,12 @@ edit(#{
             case re:run(Email, "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$") of
                 {match, _} ->
                     try
-                        ok = eadm_mnesia_api_cached:update(eadm_user, UserId, fun(U) ->
-                            U#eadm_user{
-                                loginname = LoginName,
-                                username = UserName,
-                                email = Email,
-                                updateduser = CreatedUser,
-                                updatedat = erlang:system_time(second)
-                            }
-                        end),
-                        % 失效相关缓存
-                        eadm_cache:clear(mnesia_query_all),
+                        Sql =
+                            "update eadm_user set loginname = $1, username = $2, email = $3, updateduser = $4, updatedat = current_timestamp where id = $5 and deleted is false;",
+                        {ok, _} = eadm_pgpool:equery(pool_pg, Sql, [
+                            LoginName, UserName, Email, CreatedUser, UserId
+                        ]),
+                        eadm_pgpool_cached:invalidate_pg_cache(pool_pg, {user_list, all}),
                         eadm_cache:invalidate(user_permission, LoginName),
                         A = unicode:characters_to_binary("用户【", utf8),
                         B = unicode:characters_to_binary("】编辑成功！", utf8),
@@ -264,13 +233,9 @@ reset(#{
     CryptoGram = eadm_utils:pass_encrypt(<<"123456">>),
     lager:info("用户~p重置了密码~n", [LoginName]),
     try
-        ok = eadm_mnesia_api_cached:update(eadm_user, UserId, fun(U) ->
-            U#eadm_user{
-                passwd = CryptoGram,
-                updateduser = LoginName,
-                updatedat = erlang:system_time(second)
-            }
-        end),
+        Sql =
+            "update eadm_user set passwd = $1, updateduser = $2, updatedat = current_timestamp where id = $3 and deleted is false;",
+        {ok, _} = eadm_pgpool:equery(pool_pg, Sql, [CryptoGram, LoginName, UserId]),
         {json, [#{<<"Alert">> => unicode:characters_to_binary("用户密码重置成功！", utf8)}]}
     catch
         _:Error ->
@@ -294,15 +259,10 @@ disable(#{
     bindings := #{<<"userId">> := UserId}
 }) ->
     try
-        ok = eadm_mnesia_api_cached:update(eadm_user, UserId, fun(U) ->
-            U#eadm_user{
-                userstatus = 1 - U#eadm_user.userstatus,
-                updateduser = LoginName,
-                updatedat = erlang:system_time(second)
-            }
-        end),
-        % 失效用户列表缓存
-        eadm_cache:clear(mnesia_query_all),
+        Sql =
+            "update eadm_user set userstatus = case userstatus when 0 then 1 else 0 end, updateduser = $1, updatedat = current_timestamp where id = $2 and deleted is false;",
+        {ok, _} = eadm_pgpool:equery(pool_pg, Sql, [LoginName, UserId]),
+        eadm_pgpool_cached:invalidate_pg_cache(pool_pg, {user_list, all}),
         {json, [#{<<"Alert">> => unicode:characters_to_binary("用户启禁用成功！", utf8)}]}
     catch
         _:Error ->
@@ -326,21 +286,16 @@ delete(#{
     bindings := #{<<"userId">> := UserId}
 }) ->
     try
-        % 先读取用户信息，用于失效缓存
+        Sql1 = "select loginname from eadm_user where id = $1 limit 1;",
         DeletedLoginName =
-            case eadm_mnesia_api_cached:read(eadm_user, UserId) of
-                [#eadm_user{loginname = LName}] -> LName;
+            case eadm_pgpool:equery(pool_pg, Sql1, [UserId]) of
+                {ok, _, [{LName}]} -> LName;
                 _ -> <<>>
             end,
-        ok = eadm_mnesia_api_cached:update(eadm_user, UserId, fun(U) ->
-            U#eadm_user{
-                deleted = true,
-                deleteduser = LoginName,
-                deletedat = erlang:system_time(second)
-            }
-        end),
-        % 失效相关缓存
-        eadm_cache:clear(mnesia_query_all),
+        Sql2 =
+            "update eadm_user set deleted = true, deleteduser = $1, deletedat = current_timestamp where id = $2;",
+        {ok, _} = eadm_pgpool:equery(pool_pg, Sql2, [LoginName, UserId]),
+        eadm_pgpool_cached:invalidate_pg_cache(pool_pg, {user_list, all}),
         case DeletedLoginName of
             <<>> -> ok;
             _ -> eadm_cache:invalidate(user_permission, DeletedLoginName)
@@ -369,9 +324,11 @@ userrole(#{
     try
         {ok, ResCol, ResData} = eadm_pgpool:equery(
             pool_pg,
-            "select id, rolename, updatedat\n"
+            "select id, rolename, updatedat\n"
             "\n"
-            "            from vi_userrole\n"
+            "\n"
+            "            from vi_userrole\n"
+            "\n"
             "\n"
             "            where userid = $1;",
             [UserId]
@@ -437,13 +394,17 @@ userroledel(#{
     try
         eadm_pgpool:equery(
             pool_pg,
-            "update eadm_userrole\n"
+            "update eadm_userrole\n"
             "\n"
-            "                                  set deleteduser = $1,\n"
             "\n"
-            "                                  deletedat = current_timestamp,\n"
+            "                                  set deleteduser = $1,\n"
             "\n"
-            "                                  deleted = true\n"
+            "\n"
+            "                                  deletedat = current_timestamp,\n"
+            "\n"
+            "\n"
+            "                                  deleted = true\n"
+            "\n"
             "\n"
             "                                  where id = $2;",
             [LoginName, erlang:binary_to_integer(UserRoleId)]
@@ -595,10 +556,8 @@ validate_password(_) ->
 %% 获取用户权限（带缓存）
 %% @end
 get_permission(LoginName) ->
-    % 使用缓存包装器，TTL 30分钟
     CacheType = user_permission,
     CacheKey = LoginName,
-    % 30分钟
     TTL = 1800,
 
     eadm_cache:get_or_set(
@@ -606,23 +565,14 @@ get_permission(LoginName) ->
         CacheKey,
         fun() ->
             try
-                case eadm_mnesia_api_cached:find_by_field(eadm_user, loginname, LoginName, 1800) of
-                    [#eadm_user{id = UserId}] ->
-                        UserRoles = eadm_mnesia_api_cached:find_by_field(
-                            eadm_userrole, userid, UserId, 1800
-                        ),
-                        case UserRoles of
-                            [] ->
-                                #{<<"data">> => #{}};
-                            [#eadm_userrole{roleid = RoleId} | _] ->
-                                case eadm_mnesia_api_cached:read(eadm_role, RoleId, 1800) of
-                                    [#eadm_role{rolepermission = Permission, rolestatus = 0}] ->
-                                        #{<<"data">> => Permission};
-                                    _ ->
-                                        #{<<"data">> => #{}}
-                                end
+                Sql = "select rolepermission from vi_userpermission where loginname = $1 limit 1;",
+                case eadm_pgpool:equery(pool_pg, Sql, [LoginName]) of
+                    {ok, _, [{Permission}]} ->
+                        case json:decode(Permission) of
+                            {ok, Map} -> #{<<"data">> => Map};
+                            _ -> #{<<"data">> => #{}}
                         end;
-                    [] ->
+                    _ ->
                         #{<<"data">> => #{}}
                 end
             catch
@@ -633,13 +583,3 @@ get_permission(LoginName) ->
         end,
         TTL
     ).
-
-%% @doc
-%% 获取租户名称（带缓存）
-%% @end
-get_tenant_name(TenantId) ->
-    % 使用缓存包装器，TTL 60分钟
-    case eadm_mnesia_api_cached:read(eadm_tenant, TenantId, 3600) of
-        [#eadm_tenant{tenantname = Name}] -> Name;
-        _ -> <<"未知租户"/utf8>>
-    end.

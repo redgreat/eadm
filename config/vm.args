@@ -12,5 +12,3 @@
 +A 1
 +C multi_time_warp
 +sbwt none
-
--mnesia dir '"/opt/eadm/mnesia"'

@@ -341,14 +341,21 @@ pass_encrypt(PassBin) ->
     EncryptPwd = crypto:hash(sha256, <<SecretKey/binary, PassBin/binary>>),
     base64:encode(EncryptPwd).
 
--include("eadm_mnesia.hrl").
-
 %% @doc
 %% 验证密码
 %% @end
 validate_login(LoginName, Password) ->
-    case eadm_mnesia_api:find_by_field(eadm_user, loginname, LoginName) of
-        [#eadm_user{passwd = DbPassword, userstatus = DbUserStatus, deleted = false} | _] ->
+    Sql = "select passwd, userstatus, deleted from eadm_user where loginname = $1 limit 1;",
+    case
+        eadm_pgpool_cached:equery_cached(
+            pool_pg,
+            Sql,
+            [LoginName],
+            300,
+            {user_login, LoginName}
+        )
+    of
+        {ok, _, [{DbPassword, DbUserStatus, false}]} ->
             case DbUserStatus of
                 0 ->
                     verify_password(Password, DbPassword);
