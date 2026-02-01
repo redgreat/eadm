@@ -16,7 +16,7 @@ function login() {
         loginName: $('#loginname').val(),
         password: $('#password').val()
     };
-    // 移除同步设置，使用异步请求
+    
     $.ajax({
         url: '/login',
         type: 'POST',
@@ -32,10 +32,10 @@ function login() {
                 } else if (resdata[0].logined === 1) {
                     // 修改按钮文本提示用户
                     $('#user-login-btn').text('登录成功，跳转中...');
-                    // 添加短暂延迟，确保cookie有时间设置
+                    // 延迟跳转，确保 session cookie 完全设置
                     setTimeout(function() {
                         window.location.href = "/";
-                    }, 500);
+                    }, 800);
                 }
             } else {
                 // 无效响应时启用登录按钮
@@ -46,12 +46,12 @@ function login() {
             }
         },
         error: function(jqXHR, textStatus, errorThrown) {
-          console.error('登录失败:', textStatus, errorThrown);
-          // 发生错误时启用登录按钮
-          $('#user-login-btn').prop('disabled', false);
-          $('#loginalert')
-              .text('网络错误，请稍后重试')
-              .show();
+            console.error('登录失败:', textStatus, errorThrown);
+            // 发生错误时启用登录按钮
+            $('#user-login-btn').prop('disabled', false);
+            $('#loginalert')
+                .text('网络错误，请稍后重试')
+                .show();
         }
     });
 }

@@ -33,8 +33,7 @@ index(#{auth_data := #{<<"authed">> := false}}) ->
 %% @end
 search(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName}}) ->
     try
-        % 使用缓存包装器，TTL 5分钟
-        {ok, _, ResData} = eadm_pgpool_cached:equery_cached(
+        {ok, _, ResData} = eadm_pgpool:equery(
             pool_pg,
             "with dt as (\n"
             "                select unnest(array[1,2,3,4]) as datatype\n"
@@ -46,42 +45,34 @@ search(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName}}) ->
             "                and d.loginname = $1\n"
             "                and d.datavalue is not null\n"
             "            order by dt.datatype;",
-            [LoginName],
-            300,
-            {dashboard_data, LoginName}
+            [LoginName]
         ),
-        {ok, _, ResLocation} = eadm_pgpool_cached:equery_cached(
+        {ok, _, ResLocation} = eadm_pgpool:equery(
             pool_pg,
             "select cast(right(checkdate, 2) as int) as month, datavalue\n"
             "            from eadm_dashboard\n"
             "            where loginname = $1\n"
             "                and datatype = 5\n"
             "            order by cast(right(checkdate, 2) as int);",
-            [LoginName],
-            300,
-            {dashboard_location, LoginName}
+            [LoginName]
         ),
-        {ok, _, ResFinanceIn} = eadm_pgpool_cached:equery_cached(
+        {ok, _, ResFinanceIn} = eadm_pgpool:equery(
             pool_pg,
             "select cast(right(checkdate, 2) as int) as month, datavalue\n"
             "            from eadm_dashboard\n"
             "            where loginname = $1\n"
             "                and datatype = 6\n"
             "            order by cast(right(checkdate, 2) as int);",
-            [LoginName],
-            300,
-            {dashboard_finance_in, LoginName}
+            [LoginName]
         ),
-        {ok, _, ResFinanceOut} = eadm_pgpool_cached:equery_cached(
+        {ok, _, ResFinanceOut} = eadm_pgpool:equery(
             pool_pg,
             "select cast(right(checkdate, 2) as int) as month, datavalue\n"
             "            from eadm_dashboard\n"
             "            where loginname = $1\n"
             "                and datatype = 7\n"
             "            order by cast(right(checkdate, 2) as int);",
-            [LoginName],
-            300,
-            {dashboard_finance_out, LoginName}
+            [LoginName]
         ),
         DataValues = [V || {V} <- ResData],
         % resdata[0-3]: 周数据

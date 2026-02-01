@@ -22,6 +22,7 @@
 %% 主函数
 %% @end
 auth(Req) ->
+    Path = cowboy_req:path(Req),
     case nova_session:get(Req, <<"exp">>) of
         {ok, Exp} ->
             case erlang:is_integer(Exp) andalso (Exp > erlang:system_time(seconds)) of
@@ -29,9 +30,9 @@ auth(Req) ->
                     {ok, LoginName} = nova_session:get(Req, <<"loginname">>),
                     {ok, UserName} = nova_session:get(Req, <<"username">>),
                     {ok, Permission} = nova_session:get(Req, <<"permission">>),
+                    % lager:debug("Auth Success! User: ~ts, Path: ~ts", [UserName, Path]),
                     NewExp = eadm_utils:get_exp_bin(),
                     nova_session:set(Req, <<"exp">>, NewExp),
-                    % lager:info("User: ~ts ~p Auth Success! Exp: ~p, NewExp: ~p", [UserName, self(), Exp, NewExp]),
                     {true, #{
                         <<"authed">> => true,
                         <<"username">> => UserName,
@@ -39,11 +40,11 @@ auth(Req) ->
                         <<"permission">> => Permission
                     }};
                 false ->
-                    lager:info("Auth Failed, Exp: ~p Expired!", [Exp]),
+                    lager:debug("Session expired for path: ~ts", [Path]),
                     {true, #{<<"authed">> => false}}
             end;
         {error, _SessionErr} ->
-            lager:info("Auth Failed, SessionError!"),
+            lager:debug("No session found for path: ~ts", [Path]),
             {true, #{<<"authed">> => false}}
     end.
 

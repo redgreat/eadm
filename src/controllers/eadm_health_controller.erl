@@ -79,116 +79,94 @@ search(#{
                                 % 步数
                                 {ok, ResCol, ResData} = eadm_pgpool:equery(
                                     pool_pg,
-                                    "select to_char(ptime, 'yyyy-mm-dd hh24:mi:ss') as utctime, steps\n"
-                                    "\n"
-                                    "                                    from lc_watchstep\n"
-                                    "\n"
-                                    "                                    where ptime >= $1\n"
-                                    "\n"
-                                    "                                      and ptime < $2\n"
-                                    "\n"
-                                    "                                      and steps is not null\n"
-                                    "\n"
+                                    "select to_char(ptime, 'yyyy-mm-dd hh24:mi:ss') as utctime, steps\n"
+                                    "                                    from lc_watchstep\n"
+                                    "                                    where ptime >= $1\n"
+                                    "                                      and ptime < $2\n"
+                                    "                                      and steps is not null\n"
                                     "                                    order by ptime desc;",
                                     [ParameterStartTime, ParameterEndTime]
-                                );
+                                ),
+                                {json, eadm_utils:pg_as_json(ResCol, ResData)};
                             <<"2">> ->
                                 % 心率
                                 {ok, ResCol, ResData} = eadm_pgpool:equery(
                                     pool_pg,
-                                    "select to_char(ptime, 'yyyy-mm-dd hh24:mi:ss') as utctime, heartbeat\n"
-                                    "\n"
-                                    "                                    from lc_watchhb\n"
-                                    "\n"
-                                    "                                    where ptime >= $1\n"
-                                    "\n"
-                                    "                                      and ptime < $2\n"
-                                    "\n"
-                                    "                                      and heartbeat is not null\n"
-                                    "\n"
+                                    "select to_char(ptime, 'yyyy-mm-dd hh24:mi:ss') as utctime, heartbeat\n"
+                                    "                                    from lc_watchhb\n"
+                                    "                                    where ptime >= $1\n"
+                                    "                                      and ptime < $2\n"
+                                    "                                      and heartbeat is not null\n"
                                     "                                    order by ptime desc;",
                                     [ParameterStartTime, ParameterEndTime]
-                                );
+                                ),
+                                {json, eadm_utils:pg_as_json(ResCol, ResData)};
                             <<"3">> ->
                                 % 体温
                                 {ok, ResCol, ResData} = eadm_pgpool:equery(
                                     pool_pg,
-                                    "select to_char(ptime, 'yyyy-mm-dd hh24:mi:ss') as utctime,\n"
-                                    "\n"
-                                    "                                    bodytemperature, wristtemperature\n"
-                                    "\n"
-                                    "                                    from lc_watchbt\n"
-                                    "\n"
-                                    "                                    where ptime >= $1\n"
-                                    "\n"
-                                    "                                      and ptime < $2\n"
-                                    "\n"
-                                    "                                      and bodytemperature is not null\n"
-                                    "\n"
+                                    "select to_char(ptime, 'yyyy-mm-dd hh24:mi:ss') as utctime,\n"
+                                    "                                    bodytemperature, wristtemperature\n"
+                                    "                                    from lc_watchbt\n"
+                                    "                                    where ptime >= $1\n"
+                                    "                                      and ptime < $2\n"
+                                    "                                      and bodytemperature is not null\n"
                                     "                                    order by ptime desc;",
                                     [ParameterStartTime, ParameterEndTime]
-                                );
+                                ),
+                                {json, eadm_utils:pg_as_json(ResCol, ResData)};
                             <<"4">> ->
                                 % 血压
                                 {ok, ResCol, ResData} = eadm_pgpool:equery(
                                     pool_pg,
-                                    "select to_char(ptime, 'yyyy-mm-dd hh24:mi:ss') as utctime,\n"
-                                    "\n"
-                                    "                                    diastolic, shrink\n"
-                                    "\n"
-                                    "                                    from lc_watchbp\n"
-                                    "\n"
-                                    "                                    where ptime >= $1\n"
-                                    "\n"
-                                    "                                    and ptime < $2\n"
-                                    "\n"
-                                    "                                    and diastolic is not null\n"
-                                    "\n"
+                                    "select to_char(ptime, 'yyyy-mm-dd hh24:mi:ss') as utctime,\n"
+                                    "                                    diastolic, shrink\n"
+                                    "                                    from lc_watchbp\n"
+                                    "                                    where ptime >= $1\n"
+                                    "                                    and ptime < $2\n"
+                                    "                                    and diastolic is not null\n"
                                     "                                    order by ptime desc;",
                                     [ParameterStartTime, ParameterEndTime]
-                                );
+                                ),
+                                {json, eadm_utils:pg_as_json(ResCol, ResData)};
                             <<"5">> ->
                                 % 睡眠
                                 {ok, ResCol, ResData} = eadm_pgpool:equery(
                                     pool_pg,
-                                    "select to_char(ptime, 'yyyy-mm-dd hh24:mi:ss') as utctime,\n"
-                                    "\n"
-                                    "                                    sleeptype, starttime, endtime, minute\n"
-                                    "\n"
-                                    "                                    from lc_watchsleep\n"
-                                    "\n"
-                                    "                                    where ptime >= $1\n"
-                                    "\n"
-                                    "                                    and ptime < $2\n"
-                                    "\n"
-                                    "                                    and sleeptype is not null\n"
-                                    "\n"
+                                    "select to_char(ptime, 'yyyy-mm-dd hh24:mi:ss') as utctime,\n"
+                                    "                                    sleeptype, starttime, endtime, minute\n"
+                                    "                                    from lc_watchsleep\n"
+                                    "                                    where ptime >= $1\n"
+                                    "                                    and ptime < $2\n"
+                                    "                                    and sleeptype is not null\n"
                                     "                                    order by ptime desc;",
                                     [ParameterStartTime, ParameterEndTime]
-                                );
+                                ),
+                                {json, eadm_utils:pg_as_json(ResCol, ResData)};
                             <<"6">> ->
                                 % 信号/电量
                                 {ok, ResCol, ResData} = eadm_pgpool:equery(
                                     pool_pg,
-                                    "select to_char(ptime, 'yyyy-mm-dd hh24:mi:ss') as utctime,\n"
-                                    "\n"
-                                    "                                     battery, signal\n"
-                                    "\n"
-                                    "                                    from lc_watchsb\n"
-                                    "\n"
-                                    "                                    where ptime >= $1\n"
-                                    "\n"
-                                    "                                    and ptime < $2\n"
-                                    "\n"
-                                    "                                    and battery is not null\n"
-                                    "\n"
+                                    "select to_char(ptime, 'yyyy-mm-dd hh24:mi:ss') as utctime,\n"
+                                    "                                     battery, signal\n"
+                                    "                                    from lc_watchsb\n"
+                                    "                                    where ptime >= $1\n"
+                                    "                                    and ptime < $2\n"
+                                    "                                    and battery is not null\n"
                                     "                                    order by ptime desc;",
                                     [ParameterStartTime, ParameterEndTime]
-                                );
+                                ),
+                                {json, eadm_utils:pg_as_json(ResCol, ResData)};
                             _ ->
-                                {ResCol, ResData} = {undefined, undefined}
-                        end,
-                        {json, eadm_utils:to_json(eadm_utils:pg_as_json(ResCol, ResData))}
+                                lager:warning("未知的数据类型: ~p", [DataType]),
+                                {json, [
+                                    #{
+                                        <<"Alert">> => unicode:characters_to_binary(
+                                            "不支持的数据类型！", utf8
+                                        )
+                                    }
+                                ]}
+                        end
                 end
         end
     catch

@@ -270,8 +270,11 @@ connect_emqx(#state{
 %% @end
 handle_device_data(Payload) ->
     try
-        Data = json:decode(Payload),
-
+        Data =
+            case json:decode(Payload) of
+                {ok, Result} -> Result;
+                Result -> Result
+            end,
         %% 提取需要的字段
         Imei = maps:get(<<"imei">>, Data, <<>>),
         Imsi = maps:get(<<"imsi">>, Data, <<>>),

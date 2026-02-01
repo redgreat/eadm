@@ -93,7 +93,7 @@ route_table(#{auth_data := #{<<"authed">> := true, <<"username">> := Username}})
         end,
         Hosts
     ),
-    {ok, [{routes, json:encode(Routes)}, {username, Username}], #{view => eadm_sys_routes}};
+    {ok, [{routes, eadm_utils:to_json(Routes)}, {username, Username}], #{view => eadm_sys_routes}};
 route_table(#{auth_data := #{<<"authed">> := false}}) ->
     {redirect, "/login"}.
 

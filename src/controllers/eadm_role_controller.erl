@@ -55,15 +55,15 @@ search(#{
     }
 }) ->
     try
-        {ok, Columns, ResData} =
-            eadm_pgpool_cached:equery_cached(
-                pool_pg,
-                "select id, rolename, rolestatus, createdat from eadm_role where deleted is false order by createdat desc;",
-                [],
-                600,
-                {role_list, all}
-            ),
-        {json, eadm_utils:to_json(eadm_utils:pg_as_json(Columns, ResData))}
+        {ok, ResCol, ResData} = eadm_pgpool:equery(
+            pool_pg,
+            "select id, rolename, rolestatus, createdat\n"
+            "            from vi_role\n"
+            "            order by createdat;",
+            []
+        ),
+        Response = eadm_utils:pg_as_json(ResCol, ResData),
+        {json, Response}
     catch
         _:Error ->
             lager:error("数据查询失败：~p~n", [Error]),
@@ -86,10 +86,11 @@ add(#{
     params := #{<<"roleName">> := RoleName}
 }) ->
     try
-        Sql =
-            "insert into eadm_role(rolename, createduser, updateduser) values($1,$2,$2);",
-        {ok, _} = eadm_pgpool:equery(pool_pg, Sql, [RoleName, CreatedUser]),
-        eadm_pgpool_cached:invalidate_pg_cache(pool_pg, {role_list, all}),
+        eadm_pgpool:equery(
+            pool_pg,
+            "insert into eadm_role(rolename, createduser) values($1, $2);",
+            [RoleName, CreatedUser]
+        ),
         A = unicode:characters_to_binary("角色【", utf8),
         B = unicode:characters_to_binary("】新增成功！", utf8),
         {json, [#{<<"Alert">> => <<A/binary, RoleName/binary, B/binary>>}]}
@@ -114,13 +115,17 @@ loadpermission(#{
     bindings := #{<<"roleId">> := RoleId}
 }) ->
     try
-        Sql = "select rolepermission from eadm_role where id = $1 and deleted is false limit 1;",
-        case eadm_pgpool:equery(pool_pg, Sql, [RoleId]) of
-            {ok, _, [{Permission}]} ->
-                {json, [#{<<"rolepermission">> => normalize_permission(Permission)}]};
-            _ ->
-                {json, [#{<<"Alert">> => unicode:characters_to_binary("角色不存在！", utf8)}]}
-        end
+        {ok, _, ResData} = eadm_pgpool:equery(
+            pool_pg,
+            "select rolepermission\n"
+            "            from eadm_role\n"
+            "            where id = $1\n"
+            "                and deleted is false;",
+            [RoleId]
+        ),
+        RetuenJson = eadm_utils:pg_as_jsondata(ResData),
+        % 角色权限加载直接返回权限对象，不需要包装在data字段中
+        {json, RetuenJson}
     catch
         _:Error ->
             lager:error("角色权限查询失败：~p~n", [Error]),
@@ -150,7 +155,6 @@ updatepermission(#{
         <<"findel">> := Findel,
         <<"crontab">> := Crontab,
         <<"userManage">> := Usermanage,
-        <<"sports">> := Sports,
         <<"devlist">> := Devlist,
         <<"devadd">> := Devadd,
         <<"devedit">> := Devedit,
@@ -176,15 +180,18 @@ updatepermission(#{
                 <<"devassign">> => erlang:binary_to_atom(Devassign)
             },
             <<"crontab">> => erlang:binary_to_atom(Crontab),
-            <<"sports">> => erlang:binary_to_atom(Sports),
             <<"usermanage">> => erlang:binary_to_atom(Usermanage)
         },
-        RolePermissionJson = json:encode(RolePermissionMap),
-        Sql =
-            "update eadm_role set rolepermission = $1, updateduser = $2, updatedat = current_timestamp where id = $3 and deleted is false;",
-        {ok, _} = eadm_pgpool:equery(pool_pg, Sql, [RolePermissionJson, LoginName, RoleId]),
-        eadm_pgpool_cached:invalidate_pg_cache(pool_pg, {role_list, all}),
-        eadm_pgpool_cached:invalidate_pg_cache(pool_pg, {role_permission, RoleId}),
+        RolePermissionJson = eadm_utils:to_json(RolePermissionMap),
+        eadm_pgpool:equery(
+            pool_pg,
+            "update eadm_role\n"
+            "            set rolepermission = $1,\n"
+            "                updateduser = $2,\n"
+            "                updatedat = current_timestamp\n"
+            "            where id = $3;",
+            [RolePermissionJson, LoginName, RoleId]
+        ),
         {json, [#{<<"Alert">> => unicode:characters_to_binary("权限更新成功！", utf8)}]}
     catch
         _:Error ->
@@ -208,15 +215,21 @@ disable(#{
     bindings := #{<<"roleId">> := RoleId}
 }) ->
     try
-        Sql =
-            "update eadm_role set rolestatus = case rolestatus when 0 then 1 else 0 end, updateduser = $1, updatedat = current_timestamp where id = $2 and deleted is false;",
-        {ok, _} = eadm_pgpool:equery(pool_pg, Sql, [LoginName, RoleId]),
-        eadm_pgpool_cached:invalidate_pg_cache(pool_pg, {role_list, all}),
+        eadm_pgpool:equery(
+            pool_pg,
+            "update eadm_role\n"
+            "            set rolestatus = 1 - rolestatus,\n"
+            "                updateduser = $1,\n"
+            "                updatedat = current_timestamp\n"
+            "            where id = $2\n"
+            "                and deleted is false;",
+            [LoginName, RoleId]
+        ),
         {json, [#{<<"Alert">> => unicode:characters_to_binary("角色启禁用成功！", utf8)}]}
     catch
         _:Error ->
-            lager:error("角色启禁用失败：~p~n", [Error]),
-            {json, [#{<<"Alert">> => unicode:characters_to_binary("角色启禁用失败！", utf8)}]}
+            lager:error("任务新增失败：~p~n", [Error]),
+            {json, [#{<<"Alert">> => unicode:characters_to_binary("任务新增失败！", utf8)}]}
     end;
 disable(#{auth_data := #{<<"permission">> := #{<<"usermanage">> := false}}}) ->
     {json, [#{<<"Alert">> => unicode:characters_to_binary("API鉴权失败！", utf8)}]};
@@ -235,10 +248,15 @@ delete(#{
     bindings := #{<<"roleId">> := RoleId}
 }) ->
     try
-        Sql =
-            "update eadm_role set deleted = true, deleteduser = $1, deletedat = current_timestamp where id = $2;",
-        {ok, _} = eadm_pgpool:equery(pool_pg, Sql, [LoginName, RoleId]),
-        eadm_pgpool_cached:invalidate_pg_cache(pool_pg, {role_list, all}),
+        eadm_pgpool:equery(
+            pool_pg,
+            "update eadm_role\n"
+            "            set deleteduser = $1,\n"
+            "                deletedat = now(),\n"
+            "                deleted = true\n"
+            "            where id = $2;",
+            [LoginName, RoleId]
+        ),
         {json, [#{<<"Alert">> => unicode:characters_to_binary("角色删除成功！", utf8)}]}
     catch
         _:Error ->
@@ -261,19 +279,23 @@ getrolelist(#{
     bindings := #{<<"userId">> := UserId}
 }) ->
     try
-        {ok, Columns, ResData} =
-            eadm_pgpool_cached:equery_cached(
-                pool_pg,
-                "select id, rolename, createdat from eadm_role where deleted is false and id not in (select roleid from eadm_userrole where userid = $1 and deleted is false) order by createdat desc;",
-                [UserId],
-                600,
-                {role_available, UserId}
-            ),
-        {json, eadm_utils:to_json(eadm_utils:pg_as_json(Columns, ResData))}
+        {ok, ResCol, ResData} = eadm_pgpool:equery(
+            pool_pg,
+            "select a.id, a.rolename, a.createdat\n"
+            "            from vi_role a\n"
+            "            where not exists(select 1\n"
+            "                from eadm_userrole b\n"
+            "                where b.roleid=a.id\n"
+            "                and b.userid=$1\n"
+            "                and b.deleted is false)\n"
+            "            order by a.createdat;",
+            [UserId]
+        ),
+        {json, eadm_utils:pg_as_json(ResCol, ResData)}
     catch
         _:Error ->
-            lager:error("角色列表查询失败：~p~n", [Error]),
-            {json, [#{<<"Alert">> => unicode:characters_to_binary("角色列表查询失败！", utf8)}]}
+            lager:error("数据查询失败：~p~n", [Error]),
+            {json, [#{<<"Alert">> => unicode:characters_to_binary("数据查询失败！", utf8)}]}
     end;
 getrolelist(#{auth_data := #{<<"permission">> := #{<<"usermanage">> := false}}}) ->
     {json, [#{<<"Alert">> => unicode:characters_to_binary("API鉴权失败！", utf8)}]};
@@ -283,13 +305,3 @@ getrolelist(#{auth_data := #{<<"authed">> := false}}) ->
 %%====================================================================
 %% 内部函数
 %%====================================================================
-
-normalize_permission(Permission) when is_binary(Permission) ->
-    case json:decode(Permission) of
-        {ok, Map} -> Map;
-        _ -> #{}
-    end;
-normalize_permission(Permission) when is_map(Permission) ->
-    Permission;
-normalize_permission(_) ->
-    #{}.

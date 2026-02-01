@@ -28,9 +28,9 @@ function loadMemu() {
             if (resobj.crontab === true) {
                 menuHtml += '<li><a href="/menu/crontab"><i class="fas fa-hourglass-half"></i> 定时任务</a></li>';
             }
-            if (resobj.sports === true) {
-                menuHtml += '<li><a href="/menu/settings"><i class="fas fa-cog"></i> 运动设置</a></li>';
-            }
+            // if (resobj.sports === true) {
+            //     menuHtml += '<li><a href="/menu/settings"><i class="fas fa-cog"></i> 运动设置</a></li>';
+            // }
             if (resobj.usermanage === true) {
                 menuHtml += '<li><a href="/menu/user"><i class="fas fa-user"></i> 用户信息</a></li>';
             }

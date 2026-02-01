@@ -36,12 +36,9 @@
 %%--------------------------------------------------------------------
 start(_StartType, _StartArgs) ->
     application:start(lager),
-
     {ok, Pid} = eadm_sup:start_link(),
     timer:apply_after(2000, fun() -> lager:info("EADM 启动成功，访问地址：http://127.0.0.1:8080") end),
     timer:apply_after(3000, eadm_crontab_controller, init, []),
-    % 缓存预热（延迟5秒，确保所有服务已启动）
-    timer:apply_after(5000, eadm_cache_preload, preload_all, []),
     {ok, Pid}.
 
 %%--------------------------------------------------------------------

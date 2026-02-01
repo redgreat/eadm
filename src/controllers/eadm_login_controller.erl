@@ -36,11 +36,12 @@ login(Req) ->
                         UserName = getusername(LoginName),
                         Permission = getpermission(LoginName),
                         NewExp = eadm_utils:get_exp_bin(),
+                        % 设置 session 数据
                         nova_session:set(Req, <<"loginname">>, LoginName),
                         nova_session:set(Req, <<"username">>, UserName),
                         nova_session:set(Req, <<"permission">>, Permission),
                         nova_session:set(Req, <<"exp">>, NewExp),
-                        lager:info("User: ~ts, Login Success! New Exp: ~p", [UserName, NewExp]),
+                        lager:debug("User: ~ts, Login Success! New Exp: ~p~n", [UserName, NewExp]),
                         A = unicode:characters_to_binary("欢迎【", utf8),
                         B = unicode:characters_to_binary("】登录! ", utf8),
                         {json, [
@@ -95,14 +96,18 @@ logout(Req) ->
 %% @end
 userinfo(#{auth_data := #{<<"authed">> := true, <<"loginname">> := LoginName}}) ->
     try
-        Sql =
-            "select loginname, username, email, userstatus, deleted from eadm_user where loginname = $1 limit 1;",
-        case eadm_pgpool:equery(pool_pg, Sql, [LoginName]) of
-            {ok, _, [{LName, UName, Email, 0, false}]} ->
-                {json, [#{<<"loginname">> => LName, <<"username">> => UName, <<"email">> => Email}]};
-            _ ->
-                {json, [#{<<"Alert">> => unicode:characters_to_binary("用户不存在或已禁用！", utf8)}]}
-        end
+        {ok, _, ResData} = eadm_pgpool:equery(
+            pool_pg,
+            "select loginname, username, email\n"
+            "            from eadm_user\n"
+            "            where loginname = $1\n"
+            "                and userstatus = 0\n"
+            "                and deleted is false\n"
+            "            limit 1",
+            [LoginName]
+        ),
+        ResList = eadm_utils:pg_as_list(ResData),
+        {json, ResList}
     catch
         _:Error ->
             lager:error("用户查询失败：~p~n", [Error]),
@@ -121,15 +126,16 @@ useredit(#{
     case re:run(Email, "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$") of
         {match, _} ->
             try
-                Sql =
-                    "update eadm_user set loginname = $1, username = $2, email = $3, updateduser = $4, updatedat = current_timestamp where loginname = $5 and deleted is false;",
-                {ok, _} = eadm_pgpool:equery(pool_pg, Sql, [
-                    LoginName,
-                    NewUserName,
-                    Email,
-                    CreatedUser,
-                    CreatedUser
-                ]),
+                eadm_pgpool:equery(
+                    pool_pg,
+                    "update eadm_user\n"
+                    "                    set loginname = $1,\n"
+                    "                    username = $2,\n"
+                    "                    email = $3,\n"
+                    "                    updateduser = $4\n"
+                    "                    where loginname = $5;",
+                    [LoginName, NewUserName, Email, CreatedUser, CreatedUser]
+                ),
                 A = unicode:characters_to_binary("用户【", utf8),
                 B = unicode:characters_to_binary("】编辑成功！", utf8),
                 {json, [#{<<"Alert">> => <<A/binary, NewUserName/binary, B/binary>>}]}
@@ -159,11 +165,17 @@ userpwd(#{
                 true ->
                     CryptoGram = eadm_utils:pass_encrypt(PasswordNew),
                     try
-                        Sql =
-                            "update eadm_user set passwd = $1, updateduser = $2, updatedat = current_timestamp where loginname = $3 and deleted is false;",
-                        {ok, _} = eadm_pgpool:equery(pool_pg, Sql, [
-                            CryptoGram, LoginName, LoginName
-                        ]),
+                        eadm_pgpool:equery(
+                            pool_pg,
+                            "update eadm_user\n"
+                            "                            set updateduser = $1,\n"
+                            "                            updatedat = current_timestamp,\n"
+                            "                            passwd = $2\n"
+                            "                            where loginname = $3\n"
+                            "                                and userstatus = 0\n"
+                            "                                and deleted is false;",
+                            [LoginName, CryptoGram, LoginName]
+                        ),
                         {json, [#{<<"Alert">> => unicode:characters_to_binary("密码修改成功！", utf8)}]}
                     catch
                         _:Error ->
@@ -214,17 +226,22 @@ userpwd(#{auth_data := #{<<"authed">> := false}}) ->
 %% @end
 getpermission(LoginName) ->
     try
-        Sql = "select rolepermission from vi_userpermission where loginname = $1 limit 1;",
-        case eadm_pgpool:equery(pool_pg, Sql, [LoginName]) of
-            {ok, _, [{Permission}]} ->
-                normalize_permission(Permission);
-            _ ->
-                #{}
-        end
+        {ok, _, ResData} = eadm_pgpool:equery(
+            pool_pg,
+            "select rolepermission\n"
+            "            from vi_userpermission\n"
+            "            where loginname = $1\n"
+            "            limit 1;",
+            [LoginName]
+        ),
+        Permission = eadm_utils:pg_as_jsondata(ResData),
+        Permission
     catch
-        _:Error ->
-            lager:error("用户权限获取失败：~p~n", [Error]),
-            #{}
+        ErrorType:ErrorReason:Stacktrace ->
+            lager:error("用户权限获取失败 - Type: ~p, Reason: ~p, Stacktrace: ~p", [
+                ErrorType, ErrorReason, Stacktrace
+            ]),
+            #{<<"Alert">> => unicode:characters_to_binary("用户权限获取失败！", utf8)}
     end.
 
 %% @doc
@@ -232,26 +249,20 @@ getpermission(LoginName) ->
 %% @end
 getusername(LoginName) ->
     try
-        Sql = "select username from eadm_user where loginname = $1 and deleted is false limit 1;",
-        case eadm_pgpool:equery(pool_pg, Sql, [LoginName]) of
-            {ok, _, [{UserName}]} -> UserName;
-            _ -> <<"未知用户"/utf8>>
-        end
+        {ok, _, ResData} = eadm_pgpool:equery(
+            pool_pg,
+            "select username\n"
+            "            from eadm_user\n"
+            "            where loginname = $1\n"
+            "            limit 1;",
+            [LoginName]
+        ),
+        eadm_utils:pg_as_jsonmap(ResData)
     catch
         _:Error ->
             lager:error("登录名称获取失败：~p~n", [Error]),
-            <<"未知用户"/utf8>>
+            {json, [#{<<"Alert">> => unicode:characters_to_binary("登录名称获取失败！", utf8)}]}
     end.
-
-normalize_permission(Permission) when is_binary(Permission) ->
-    case json:decode(Permission) of
-        {ok, Map} -> Map;
-        _ -> #{}
-    end;
-normalize_permission(Permission) when is_map(Permission) ->
-    Permission;
-normalize_permission(_) ->
-    #{}.
 
 %% @doc
 %% 验证二进制密码数据

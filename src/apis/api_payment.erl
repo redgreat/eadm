@@ -55,7 +55,7 @@ fetch_alipay_transactions(StartDate, EndDate) ->
                     sign_type => "RSA2",
                     timestamp => format_datetime(erlang:localtime()),
                     version => "1.0",
-                    biz_content => json:encode(#{
+                    biz_content => eadm_utils:to_json(#{
                         start_time => StartDate,
                         end_time => EndDate
                     })

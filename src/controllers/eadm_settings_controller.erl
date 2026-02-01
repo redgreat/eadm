@@ -134,10 +134,10 @@ link_garmin(#{req := Req}) ->
     case garmin_client_service:login(Email, Password) of
         {ok, #{oauth1 := OAuth1Token, oauth2 := OAuth2Token}} ->
             %% 加密并保存tokens
-            OAuth1Encrypted = garmin_client_service:encrypt_token(json:encode(OAuth1Token)),
-            OAuth2Encrypted = garmin_client_service:encrypt_token(json:encode(OAuth2Token)),
-            OAuth1Json = json:encode(#{<<"enc">> => OAuth1Encrypted}),
-            OAuth2Json = json:encode(#{<<"enc">> => OAuth2Encrypted}),
+            OAuth1Encrypted = garmin_client_service:encrypt_token(eadm_utils:to_json(OAuth1Token)),
+            OAuth2Encrypted = garmin_client_service:encrypt_token(eadm_utils:to_json(OAuth2Token)),
+            OAuth1Json = eadm_utils:to_json(#{<<"enc">> => OAuth1Encrypted}),
+            OAuth2Json = eadm_utils:to_json(#{<<"enc">> => OAuth2Encrypted}),
 
             %% 保存到数据库
             SQL =

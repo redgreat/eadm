@@ -21,4 +21,6 @@ rebar3.crashdump
 doc/
 .trae
 .qoder
+.vscode
+.kiro
 Mnesia*/

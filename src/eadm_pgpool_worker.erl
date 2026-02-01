@@ -171,20 +171,13 @@ start_link(Args) ->
 %% @end
 init(Args) ->
     process_flag(trap_exit, true),
-    %% 延迟连接：初始化时不立即连接数据库，而是返回状态，
-    %% 并在第一次使用或通过 handle_info 进行连接。
-    {ok, #state{start_args = Args, delay = ?INITIAL_DELAY, conn = undefined, timer = undefined}}.
+    {ok, connect(#state{start_args = Args, delay = ?INITIAL_DELAY})}.
 
 %% @doc
 %% 提交处理逻辑
 %% @end
-handle_call(Query, From, #state{conn = undefined} = State) ->
-    case connect(State) of
-        #state{conn = undefined} = NewState ->
-            {reply, {error, disconnected}, NewState};
-        NewState ->
-            handle_call(Query, From, NewState)
-    end;
+handle_call(_Query, _From, #state{conn = undefined} = State) ->
+    {reply, {error, disconnected}, State};
 handle_call(
     {squery, Sql},
     _From,
@@ -267,45 +260,24 @@ connect(State) ->
 
     case epgsql:connect(Args) of
         {ok, Conn} ->
-            lager:info(
-                "PGPool Worker ~p Connected to ~s at ~s with user ~s: ~p",
+            error_logger:info_msg(
+                "~p Connected to ~s at ~s with user ~s: ~p~n",
                 [self(), Database, Hostname, Username, Conn]
             ),
-            case State#state.timer of
-                undefined -> ok;
-                Tref -> timer:cancel(Tref)
-            end,
+            timer:cancel(State#state.timer),
             State#state{conn = Conn, delay = ?INITIAL_DELAY, timer = undefined};
-        {error, Error} ->
-            NewDelay = calculate_delay(State#state.delay),
-            lager:warning(
-                "PGPool Worker ~p Unable to connect to ~s at ~s with user ~s (~p) - attempting reconnect in ~p ms",
-                [self(), Database, Hostname, Username, Error, NewDelay]
-            ),
-            case State#state.timer of
-                undefined ->
-                    {ok, Tref} = timer:apply_after(State#state.delay, gen_server, cast, [
-                        self(), reconnect
-                    ]),
-                    State#state{conn = undefined, delay = NewDelay, timer = Tref};
-                _ ->
-                    State#state{conn = undefined, delay = NewDelay}
-            end;
         Error ->
             NewDelay = calculate_delay(State#state.delay),
-            lager:warning(
-                "PGPool Worker ~p Unexpected error connecting to ~s at ~s with user ~s (~p) - attempting reconnect in ~p ms",
+            error_logger:warning_msg(
+                "~p Unable to connect to ~s at ~s with user ~s (~p) "
+                "- attempting reconnect in ~p ms~n",
                 [self(), Database, Hostname, Username, Error, NewDelay]
             ),
-            case State#state.timer of
-                undefined ->
-                    {ok, Tref} = timer:apply_after(State#state.delay, gen_server, cast, [
-                        self(), reconnect
-                    ]),
-                    State#state{conn = undefined, delay = NewDelay, timer = Tref};
-                _ ->
-                    State#state{conn = undefined, delay = NewDelay}
-            end
+            {ok, Tref} =
+                timer:apply_after(
+                    State#state.delay, gen_server, cast, [self(), reconnect]
+                ),
+            State#state{conn = undefined, delay = NewDelay, timer = Tref}
     end.
 
 %% @doc

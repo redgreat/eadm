@@ -151,10 +151,19 @@ pg_as_jsonmap(ResData) ->
 %% @end
 -spec pg_as_jsondata([pg_row()]) -> any().
 pg_as_jsondata(ResData) ->
-    case erlang:hd(ResData) of
-        {ResBin} when is_binary(ResBin) ->
-            {ok, RetuenData} = json:decode(ResBin),
-            RetuenData;
+    case ResData of
+        [] ->
+            #{};
+        [Row | _] when is_tuple(Row) ->
+            case Row of
+                {ResBin} when is_binary(ResBin) ->
+                    case json:decode(ResBin) of
+                        {ok, Data} -> Data;
+                        Data -> Data
+                    end;
+                _ ->
+                    #{}
+            end;
         _ ->
             #{}
     end.
@@ -347,12 +356,10 @@ pass_encrypt(PassBin) ->
 validate_login(LoginName, Password) ->
     Sql = "select passwd, userstatus, deleted from eadm_user where loginname = $1 limit 1;",
     case
-        eadm_pgpool_cached:equery_cached(
+        eadm_pgpool:equery(
             pool_pg,
             Sql,
-            [LoginName],
-            300,
-            {user_login, LoginName}
+            [LoginName]
         )
     of
         {ok, _, [{DbPassword, DbUserStatus, false}]} ->

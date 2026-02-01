@@ -79,13 +79,13 @@ search(#{
                                 % 未指定设备号，查询用户有权限的所有设备轨迹
                                 {ok, _, ResData} = eadm_pgpool:equery(
                                     pool_pg,
-                                    "select c.lng, c.lat\n"
-                                    "                                    from lc_carlocdaily c\n"
-                                    "                                    join eadm_userdevice ud on c.deviceno = ud.deviceno\n"
-                                    "                                    where c.ptime >= $1\n"
-                                    "                                      and c.ptime < $2\n"
-                                    "                                      and ud.loginname = $3\n"
-                                    "                                      and ud.deleted is false\n"
+                                    "select c.lng, c.lat\n"
+                                    "                                    from lc_carlocdaily c\n"
+                                    "                                    join eadm_userdevice ud on c.deviceno = ud.deviceno\n"
+                                    "                                    where c.ptime >= $1\n"
+                                    "                                      and c.ptime < $2\n"
+                                    "                                      and ud.loginname = $3\n"
+                                    "                                      and ud.deleted is false\n"
                                     "                                    order by c.ptime asc;",
                                     [ParameterStartTime, ParameterEndTime, LoginName]
                                 ),
@@ -94,7 +94,7 @@ search(#{
                                 % 指定了设备号，检查用户是否有权限访问该设备
                                 {ok, _, AuthData} = eadm_pgpool:equery(
                                     pool_pg,
-                                    "select count(*) from eadm_userdevice\n"
+                                    "select count(*) from eadm_userdevice\n"
                                     "                                    where deviceno = $1 and loginname = $2 and deleted is false;",
                                     [DeviceNo, LoginName]
                                 ),
@@ -112,11 +112,11 @@ search(#{
                                         % 用户有权限，查询指定设备的轨迹
                                         {ok, _, ResData} = eadm_pgpool:equery(
                                             pool_pg,
-                                            "select lng, lat\n"
-                                            "                                            from lc_carlocdaily\n"
-                                            "                                            where ptime >= $1\n"
-                                            "                                              and ptime < $2\n"
-                                            "                                              and deviceno = $3\n"
+                                            "select lng, lat\n"
+                                            "                                            from lc_carlocdaily\n"
+                                            "                                            where ptime >= $1\n"
+                                            "                                              and ptime < $2\n"
+                                            "                                              and deviceno = $3\n"
                                             "                                            order by ptime asc;",
                                             [ParameterStartTime, ParameterEndTime, DeviceNo]
                                         ),

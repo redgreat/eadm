@@ -49,7 +49,7 @@ load_and_schedule_jobs() ->
         Sql =
             "select id, cronname, cronexp, cronmfa, starttime, endtime from eadm_crontab where cronstatus = 0 and deleted is false;",
         {ok, Columns, ResData} =
-            eadm_pgpool_cached:equery_cached(pool_pg, Sql, [], 300, {crontab_active, all}),
+            eadm_pgpool:equery(pool_pg, Sql, []),
         ActiveJobs = eadm_utils:pg_as_map(Columns, ResData),
 
         case ActiveJobs of
@@ -266,7 +266,7 @@ search(#{
 }) ->
     try
         % 使用缓存包装器，TTL 5分钟
-        {ok, Columns, ResData} = eadm_pgpool_cached:equery_cached(
+        {ok, Columns, ResData} = eadm_pgpool:equery(
             pool_pg,
             "select id, cronname, cronexp, cronmfa,\n"
             "\n"
@@ -281,9 +281,7 @@ search(#{
             "\n"
             "\n"
             "            order by createdat desc;",
-            [<<"%", CronName/binary, "%">>],
-            300,
-            {crontab_list, CronName}
+            [<<"%", CronName/binary, "%">>]
         ),
         {json, eadm_utils:pg_as_json(Columns, ResData)}
     catch
@@ -656,9 +654,7 @@ toggle(#{
         Result = eadm_pgpool:equery(
             pool_pg,
             "update eadm_crontab set cronstatus = $1, updateduser = $2, updatedat = now()\n"
-            "\n"
-            "\n"
-            "             where id = $3 returning cronexp, cronmfa, starttime, endtime;",
+            "where id = $3 returning cronexp, cronmfa, starttime, endtime;",
             [StatusInt, LoginName, CronId]
         ),
 

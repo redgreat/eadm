@@ -197,7 +197,7 @@ share_page(#{bindings := #{<<"shareId">> := ShareToken}} = _Params) ->
                 [
                     {activity, ActivityView},
                     {has_map_data, HasMapData},
-                    {map_coordinates, json:encode(MapCoordinates)},
+                    {map_coordinates, eadm_utils:to_json(MapCoordinates)},
                     {share_url, ShareUrl}
                 ],
                 #{view => eadm_share}};

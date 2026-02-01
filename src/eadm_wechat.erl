@@ -35,7 +35,7 @@
 %% @end
 send_msg(Content) ->
     try
-        JsonData = json:encode(#{
+        JsonData = eadm_utils:to_json(#{
             msgtype => 'text',
             text => #{content => Content, mentioned_list => ?WX_MENTIONS}
         }),
