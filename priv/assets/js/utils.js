@@ -106,9 +106,9 @@ function showInfoToast(message) {
         const toastHeaderEl = toastEl.querySelector('.toast-header svg rect');
         const toastBodyEl = toastEl.querySelector('.toast-body');
 
-        // 设置信息颜色（蓝色）
+        // 设置信息颜色（淡红色）
         if (toastHeaderEl) {
-            toastHeaderEl.setAttribute('fill', '#007aff');
+            toastHeaderEl.setAttribute('fill', '#ff6b6b');
         }
 
         toastBodyEl.textContent = message;

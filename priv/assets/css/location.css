@@ -48,7 +48,7 @@
 .location-query-panel {
     border: none;
     border-radius: 0.5rem;
-    box-shadow: 0 4px 16px rgba(33, 150, 243, 0.1);
+    box-shadow: 0 4px 16px rgba(255, 107, 107, 0.1);
     overflow: hidden;
     position: absolute;
     top: 15px;
@@ -84,9 +84,9 @@
 }
 
 .location-query-panel .form-control:focus {
-    border-color: #2196F3;
+    border-color: #ff6b6b;
     outline: none;
-    box-shadow: 0 0 0 0.2rem rgba(33, 150, 243, 0.25);
+    box-shadow: 0 0 0 0.2rem rgba(255, 107, 107, 0.25);
 }
 
 .location-query-panel .form-control::placeholder {

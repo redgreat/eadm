@@ -15,7 +15,7 @@
 
 /* 表格标题美化样式 */
 .table thead th {
-    background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(180deg, #ffb3ba 0%, #ff8a8a 100%);
     color: #ffffff;
     font-weight: 600;
     text-transform: none;
@@ -40,7 +40,7 @@
 
 /* 表格标题悬停效果 */
 .table thead th:hover {
-    background: linear-gradient(180deg, #764ba2 0%, #667eea 100%);
+    background: linear-gradient(180deg, #ff8a8a 0%, #ffb3ba 100%);
     cursor: pointer;
 }
 
@@ -73,7 +73,7 @@
 
 /* 表格行悬停效果 */
 .table tbody tr:hover {
-    background: linear-gradient(90deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%);
+    background: linear-gradient(90deg, rgba(255, 179, 186, 0.08) 0%, rgba(255, 138, 138, 0.08) 100%);
     transform: scale(1.005);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     position: relative;
@@ -99,7 +99,7 @@
 }
 
 .table-striped tbody tr:nth-of-type(odd):hover {
-    background: linear-gradient(90deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%);
+    background: linear-gradient(90deg, rgba(255, 179, 186, 0.08) 0%, rgba(255, 138, 138, 0.08) 100%);
 }
 
 /* 紧凑型表格 */
@@ -147,17 +147,17 @@
 }
 
 .dataTables_paginate .paginate_button.current {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    background: linear-gradient(135deg, #ffb3ba 0%, #ff8a8a 100%) !important;
     border-color: transparent !important;
     color: white !important;
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 4px 12px rgba(255, 138, 138, 0.4);
     transform: translateY(-2px);
 }
 
 .dataTables_paginate .paginate_button:hover:not(.current):not(.disabled) {
-    background: linear-gradient(90deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%) !important;
-    border-color: #667eea !important;
-    color: #667eea !important;
+    background: linear-gradient(90deg, rgba(255, 179, 186, 0.1) 0%, rgba(255, 138, 138, 0.1) 100%) !important;
+    border-color: #ff6b6b !important;
+    color: #ff6b6b !important;
     transform: translateY(-1px);
 }
 
@@ -211,9 +211,9 @@
 }
 
 .dataTables_filter input:focus {
-    border-color: #667eea;
+    border-color: #ff6b6b;
     outline: none;
-    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+    box-shadow: 0 0 0 4px rgba(255, 107, 107, 0.1);
     background-color: #fff;
 }
 
@@ -239,7 +239,7 @@
     margin: 0 0.5rem;
     transition: all 0.2s ease;
     background-color: #f8f9fa;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23667eea' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ff6b6b' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 0.75rem center;
     background-size: 12px;
@@ -248,9 +248,9 @@
 }
 
 .dataTables_length select:focus {
-    border-color: #667eea;
+    border-color: #ff6b6b;
     outline: none;
-    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+    box-shadow: 0 0 0 4px rgba(255, 107, 107, 0.1);
     background-color: #fff;
 }
 
@@ -264,8 +264,8 @@
     border-radius: 12px !important;
     padding: 2rem 3rem !important;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15) !important;
-    border: 2px solid #667eea !important;
-    color: #667eea !important;
+    border: 2px solid #ff6b6b !important;
+    color: #ff6b6b !important;
     font-weight: 600 !important;
     font-size: 1.125rem !important;
 }

@@ -146,7 +146,7 @@
             <div class="content">
                 <div class="row">
                     <div class="dfd text-center">
-                        <i class="blue large-icon mb-2 fas fa-car"></i>
+                        <i class="cash large-icon mb-2 fas fa-car"></i>
                         <h4 class="mb-0" id="locationYear">-</h4>
                         <p class="text-muted">年度里程</p>
                     </div>

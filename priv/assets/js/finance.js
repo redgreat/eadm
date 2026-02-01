@@ -188,7 +188,7 @@ function deleteRecord(detailId) {
             if (response && response.length > 0 && response[0].Alert) {
                 showWarningToast(response[0].Alert);
             } else {
-                showWarningToast("数据删除成功！");
+                showSuccessToast("数据删除成功！");
             }
         }
     });
@@ -373,19 +373,19 @@ function preprocessData(importType, data) {
     return processedData;
 }
 
-/**
- * 显示信息提示
- * @param {string} message - 提示信息
- */
-function showInfoToast(message) {
-    const toastElList = [].slice.call(document.querySelectorAll('.toast'));
-    const toastList = toastElList.map(function (toastEl) {
-        const toastBodyEl = toastEl.querySelector('.toast-body');
-        toastBodyEl.textContent = message;
-        return new bootstrap.Toast(toastEl);
-    });
-    toastList.forEach(toast => toast.show());
-}
+// /**
+//  * 显示信息提示
+//  * @param {string} message - 提示信息
+//  */
+// function showInfoToast(message) {
+//     const toastElList = [].slice.call(document.querySelectorAll('.toast'));
+//     const toastList = toastElList.map(function (toastEl) {
+//         const toastBodyEl = toastEl.querySelector('.toast-body');
+//         toastBodyEl.textContent = message;
+//         return new bootstrap.Toast(toastEl);
+//     });
+//     toastList.forEach(toast => toast.show());
+// }
 
 /**
  * 映射支付宝字段

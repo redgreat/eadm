@@ -18,7 +18,7 @@
 .settings-header i {
     font-size: 24px;
     margin-right: 12px;
-    color: #667eea;
+    color: #ff6b6b;
 }
 
 .status-badge {
@@ -40,7 +40,7 @@
 
 .sync-log-item {
     padding: 12px;
-    border-left: 3px solid #667eea;
+    border-left: 3px solid #ff6b6b;
     background: #f8f9fa;
     margin-bottom: 10px;
     border-radius: 4px;

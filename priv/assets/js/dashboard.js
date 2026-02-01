@@ -32,8 +32,8 @@ function loadChart() {
                 labels: resdata[8],
                 datasets: [{
                     data: resdata[9],
-                    backgroundColor: "rgba(48, 164, 255, 0.2)",
-                    borderColor: "rgba(48, 164, 255, 0.8)",
+                    backgroundColor: "rgba(255, 179, 186, 0.3)",
+                    borderColor: "rgba(255, 107, 107, 0.8)",
                     fill: true,
                     borderWidth: 1
                 }]

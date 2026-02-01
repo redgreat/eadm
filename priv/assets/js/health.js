@@ -23,12 +23,12 @@ function translateSleepType(columnName) {
 
 // 数据类型配置
 const dataTypeConfig = {
-    'Steps': { name: '步数', unit: '步', color: '#5470c6' },
+    'Steps': { name: '步数', unit: '步', color: '#ff6b6b' },
     'HeartRate': { name: '心率', unit: 'bpm', color: '#ee6666' },
     'Temperature': { name: '体温', unit: '°C', color: '#fac858' },
     'Pressure': { name: '血压', unit: 'mmHg', color: '#91cc75' },
-    'Sleep': { name: '睡眠', unit: '小时', color: '#73c0de' },
-    'Battery': { name: '电量', unit: '%', color: '#3ba272' }
+    'Sleep': { name: '睡眠', unit: '小时', color: '#ffb3ba' },
+    'Battery': { name: '电量', unit: '%', color: '#ff8a8a' }
 };
 
 // 初始化图表

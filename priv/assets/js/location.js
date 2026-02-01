@@ -195,7 +195,7 @@ AMapLoader.load({
                 map: mapwong,
                 path: linePath,
                 showDir: true,
-                strokeColor: '#28F',
+                strokeColor: '#ffb3ba',
                 // strokeOpacity: 0.8,
                 strokeWeight: 6,
                 // strokeStyle: 'solid'
@@ -203,7 +203,7 @@ AMapLoader.load({
 
             passedPolyline = new AMap.Polyline({
                 map: mapwong,
-                strokeColor: '#AF5',
+                strokeColor: '#ff6b6b',
                 // strokeOpacity: 0.8,
                 strokeWeight: 6,
             });
@@ -253,6 +253,10 @@ AMapLoader.load({
             const toastList = toastElList.map(function (toastEl) {
                 const toastBodyEl = toastEl.querySelector('.toast-body');
                 toastBodyEl.textContent = "此时间段内无定位数据！";
+                // 设置信息颜色（淡红色）
+                if (toastHeaderEl) {
+                    toastHeaderEl.setAttribute('fill', '#ff6b6b');
+                }
                 return new bootstrap.Toast(toastEl);
             })
             toastList.forEach(toast => toast.show());

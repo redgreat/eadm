@@ -1,6 +1,6 @@
 /* 运动活动分享页面样式 */
 body {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #ffb3ba 0%, #ff8a8a 100%);
     min-height: 100vh;
     padding: 20px;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -45,7 +45,7 @@ body {
 }
 
 .stat-item {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #ffb3ba 0%, #ff8a8a 100%);
     border-radius: 12px;
     padding: 20px;
     color: white;
@@ -89,7 +89,7 @@ body {
 }
 
 .type-cycling { 
-    background: #2196F3; 
+    background: #ff8a8a; 
     color: white; 
 }
 

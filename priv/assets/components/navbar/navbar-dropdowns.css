@@ -8,7 +8,7 @@
 
 /* 用户下拉菜单 */
 .nav-dropdown .nav-link {
-    color: #2196F3;
+    color: #ff6b6b;
     line-height: 1.42857;
     padding: 1rem 1.2rem !important;
     transition: all 0.2s ease;
@@ -36,13 +36,13 @@
 }
 
 .nav-dropdown .nav-link:hover {
-    color: #1565c0;
-    background: rgba(33, 150, 243, 0.05);
+    color: #e63946;
+    background: rgba(255, 107, 107, 0.05);
 }
 
 .nav-dropdown.show .nav-link {
-    color: #1565c0;
-    background: rgba(33, 150, 243, 0.08);
+    color: #e63946;
+    background: rgba(255, 107, 107, 0.08);
 }
 
 .nav-dropdown .nav-link::after {
@@ -55,7 +55,7 @@
     height: 36px;
     border-radius: 50%;
     margin-right: 10px;
-    border: 2px solid #2196F3;
+    border: 2px solid #ff6b6b;
     object-fit: cover;
 }
 
@@ -133,12 +133,12 @@
     margin-right: 10px;
     width: 20px;
     text-align: center;
-    color: #2196F3;
+    color: #ff6b6b;
 }
 
 .nav-dropdown .nav-link-menu .nav-list li a:hover {
-    background: linear-gradient(90deg, rgba(33, 150, 243, 0.1) 0%, rgba(33, 150, 243, 0.05) 100%);
-    color: #2196F3;
+    background: linear-gradient(90deg, rgba(255, 107, 107, 0.1) 0%, rgba(255, 107, 107, 0.05) 100%);
+    color: #ff6b6b;
     padding-left: 1.5rem;
 }
 

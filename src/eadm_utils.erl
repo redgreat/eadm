@@ -58,18 +58,53 @@
 %% @end
 to_json(Data) ->
     try
-        Encoded = json:encode(Data),
-        case Encoded of
+        % 预处理数据，确保所有键都是二进制字符串
+        ProcessedData = preprocess_data(Data),
+        case json:encode(ProcessedData) of
             {ok, Bin} when is_binary(Bin) -> Bin;
             Bin when is_binary(Bin) -> Bin;
             Iolist when is_list(Iolist) -> iolist_to_binary(Iolist);
-            Other -> iolist_to_binary(Other)
+            Other -> 
+                lager:error("JSON编码返回未知格式: ~p", [Other]),
+                <<"{}">>
         end
     catch
         ErrorType:ErrorReason ->
             lager:error("JSON编码失败: ~p:~p, 数据: ~p", [ErrorType, ErrorReason, Data]),
             <<"{}">>
     end.
+
+%% @private
+%% 预处理数据，确保符合JSON标准
+preprocess_data(Data) when is_map(Data) ->
+    maps:from_list(
+        lists:map(
+            fun({K, V}) ->
+                {ensure_binary(K), preprocess_data(V)}
+            end,
+            maps:to_list(Data)
+        )
+    );
+preprocess_data(Data) when is_list(Data) ->
+    [preprocess_data(Item) || Item <- Data];
+preprocess_data(Data) when is_tuple(Data) ->
+    preprocess_data(tuple_to_list(Data));
+preprocess_data(Data) when is_atom(Data) ->
+    atom_to_binary(Data, utf8);
+preprocess_data(Data) when is_integer(Data) orelse is_float(Data) ->
+    Data;
+preprocess_data(Data) when is_binary(Data) ->
+    Data;
+preprocess_data(Data) ->
+    lager:error("不支持的JSON数据类型: ~p, 值: ~p", [Data]),
+    null.
+
+%% @private
+%% 确保键是二进制字符串
+ensure_binary(Key) when is_binary(Key) -> Key;
+ensure_binary(Key) when is_atom(Key) -> atom_to_binary(Key, utf8);
+ensure_binary(Key) when is_list(Key) -> list_to_binary(Key);
+ensure_binary(Key) when is_integer(Key) -> integer_to_binary(Key).
 
 %% @doc
 %% 获取session过期时间
