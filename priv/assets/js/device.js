@@ -804,5 +804,3 @@ function toggleDeviceStatus(deviceNo) {
         }
     });
 }
-
-// 这些函数已经在utils.js中定义，这里不再重复定义

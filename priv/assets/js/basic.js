@@ -139,18 +139,5 @@ $(document).ready(function() {
     });
 });
 
-// 公用函数
-window.showWarningToast = window.showWarningToast || {};
-
-function showWarningToast(message) {
-    const toastElList = [].slice.call(document.querySelectorAll('.toast'));
-    const toastList = toastElList.map(function (toastEl) {
-        const toastBodyEl = toastEl.querySelector('.toast-body');
-        toastBodyEl.textContent = message;
-        return new bootstrap.Toast(toastEl);
-    });
-    toastList.forEach(toast => toast.show());
-}
-
 // 配置常量
 defaultLanguage = 'zh';

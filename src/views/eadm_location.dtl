@@ -57,5 +57,4 @@
     <script src="/assets/js/utils-datetime.js"></script>
     <script src="https://webapi.amap.com/loader.js"></script>
     <script src="/assets/js/location.js"></script>
-
 {% endblock %}

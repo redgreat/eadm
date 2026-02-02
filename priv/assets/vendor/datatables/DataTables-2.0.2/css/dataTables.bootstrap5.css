@@ -1,6 +1,6 @@
 @charset "UTF-8";
 :root {
-  --dt-row-selected: 13, 110, 253;
+  --dt-row-selected: 255, 107, 157;
   --dt-row-selected-text: 255, 255, 255;
   --dt-row-selected-link: 9, 10, 11;
   --dt-row-stripe: 0, 0, 0;
@@ -181,7 +181,7 @@ div.dt-processing > div:last-child > div {
   width: 13px;
   height: 13px;
   border-radius: 50%;
-  background: rgb(13, 110, 253);
+  background: rgb(255, 107, 157);
   background: rgb(var(--dt-row-selected));
   animation-timing-function: cubic-bezier(0, 1, 1, 0);
 }
@@ -341,7 +341,7 @@ table.table.dataTable > tbody > tr {
   background-color: transparent;
 }
 table.table.dataTable > tbody > tr.selected > * {
-  box-shadow: inset 0 0 0 9999px rgb(13, 110, 253);
+  box-shadow: inset 0 0 0 9999px rgb(255, 107, 157);
   box-shadow: inset 0 0 0 9999px rgb(var(--dt-row-selected));
   color: rgb(255, 255, 255);
   color: rgb(var(--dt-row-selected-text));
@@ -354,14 +354,14 @@ table.table.dataTable.table-striped > tbody > tr:nth-of-type(2n+1) > * {
   box-shadow: inset 0 0 0 9999px rgba(var(--dt-row-stripe), 0.05);
 }
 table.table.dataTable.table-striped > tbody > tr:nth-of-type(2n+1).selected > * {
-  box-shadow: inset 0 0 0 9999px rgba(13, 110, 253, 0.95);
+  box-shadow: inset 0 0 0 9999px rgba(255, 107, 157, 0.95);
   box-shadow: inset 0 0 0 9999px rgba(var(--dt-row-selected), 0.95);
 }
 table.table.dataTable.table-hover > tbody > tr:hover > * {
   box-shadow: inset 0 0 0 9999px rgba(var(--dt-row-hover), 0.075);
 }
 table.table.dataTable.table-hover > tbody > tr.selected:hover > * {
-  box-shadow: inset 0 0 0 9999px rgba(13, 110, 253, 0.975);
+  box-shadow: inset 0 0 0 9999px rgba(255, 107, 157, 0.975);
   box-shadow: inset 0 0 0 9999px rgba(var(--dt-row-selected), 0.975);
 }
 

@@ -181,6 +181,7 @@
         <script src="/assets/vendor/jquery/jquery.min.js"></script>
         <script src="/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
         <script src="/assets/js/basic.js"></script>
+        <script src="/assets/js/utils.js"></script>
         {% block js_scripts %}{% endblock %}
     </body>
 </html>

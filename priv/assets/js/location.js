@@ -93,20 +93,6 @@ AMapLoader.load({
     }
 
     /**
-     * 显示警告提示
-     * @param {string} message - 提示信息
-     */
-    function showWarningToast(message) {
-        const toastElList = [].slice.call(document.querySelectorAll('.toast'));
-        const toastList = toastElList.map(function (toastEl) {
-            const toastBodyEl = toastEl.querySelector('.toast-body');
-            toastBodyEl.textContent = message;
-            return new bootstrap.Toast(toastEl);
-        });
-        toastList.forEach(toast => toast.show());
-    }
-
-    /**
      * 加载位置数据
      * @param {Function} callback - 回调函数，用于处理返回的位置数据
      */

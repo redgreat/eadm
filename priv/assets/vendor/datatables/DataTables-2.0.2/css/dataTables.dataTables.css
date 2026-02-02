@@ -1,6 +1,6 @@
 @charset "UTF-8";
 :root {
-  --dt-row-selected: 13, 110, 253;
+  --dt-row-selected: 255, 107, 157;
   --dt-row-selected-text: 255, 255, 255;
   --dt-row-selected-link: 9, 10, 11;
   --dt-row-stripe: 0, 0, 0;
@@ -181,7 +181,7 @@ div.dt-processing > div:last-child > div {
   width: 13px;
   height: 13px;
   border-radius: 50%;
-  background: rgb(13, 110, 253);
+  background: rgb(255, 107, 157);
   background: rgb(var(--dt-row-selected));
   animation-timing-function: cubic-bezier(0, 1, 1, 0);
 }
@@ -362,7 +362,7 @@ table.dataTable > tbody > tr:last-child > * {
   border-bottom: none;
 }
 table.dataTable > tbody > tr.selected > * {
-  box-shadow: inset 0 0 0 9999px rgba(13, 110, 253, 0.9);
+  box-shadow: inset 0 0 0 9999px rgba(255, 107, 157, 0.9);
   box-shadow: inset 0 0 0 9999px rgba(var(--dt-row-selected), 0.9);
   color: rgb(255, 255, 255);
   color: rgb(var(--dt-row-selected-text));
@@ -382,7 +382,7 @@ table.dataTable.row-border > tbody > tr:first-child > *, table.dataTable.display
   border-top: none;
 }
 table.dataTable.row-border > tbody > tr.selected + tr.selected > td, table.dataTable.display > tbody > tr.selected + tr.selected > td {
-  border-top-color: rgba(13, 110, 253, 0.65);
+  border-top-color: rgba(255, 107, 157, 0.65);
   border-top-color: rgba(var(--dt-row-selected), 0.65);
 }
 table.dataTable.cell-border > tbody > tr > * {
@@ -400,7 +400,7 @@ table.dataTable.stripe > tbody > tr:nth-child(odd) > *, table.dataTable.display 
   box-shadow: inset 0 0 0 9999px rgba(var(--dt-row-stripe), 0.023);
 }
 table.dataTable.stripe > tbody > tr:nth-child(odd).selected > *, table.dataTable.display > tbody > tr:nth-child(odd).selected > * {
-  box-shadow: inset 0 0 0 9999px rgba(13, 110, 253, 0.923);
+  box-shadow: inset 0 0 0 9999px rgba(255, 107, 157, 0.923);
   box-shadow: inset 0 0 0 9999px rgba(var(--dt-row-selected), 0.923);
 }
 table.dataTable.hover > tbody > tr:hover > *, table.dataTable.display > tbody > tr:hover > * {
@@ -408,7 +408,7 @@ table.dataTable.hover > tbody > tr:hover > *, table.dataTable.display > tbody > 
   box-shadow: inset 0 0 0 9999px rgba(var(--dt-row-hover), 0.035);
 }
 table.dataTable.hover > tbody > tr.selected:hover > *, table.dataTable.display > tbody > tr.selected:hover > * {
-  box-shadow: inset 0 0 0 9999px #0d6efd !important;
+  box-shadow: inset 0 0 0 9999px #ff6b9d !important;
   box-shadow: inset 0 0 0 9999px rgba(var(--dt-row-selected), 1) !important;
 }
 table.dataTable.order-column > tbody tr > .sorting_1,
@@ -424,7 +424,7 @@ table.dataTable.order-column > tbody tr.selected > .sorting_2,
 table.dataTable.order-column > tbody tr.selected > .sorting_3, table.dataTable.display > tbody tr.selected > .sorting_1,
 table.dataTable.display > tbody tr.selected > .sorting_2,
 table.dataTable.display > tbody tr.selected > .sorting_3 {
-  box-shadow: inset 0 0 0 9999px rgba(13, 110, 253, 0.919);
+  box-shadow: inset 0 0 0 9999px rgba(255, 107, 157, 0.919);
   box-shadow: inset 0 0 0 9999px rgba(var(--dt-row-selected), 0.919);
 }
 table.dataTable.display > tbody > tr:nth-child(odd) > .sorting_1, table.dataTable.order-column.stripe > tbody > tr:nth-child(odd) > .sorting_1 {
@@ -440,15 +440,15 @@ table.dataTable.display > tbody > tr:nth-child(odd) > .sorting_3, table.dataTabl
   box-shadow: inset 0 0 0 9999px rgba(var(--dt-column-ordering), 0.039);
 }
 table.dataTable.display > tbody > tr:nth-child(odd).selected > .sorting_1, table.dataTable.order-column.stripe > tbody > tr:nth-child(odd).selected > .sorting_1 {
-  box-shadow: inset 0 0 0 9999px rgba(13, 110, 253, 0.954);
+  box-shadow: inset 0 0 0 9999px rgba(255, 107, 157, 0.954);
   box-shadow: inset 0 0 0 9999px rgba(var(--dt-row-selected), 0.954);
 }
 table.dataTable.display > tbody > tr:nth-child(odd).selected > .sorting_2, table.dataTable.order-column.stripe > tbody > tr:nth-child(odd).selected > .sorting_2 {
-  box-shadow: inset 0 0 0 9999px rgba(13, 110, 253, 0.947);
+  box-shadow: inset 0 0 0 9999px rgba(255, 107, 157, 0.947);
   box-shadow: inset 0 0 0 9999px rgba(var(--dt-row-selected), 0.947);
 }
 table.dataTable.display > tbody > tr:nth-child(odd).selected > .sorting_3, table.dataTable.order-column.stripe > tbody > tr:nth-child(odd).selected > .sorting_3 {
-  box-shadow: inset 0 0 0 9999px rgba(13, 110, 253, 0.939);
+  box-shadow: inset 0 0 0 9999px rgba(255, 107, 157, 0.939);
   box-shadow: inset 0 0 0 9999px rgba(var(--dt-row-selected), 0.939);
 }
 table.dataTable.display > tbody > tr.even > .sorting_1, table.dataTable.order-column.stripe > tbody > tr.even > .sorting_1 {
@@ -464,15 +464,15 @@ table.dataTable.display > tbody > tr.even > .sorting_3, table.dataTable.order-co
   box-shadow: inset 0 0 0 9999px rgba(var(--dt-column-ordering), 0.003);
 }
 table.dataTable.display > tbody > tr.even.selected > .sorting_1, table.dataTable.order-column.stripe > tbody > tr.even.selected > .sorting_1 {
-  box-shadow: inset 0 0 0 9999px rgba(13, 110, 253, 0.919);
+  box-shadow: inset 0 0 0 9999px rgba(255, 107, 157, 0.919);
   box-shadow: inset 0 0 0 9999px rgba(var(--dt-row-selected), 0.919);
 }
 table.dataTable.display > tbody > tr.even.selected > .sorting_2, table.dataTable.order-column.stripe > tbody > tr.even.selected > .sorting_2 {
-  box-shadow: inset 0 0 0 9999px rgba(13, 110, 253, 0.911);
+  box-shadow: inset 0 0 0 9999px rgba(255, 107, 157, 0.911);
   box-shadow: inset 0 0 0 9999px rgba(var(--dt-row-selected), 0.911);
 }
 table.dataTable.display > tbody > tr.even.selected > .sorting_3, table.dataTable.order-column.stripe > tbody > tr.even.selected > .sorting_3 {
-  box-shadow: inset 0 0 0 9999px rgba(13, 110, 253, 0.903);
+  box-shadow: inset 0 0 0 9999px rgba(255, 107, 157, 0.903);
   box-shadow: inset 0 0 0 9999px rgba(var(--dt-row-selected), 0.903);
 }
 table.dataTable.display tbody tr:hover > .sorting_1, table.dataTable.order-column.hover tbody tr:hover > .sorting_1 {
@@ -488,15 +488,15 @@ table.dataTable.display tbody tr:hover > .sorting_3, table.dataTable.order-colum
   box-shadow: inset 0 0 0 9999px rgba(var(--dt-row-hover), 0.062);
 }
 table.dataTable.display tbody tr:hover.selected > .sorting_1, table.dataTable.order-column.hover tbody tr:hover.selected > .sorting_1 {
-  box-shadow: inset 0 0 0 9999px rgba(13, 110, 253, 0.982);
+  box-shadow: inset 0 0 0 9999px rgba(255, 107, 157, 0.982);
   box-shadow: inset 0 0 0 9999px rgba(var(--dt-row-selected), 0.982);
 }
 table.dataTable.display tbody tr:hover.selected > .sorting_2, table.dataTable.order-column.hover tbody tr:hover.selected > .sorting_2 {
-  box-shadow: inset 0 0 0 9999px rgba(13, 110, 253, 0.974);
+  box-shadow: inset 0 0 0 9999px rgba(255, 107, 157, 0.974);
   box-shadow: inset 0 0 0 9999px rgba(var(--dt-row-selected), 0.974);
 }
 table.dataTable.display tbody tr:hover.selected > .sorting_3, table.dataTable.order-column.hover tbody tr:hover.selected > .sorting_3 {
-  box-shadow: inset 0 0 0 9999px rgba(13, 110, 253, 0.962);
+  box-shadow: inset 0 0 0 9999px rgba(255, 107, 157, 0.962);
   box-shadow: inset 0 0 0 9999px rgba(var(--dt-row-selected), 0.962);
 }
 table.dataTable.compact thead th,
@@ -697,7 +697,7 @@ html.dark table.dataTable.row-border > tbody > tr:first-child > *, html.dark tab
   border-top: none;
 }
 html.dark table.dataTable.row-border > tbody > tr.selected + tr.selected > td, html.dark table.dataTable.display > tbody > tr.selected + tr.selected > td {
-  border-top-color: rgba(13, 110, 253, 0.65);
+  border-top-color: rgba(255, 107, 157, 0.65);
   border-top-color: rgba(var(--dt-row-selected), 0.65);
 }
 html.dark table.dataTable.cell-border > tbody > tr > th,

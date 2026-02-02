@@ -227,6 +227,5 @@
 
 {% block js_scripts %}
     <script src="/assets/vendor/datatables/datatables.min.js"></script>
-    <script src="/assets/js/utils.js"></script>
     <script src="/assets/js/device.js"></script>
 {% endblock %}
