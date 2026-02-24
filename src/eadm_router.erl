@@ -229,5 +229,15 @@ routes(_Environment) ->
                     {"/wechat", fun eadm_payment_controller:wechat/1, #{methods => [get]}},
                     {"/config", fun eadm_payment_controller:config/1, #{methods => [post]}}
                 ]
+        },
+        #{
+            prefix => "api/v1",
+            security => false,
+            routes =>
+                [
+                    {"/login", fun api_auth:login/1, #{methods => [post, options]}},
+                    {"/userinfo", fun api_auth:userinfo/1, #{methods => [get, options]}},
+                    {"/logout", fun api_auth:logout/1, #{methods => [post, options]}}
+                ]
         }
     ].
