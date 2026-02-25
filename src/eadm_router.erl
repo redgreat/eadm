@@ -239,5 +239,18 @@ routes(_Environment) ->
                     {"/userinfo", fun api_auth:userinfo/1, #{methods => [get, options]}},
                     {"/logout", fun api_auth:logout/1, #{methods => [post, options]}}
                 ]
+        },
+        #{
+            prefix => "api/v1/health",
+            security => false,
+            routes =>
+                [
+                    {"/summary", fun api_health:summary/1, #{methods => [get, options]}},
+                    {"/heartrate", fun api_health:heartrate/1, #{methods => [get, options]}},
+                    {"/sleep", fun api_health:sleep/1, #{methods => [get, options]}},
+                    {"/stress", fun api_health:stress/1, #{methods => [get, options]}},
+                    {"/spo2", fun api_health:spo2/1, #{methods => [get, options]}},
+                    {"/respiration", fun api_health:respiration/1, #{methods => [get, options]}}
+                ]
         }
     ].
