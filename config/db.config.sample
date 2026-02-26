@@ -17,14 +17,16 @@
 {epgsql, [
     {pools, [
         {pool_pg, [
-                {size, 2},
-                {max_overflow, 20}
+                {size, 10},           %% 初始连接数：10个连接
+                {max_overflow, 10},   %% 最大溢出连接数：10个
+                {strategy, fifo}      %% FIFO策略：先进先出
             ],
             [   {host, "postgres"},
                 {port, 5432},
                 {database, "eadm"},
                 {username, "user_eadm"},
-                {password, "iyS62bvt"}
+                {password, "iyS62bvt"},
+                {timeout, 10000}      %% 查询超时时间：10秒
             ]}
         ]}
     ]

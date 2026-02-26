@@ -252,5 +252,13 @@ routes(_Environment) ->
                     {"/spo2", fun api_health:spo2/1, #{methods => [get, options]}},
                     {"/respiration", fun api_health:respiration/1, #{methods => [get, options]}}
                 ]
+        },
+        #{
+            prefix => "api/location",
+            security => false,
+            routes =>
+                [
+                    {"/track", fun api_location:index/1, #{methods => [get]}}
+                ]
         }
     ].
