@@ -66,7 +66,23 @@ init([]) ->
         worker,
         [emqx_sync_service]
     },
-    {ok, {{one_for_one, 10, 10}, [EmqxSyncServiceSpec | PoolSpec]}}.
+    
+    % 添加SSL证书管理服务（如果启用）
+    CertManagerSpec = case application:get_env(eadm, ssl_enabled, false) of
+        true ->
+            [{
+                eadm_cert_manager,
+                {eadm_cert_manager, start_link, []},
+                permanent,
+                5000,
+                worker,
+                [eadm_cert_manager]
+            }];
+        false ->
+            []
+    end,
+    
+    {ok, {{one_for_one, 10, 10}, [EmqxSyncServiceSpec | PoolSpec] ++ CertManagerSpec}}.
 
 %% @doc
 %% 添加数据库连接池

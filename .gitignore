@@ -24,3 +24,7 @@ doc/
 .vscode
 .kiro
 Mnesia*/
+.env
+certs/
+mnesia_data/
+backups/

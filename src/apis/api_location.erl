@@ -1,15 +1,15 @@
 %%%-------------------------------------------------------------------
-%%% @author eadm
-%%% @copyright (C) 2024, REDGREAT
+%%% @author wangcw
+%%% @copyright (C) 2026, REDGREAT
 %%% @doc
 %%% 位置追踪API模块
 %%% 提供多数据源的GPS轨迹查询和聚合功能
 %%% 支持设备类型：garmin、watch、car、device、yedgns、racebox
 %%% @end
-%%% Created : 2024-12-20
+%%% Created : 2026-02-27 10:00:00
 %%%-------------------------------------------------------------------
 -module(api_location).
--author("eadm").
+-author("wangcw").
 
 %%%===================================================================
 %%% 函数导出
@@ -280,16 +280,11 @@ query_track_data(DeviceType, StartTime, EndTime) ->
 query_garmin_track(StartTime, EndTime) ->
     SQL = "
         SELECT 
-            d.pointtime,
-            d.latitude,
-            d.longitude,
-            d.elevation,
-            d.speed,
-            d.heartrate
-        FROM garmin_activity a
-        JOIN garmin_activity_detail d ON a.activityid = d.activityid
-        WHERE a.starttime >= $1 AND a.starttime <= $2
-        ORDER BY d.pointtime ASC
+            latitude,
+            longitude
+        FROM garmin_activity_detail
+        WHERE pointtime >= $1 AND pointtime <= $2
+        ORDER BY pointtime ASC
         LIMIT $3
     ",
     
@@ -307,12 +302,8 @@ query_garmin_track(StartTime, EndTime) ->
 query_watch_location(StartTime, EndTime) ->
     SQL = "
         SELECT 
-            ptime,
-            latitude,
-            longitude,
-            altitude,
-            speed,
-            null as heartrate
+            lat AS latitude,
+            lng AS longitude
         FROM lc_watchlocation
         WHERE ptime >= $1 AND ptime <= $2
         ORDER BY ptime ASC
@@ -333,12 +324,8 @@ query_watch_location(StartTime, EndTime) ->
 query_car_location(StartTime, EndTime) ->
     SQL = "
         SELECT 
-            ptime,
-            latitude,
-            longitude,
-            altitude,
-            speed,
-            null as heartrate
+            lat AS latitude,
+            lng AS longitude
         FROM lc_carlocdaily
         WHERE ptime >= $1 AND ptime <= $2
         ORDER BY ptime ASC
@@ -359,15 +346,11 @@ query_car_location(StartTime, EndTime) ->
 query_device_data(StartTime, EndTime) ->
     SQL = "
         SELECT 
-            ptime,
-            latitude,
-            longitude,
-            altitude,
-            speed,
-            null as heartrate
+            lat AS latitude,
+            lng AS longitude
         FROM emqx_device_data
-        WHERE ptime >= $1 AND ptime <= $2
-        ORDER BY ptime ASC
+        WHERE receivetime >= $1 AND receivetime <= $2
+        ORDER BY receivetime ASC
         LIMIT $3
     ",
     
@@ -385,15 +368,11 @@ query_device_data(StartTime, EndTime) ->
 query_yedgns_data(StartTime, EndTime) ->
     SQL = "
         SELECT 
-            ptime,
-            latitude,
-            longitude,
-            altitude,
-            speed,
-            null as heartrate
-        FROM lc_yedgns
-        WHERE ptime >= $1 AND ptime <= $2
-        ORDER BY ptime ASC
+            COALESCE(gpslat,lbslat) AS latitude,
+            COALESCE(gpslng,lbslng) AS longitude
+        FROM lc_yedgnss
+        WHERE gtime >= $1 AND gtime <= $2
+        ORDER BY gtime ASC
         LIMIT $3
     ",
     
@@ -406,20 +385,16 @@ query_yedgns_data(StartTime, EndTime) ->
     end.
 
 %% @doc
-%% 查询赛车盒子数据
+%% 查询RaceBox数据
 %% @end
 query_racebox_data(StartTime, EndTime) ->
     SQL = "
         SELECT 
-            ptime,
             latitude,
-            longitude,
-            altitude,
-            speed,
-            null as heartrate
+            longitude
         FROM lc_racebox
-        WHERE ptime >= $1 AND ptime <= $2
-        ORDER BY ptime ASC
+        WHERE insert_time >= $1 AND insert_time <= $2
+        ORDER BY insert_time ASC
         LIMIT $3
     ",
     
@@ -427,7 +402,7 @@ query_racebox_data(StartTime, EndTime) ->
         {ok, _Columns, Rows} ->
             [format_track_point(Row, <<"racebox">>) || Row <- Rows];
         {error, Reason} ->
-            lager:warning("赛车盒子数据查询失败: ~p", [Reason]),
+            lager:warning("RaceBox数据查询失败: ~p", [Reason]),
             []
     end.
 

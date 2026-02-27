@@ -15,18 +15,26 @@ services:
         ports:
             - '5432:5432'
     eadm:
-        image: 'redgreat/eadm:latest'
+        image: 'redgreat/eadm:${EADM_VERSION:-latest}'
         container_name: eadm
         restart: unless-stopped
+        build:
+            context: .
+            dockerfile: Dockerfile
+            args:
+                DOCKER_IMAGE_VERSION: ${EADM_VERSION:-dev}
+                BUILD_PROFILE: ${EADM_BUILD_PROFILE:-prod}
         ports:
             - '8080:8090'
+            - '8443:8443'  # HTTPS端口
         volumes:
             - ./docker/db.config:/opt/eadm/config/db.config
-            - ./docker/sys.config.src:/opt/eadm/config/sys.config.src
-            - ./docker/vm.args.src:/opt/eadm/config/vm.args.src
+            - ./docker/sys.config:/opt/eadm/config/sys.config
+            - ./docker/vm.args:/opt/eadm/config/vm.args
             - ./logs/:/opt/eadm/log/:rw
             - ./mnesia_data:/opt/eadm/mnesia:rw
             - ./backups:/opt/eadm/backups:rw
+            - ./certs:/opt/eadm/certs:rw  # SSL证书目录
         environment:
             DISABLE_IPV6: 'true'
         depends_on:

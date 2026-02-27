@@ -26,5 +26,9 @@ fi
 # 创建文件夹
 mkdir -p /opt/eadm/log && chown -R eadm:eadm /opt/eadm
 
+# SSL证书管理（从sys.config读取配置）
+# 注意：这里不再依赖环境变量，而是由Erlang模块在启动后调用脚本
+echo "SSL证书管理将由Erlang模块在应用启动后处理"
+
 # 前台运行
 exec /usr/bin/gosu eadm /opt/eadm/bin/eadm foreground

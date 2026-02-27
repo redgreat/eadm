@@ -1,12 +1,12 @@
 %%%-------------------------------------------------------------------
 %%% @author eadm
-%%% @copyright (C) 2024, REDGREAT
+%%% @copyright (C) 2026, REDGREAT
 %%% @doc
 %%% 安全响应头插件
 %%% 为所有HTTP响应添加安全相关的头部，满足生产环境安全要求
 %%% 包括HSTS、X-Content-Type-Options、X-Frame-Options等
 %%% @end
-%%% Created : 2024-12-20
+%%% Created : 2026-02-27 10:00:00
 %%%-------------------------------------------------------------------
 -module(eadm_security_headers_plugin).
 -author("eadm").

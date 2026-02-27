@@ -4,8 +4,9 @@ WORKDIR /eadmbuild
 
 COPY . .
 
+ARG BUILD_PROFILE=prod
 RUN apk add --update git
-RUN rebar3 as prod release
+RUN rebar3 as ${BUILD_PROFILE} release
 
 FROM --platform=$BUILDPLATFORM alpine:3.21
 
@@ -18,13 +19,17 @@ ENV \
 
 WORKDIR /opt/eadm
 
-RUN apk add --no-cache ncurses-libs libgcc libstdc++ dumb-init
+RUN apk add --no-cache ncurses-libs libgcc libstdc++ dumb-init curl openssl socat
 RUN apk add --no-cache --repository https://dl-cdn.alpinelinux.org/alpine/edge/testing/ gosu
 
 COPY --from=builder /eadmbuild/_build/prod/rel/eadm /opt/eadm/
 COPY --from=builder /eadmbuild/docker/docker-entrypoint.sh /opt/eadm/docker/docker-entrypoint.sh
+COPY --from=builder /eadmbuild/docker/cert-manager.sh /opt/eadm/docker/cert-manager.sh
+COPY --from=builder /eadmbuild/docker/test-cert.sh /opt/eadm/docker/test-cert.sh
 
 RUN chmod +x /opt/eadm/docker/docker-entrypoint.sh
+RUN chmod +x /opt/eadm/docker/cert-manager.sh
+RUN chmod +x /opt/eadm/docker/test-cert.sh
 
 VOLUME /opt/eadm
 

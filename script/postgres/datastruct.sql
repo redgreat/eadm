@@ -1790,3 +1790,37 @@ create or replace trigger sync_lastupdate
 before update on garmin_sync
 for each row
 execute function lastupdate();
+
+-- =============================================
+-- 审计日志表
+-- =============================================
+drop table if exists audit_log cascade;
+create table audit_log (
+  id serial,
+  user_id varchar(50) not null,
+  action varchar(50) not null,
+  resource varchar(100),
+  timestamp timestamptz not null,
+  result varchar(20),
+  details jsonb
+);
+
+alter table audit_log owner to user_eadm;
+alter table audit_log drop constraint if exists pk_audit_log_id cascade;
+alter table audit_log add constraint pk_audit_log_id primary key (id);
+
+drop index if exists idx_audit_log_user_id;
+create index idx_audit_log_user_id on audit_log using btree (user_id asc nulls last);
+drop index if exists idx_audit_log_timestamp;
+create index idx_audit_log_timestamp on audit_log using btree (timestamp desc nulls last);
+drop index if exists idx_audit_log_action;
+create index idx_audit_log_action on audit_log using btree (action asc nulls last);
+
+comment on column audit_log.id is '自增主键';
+comment on column audit_log.user_id is '用户ID';
+comment on column audit_log.action is '操作类型(location_access等)';
+comment on column audit_log.resource is '资源标识(设备类型等)';
+comment on column audit_log.timestamp is '操作时间戳';
+comment on column audit_log.result is '操作结果(success/failure)';
+comment on column audit_log.details is '详细信息(JSON格式)';
+comment on table audit_log is '系统域_审计日志表';
