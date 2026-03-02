@@ -226,48 +226,59 @@ validate_time_range(StartDT, EndDT) ->
 %% @end
 query_track_data(DeviceType, StartTime, EndTime) ->
     try
-        %% 根据设备类型路由到对应的查询函数
-        TrackPoints = case DeviceType of
-            <<"garmin">> -> query_garmin_track(StartTime, EndTime);
-            <<"watch">> -> query_watch_location(StartTime, EndTime);
-            <<"car">> -> query_car_location(StartTime, EndTime);
-            <<"device">> -> query_device_data(StartTime, EndTime);
-            <<"yedgns">> -> query_yedgns_data(StartTime, EndTime);
-            <<"racebox">> -> query_racebox_data(StartTime, EndTime);
-            _ -> []
-        end,
+        %% 将 ISO 8601 字符串转换为 Erlang datetime 格式
+        StartDT = parse_timestamp(StartTime),
+        EndDT = parse_timestamp(EndTime),
         
-        %% 过滤无效坐标点
-        ValidPoints = lists:filter(fun(Point) ->
-            Lat = maps:get(<<"latitude">>, Point),
-            Lng = maps:get(<<"longitude">>, Point),
-            is_valid_coordinate(Lat, Lng)
-        end, TrackPoints),
-        
-        %% 限制返回点数
-        LimitedPoints = lists:sublist(ValidPoints, ?MAX_TRACK_POINTS),
-        
-        %% 如果超过限制，记录警告日志
-        case length(ValidPoints) > ?MAX_TRACK_POINTS of
-            true ->
-                lager:warning("轨迹点数量超过限制 - 设备类型:~p, 原始数量:~p, 限制后:~p",
-                             [DeviceType, length(ValidPoints), ?MAX_TRACK_POINTS]);
-            false ->
-                ok
-        end,
-        
-        %% 计算统计信息
-        TotalDistance = calculate_total_distance(LimitedPoints),
-        Duration = calculate_duration(LimitedPoints),
-        
-        %% 构造响应数据
-        {ok, #{
-            <<"device_type">> => DeviceType,
-            <<"track_points">> => LimitedPoints,
-            <<"total_count">> => length(LimitedPoints),
-            <<"total_distance">> => TotalDistance,
-            <<"duration">> => Duration
-        }}
+        case {StartDT, EndDT} of
+            {false, _} ->
+                {error, <<"开始时间格式无效">>};
+            {_, false} ->
+                {error, <<"结束时间格式无效">>};
+            {StartDateTime, EndDateTime} ->
+                %% 根据设备类型路由到对应的查询函数
+                TrackPoints = case DeviceType of
+                    <<"garmin">> -> query_garmin_track(StartDateTime, EndDateTime);
+                    <<"watch">> -> query_watch_location(StartDateTime, EndDateTime);
+                    <<"car">> -> query_car_location(StartDateTime, EndDateTime);
+                    <<"device">> -> query_device_data(StartDateTime, EndDateTime);
+                    <<"yedgns">> -> query_yedgns_data(StartDateTime, EndDateTime);
+                    <<"racebox">> -> query_racebox_data(StartDateTime, EndDateTime);
+                    _ -> []
+                end,
+                
+                %% 过滤无效坐标点
+                ValidPoints = lists:filter(fun(Point) ->
+                    Lat = maps:get(<<"latitude">>, Point),
+                    Lng = maps:get(<<"longitude">>, Point),
+                    is_valid_coordinate(Lat, Lng)
+                end, TrackPoints),
+                
+                %% 限制返回点数
+                LimitedPoints = lists:sublist(ValidPoints, ?MAX_TRACK_POINTS),
+                
+                %% 如果超过限制，记录警告日志
+                case length(ValidPoints) > ?MAX_TRACK_POINTS of
+                    true ->
+                        lager:warning("轨迹点数量超过限制 - 设备类型:~p, 原始数量:~p, 限制后:~p",
+                                     [DeviceType, length(ValidPoints), ?MAX_TRACK_POINTS]);
+                    false ->
+                        ok
+                end,
+                
+                %% 计算统计信息
+                TotalDistance = calculate_total_distance(LimitedPoints),
+                Duration = calculate_duration(LimitedPoints),
+                
+                %% 构造响应数据
+                {ok, #{
+                    <<"device_type">> => DeviceType,
+                    <<"track_points">> => LimitedPoints,
+                    <<"total_count">> => length(LimitedPoints),
+                    <<"total_distance">> => TotalDistance,
+                    <<"duration">> => Duration
+                }}
+        end
     catch
         _:Error ->
             lager:error("查询轨迹数据异常 - 设备类型:~p, 错误:~p", [DeviceType, Error]),
@@ -277,18 +288,22 @@ query_track_data(DeviceType, StartTime, EndTime) ->
 %% @doc
 %% 查询佳明设备轨迹
 %% @end
-query_garmin_track(StartTime, EndTime) ->
+query_garmin_track(StartDateTime, EndDateTime) ->
     SQL = "
         SELECT 
+            pointtime,
             latitude,
-            longitude
+            longitude,
+            elevation AS altitude,
+            speed,
+            heartrate
         FROM garmin_activity_detail
         WHERE pointtime >= $1 AND pointtime <= $2
         ORDER BY pointtime ASC
         LIMIT $3
     ",
     
-    case eadm_pgpool:equery(pool_pg, SQL, [StartTime, EndTime, ?MAX_TRACK_POINTS]) of
+    case eadm_pgpool:equery(pool_pg, SQL, [StartDateTime, EndDateTime, ?MAX_TRACK_POINTS]) of
         {ok, _Columns, Rows} ->
             [format_track_point(Row, <<"garmin">>) || Row <- Rows];
         {error, Reason} ->
@@ -299,18 +314,22 @@ query_garmin_track(StartTime, EndTime) ->
 %% @doc
 %% 查询手表定位轨迹
 %% @end
-query_watch_location(StartTime, EndTime) ->
+query_watch_location(StartDateTime, EndDateTime) ->
     SQL = "
         SELECT 
+            ptime as timestamp,
             lat AS latitude,
-            lng AS longitude
+            lng AS longitude,
+            NULL as altitude,
+            NULL as speed,
+            NULL as heartrate
         FROM lc_watchlocation
         WHERE ptime >= $1 AND ptime <= $2
         ORDER BY ptime ASC
         LIMIT $3
     ",
     
-    case eadm_pgpool:equery(pool_pg, SQL, [StartTime, EndTime, ?MAX_TRACK_POINTS]) of
+    case eadm_pgpool:equery(pool_pg, SQL, [StartDateTime, EndDateTime, ?MAX_TRACK_POINTS]) of
         {ok, _Columns, Rows} ->
             [format_track_point(Row, <<"watch">>) || Row <- Rows];
         {error, Reason} ->
@@ -321,18 +340,22 @@ query_watch_location(StartTime, EndTime) ->
 %% @doc
 %% 查询车辆定位轨迹
 %% @end
-query_car_location(StartTime, EndTime) ->
+query_car_location(StartDateTime, EndDateTime) ->
     SQL = "
         SELECT 
+            ptime as timestamp,
             lat AS latitude,
-            lng AS longitude
+            lng AS longitude,
+            NULL as altitude,
+            NULL as speed,
+            NULL as heartrate
         FROM lc_carlocdaily
         WHERE ptime >= $1 AND ptime <= $2
         ORDER BY ptime ASC
         LIMIT $3
     ",
     
-    case eadm_pgpool:equery(pool_pg, SQL, [StartTime, EndTime, ?MAX_TRACK_POINTS]) of
+    case eadm_pgpool:equery(pool_pg, SQL, [StartDateTime, EndDateTime, ?MAX_TRACK_POINTS]) of
         {ok, _Columns, Rows} ->
             [format_track_point(Row, <<"car">>) || Row <- Rows];
         {error, Reason} ->
@@ -343,18 +366,22 @@ query_car_location(StartTime, EndTime) ->
 %% @doc
 %% 查询设备数据轨迹
 %% @end
-query_device_data(StartTime, EndTime) ->
+query_device_data(StartDateTime, EndDateTime) ->
     SQL = "
         SELECT 
+            receivetime as timestamp,
             lat AS latitude,
-            lng AS longitude
+            lng AS longitude,
+            NULL as altitude,
+            NULL as speed,
+            NULL as heartrate
         FROM emqx_device_data
         WHERE receivetime >= $1 AND receivetime <= $2
         ORDER BY receivetime ASC
         LIMIT $3
     ",
     
-    case eadm_pgpool:equery(pool_pg, SQL, [StartTime, EndTime, ?MAX_TRACK_POINTS]) of
+    case eadm_pgpool:equery(pool_pg, SQL, [StartDateTime, EndDateTime, ?MAX_TRACK_POINTS]) of
         {ok, _Columns, Rows} ->
             [format_track_point(Row, <<"device">>) || Row <- Rows];
         {error, Reason} ->
@@ -365,18 +392,22 @@ query_device_data(StartTime, EndTime) ->
 %% @doc
 %% 查询野点GNS数据
 %% @end
-query_yedgns_data(StartTime, EndTime) ->
+query_yedgns_data(StartDateTime, EndDateTime) ->
     SQL = "
         SELECT 
+            gtime as timestamp,
             COALESCE(gpslat,lbslat) AS latitude,
-            COALESCE(gpslng,lbslng) AS longitude
+            COALESCE(gpslng,lbslng) AS longitude,
+            NULL as altitude,
+            NULL as speed,
+            NULL as heartrate
         FROM lc_yedgnss
         WHERE gtime >= $1 AND gtime <= $2
         ORDER BY gtime ASC
         LIMIT $3
     ",
     
-    case eadm_pgpool:equery(pool_pg, SQL, [StartTime, EndTime, ?MAX_TRACK_POINTS]) of
+    case eadm_pgpool:equery(pool_pg, SQL, [StartDateTime, EndDateTime, ?MAX_TRACK_POINTS]) of
         {ok, _Columns, Rows} ->
             [format_track_point(Row, <<"yedgns">>) || Row <- Rows];
         {error, Reason} ->
@@ -387,18 +418,22 @@ query_yedgns_data(StartTime, EndTime) ->
 %% @doc
 %% 查询RaceBox数据
 %% @end
-query_racebox_data(StartTime, EndTime) ->
+query_racebox_data(StartDateTime, EndDateTime) ->
     SQL = "
         SELECT 
+            insert_time as timestamp,
             latitude,
-            longitude
+            longitude,
+            NULL as altitude,
+            NULL as speed,
+            NULL as heartrate
         FROM lc_racebox
         WHERE insert_time >= $1 AND insert_time <= $2
         ORDER BY insert_time ASC
         LIMIT $3
     ",
     
-    case eadm_pgpool:equery(pool_pg, SQL, [StartTime, EndTime, ?MAX_TRACK_POINTS]) of
+    case eadm_pgpool:equery(pool_pg, SQL, [StartDateTime, EndDateTime, ?MAX_TRACK_POINTS]) of
         {ok, _Columns, Rows} ->
             [format_track_point(Row, <<"racebox">>) || Row <- Rows];
         {error, Reason} ->
@@ -427,9 +462,13 @@ format_track_point({Timestamp, Lat, Lng, Alt, Speed, Hr}, DeviceType) ->
 %% @doc
 %% 格式化时间戳为ISO 8601格式
 %% @end
-format_timestamp({{Y, M, D}, {H, Min, S}}) ->
+format_timestamp({{Y, M, D}, {H, Min, S}}) when is_integer(S) ->
     iolist_to_binary(io_lib:format("~4..0B-~2..0B-~2..0BT~2..0B:~2..0B:~2..0BZ",
                                     [Y, M, D, H, Min, S]));
+format_timestamp({{Y, M, D}, {H, Min, S}}) when is_float(S) ->
+    % 如果秒数是浮点数，转换为整数
+    iolist_to_binary(io_lib:format("~4..0B-~2..0B-~2..0BT~2..0B:~2..0B:~2..0BZ",
+                                    [Y, M, D, H, Min, trunc(S)]));
 format_timestamp(Timestamp) when is_binary(Timestamp) ->
     Timestamp;
 format_timestamp(_) ->
