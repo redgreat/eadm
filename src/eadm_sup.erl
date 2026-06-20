@@ -51,7 +51,8 @@ init([]) ->
             {worker_module, eadm_pgpool_worker}] ++ SizeArgs,
         poolboy:child_spec(PoolName, PoolArgs, WorkerArgs)
                          end, Pools),
-    {ok, { {one_for_one, 10, 10}, PoolSpec} }.
+    CowboySpec = cowboy_spec(application:get_env(eadm, cowboy_enabled, false)),
+    {ok, { {one_for_one, 10, 10}, PoolSpec ++ CowboySpec} }.
 
 %% @doc
 %% 添加数据库连接池
@@ -59,3 +60,17 @@ init([]) ->
 add_pool(Name, PoolArgs, WorkerArgs) ->
     ChildSpec = poolboy:child_spec(Name, PoolArgs, WorkerArgs),
     supervisor:start_child(?MODULE, ChildSpec).
+
+%%====================================================================
+%% 内部函数
+%%====================================================================
+
+cowboy_spec(true) ->
+    [#{id => eadm_cowboy_http,
+       start => {eadm_cowboy_http, start_link, []},
+       restart => permanent,
+       shutdown => 5000,
+       type => worker,
+       modules => [eadm_cowboy_http]}];
+cowboy_spec(_) ->
+    [].

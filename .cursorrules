@@ -1,0 +1,12 @@
+# EADM Cursor Rules
+
+统一规则见 `AGENTS.md`、`CONTRIBUTING.md` 和 `docs/DEVELOPMENT.md`。
+
+核心约束：
+
+- Erlang/Nova 后端代码在 `src/`，控制器在 `src/controllers/`，路由集中在 `src/eadm_router.erl`。
+- ErlyDTL 模板在 `src/views/`，前端脚本在 `priv/assets/js/`，样式在 `priv/assets/css/`。
+- 不要修改 `priv/assets/vendor/` 中的第三方库，除非明确升级依赖。
+- 使用 4 空格缩进，遵守 `.editorconfig`。
+- 不提交真实密码、密钥、Token、Cookie、支付配置、个人账单或设备轨迹。
+- 默认验证命令是 `rebar3 compile`；无法运行时说明原因。

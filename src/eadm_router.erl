@@ -153,9 +153,71 @@ routes(_Environment) ->
         {"/watch", fun api_watch:index/1, #{methods => [post]}}
       ]
     },
+    #{prefix => "api/auth",
+    security => false,
+    routes => [
+        {"/login", fun eadm_api_auth_controller:login/1, #{methods => [post]}},
+        {"/logout", fun eadm_api_auth_controller:logout/1, #{methods => [post]}}
+      ]
+    },
+    #{prefix => "api/auth",
+    security => {eadm_auth, auth},
+    routes => [
+        {"/me", fun eadm_api_auth_controller:me/1, #{methods => [get]}}
+      ]
+    },
+    #{prefix => "api/dashboard",
+    security => {eadm_auth, auth},
+    routes => [
+        {"/summary", fun eadm_api_dashboard_controller:summary/1, #{methods => [get]}}
+      ]
+    },
+    #{prefix => "api/users",
+    security => {eadm_auth, auth},
+    routes => [
+        {"/", fun eadm_api_user_controller:list/1, #{methods => [get]}}
+      ]
+    },
+    #{prefix => "api/roles",
+    security => {eadm_auth, auth},
+    routes => [
+        {"/", fun eadm_api_role_controller:list/1, #{methods => [get]}}
+      ]
+    },
+    #{prefix => "api/devices",
+    security => {eadm_auth, auth},
+    routes => [
+        {"/", fun eadm_api_device_controller:list/1, #{methods => [get]}}
+      ]
+    },
+    #{prefix => "api/health",
+    security => {eadm_auth, auth},
+    routes => [
+        {"/", fun eadm_api_health_controller:search/1, #{methods => [get]}}
+      ]
+    },
+    #{prefix => "api/location",
+    security => {eadm_auth, auth},
+    routes => [
+        {"/", fun eadm_api_location_controller:search/1, #{methods => [get]}}
+      ]
+    },
+    #{prefix => "api/crontabs",
+    security => {eadm_auth, auth},
+    routes => [
+        {"/", fun eadm_api_crontab_controller:list/1, #{methods => [get]}}
+      ]
+    },
+    #{prefix => "api/system",
+    security => {eadm_auth, auth},
+    routes => [
+        {"/info", fun eadm_api_system_controller:info/1, #{methods => [get]}}
+      ]
+    },
     #{prefix => "api/finance",
     security => {eadm_auth, auth},
     routes => [
+        {"/", fun eadm_api_finance_controller:search/1, #{methods => [get]}},
         {"/alipay", fun eadm_payment_controller:alipay/1, #{methods => [get]}},
         {"/wechat", fun eadm_payment_controller:wechat/1, #{methods => [get]}},
         {"/config", fun eadm_payment_controller:config/1, #{methods => [post]}}

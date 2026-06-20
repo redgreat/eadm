@@ -14,8 +14,11 @@ README.md
 VERSION
 TODO.TXT
 rebar.lock
+frontend/node_modules
+frontend/dist
 !config
 !priv
 !src
 !docker
+!frontend
 /config/prod_db.config.prod

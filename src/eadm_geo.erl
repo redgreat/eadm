@@ -34,14 +34,14 @@ wgs84_to_gcj02({Lng, Lat}) ->
     case out_of_china({Lng, Lat}) of
         true -> {Lng, Lat};
         false ->
-            DLat = convertlat(Lng - 105.0, Lat - 35.0),
-            DLng = convertlng(Lng - 105.0, Lat - 35.0),
+            LatOffset = convertlat(Lng - 105.0, Lat - 35.0),
+            LngOffset = convertlng(Lng - 105.0, Lat - 35.0),
             RadLat = Lat * ?PI / 180.0,
             Magic = math:sin(RadLat),
-            Magic = 1 - ?EE * Magic * Magic,
-            SqrtMagic = math:sqrt(Magic),
-            DLat = (DLat * 180.0) / ((?A * (1 - ?EE)) / (Magic * SqrtMagic) * ?PI),
-            DLng = (DLng * 180.0) / (?A / SqrtMagic * math:cos(RadLat) * ?PI),
+            AdjustedMagic = 1 - ?EE * Magic * Magic,
+            SqrtMagic = math:sqrt(AdjustedMagic),
+            DLat = (LatOffset * 180.0) / ((?A * (1 - ?EE)) / (AdjustedMagic * SqrtMagic) * ?PI),
+            DLng = (LngOffset * 180.0) / (?A / SqrtMagic * math:cos(RadLat) * ?PI),
             MgLat = Lat + DLat,
             MgLng = Lng + DLng,
             {MgLng, MgLat}
@@ -61,14 +61,14 @@ out_of_china({Lng, Lat}) ->
 %% @end
 convertlat(Lng, Lat) ->
     Ret = -100.0 + 2.0 * Lng + 3.0 * Lat + 0.2 * Lat * Lat +
-        0.1 * Lng * Lat + 0.2 * math:sqrt(math:abs(Lng)),
+        0.1 * Lng * Lat + 0.2 * math:sqrt(abs(Lng)),
     Ret + sin_convert(Lng, 6.0, 20.0) * 2.0 / 3.0 +
         sin_convert(Lat, 1.0, 20.0) * 2.0 / 3.0 +
         sin_convert(Lat, 12.0, 160.0, 320.0) * 2.0 / 3.0.
 
 convertlng(Lng, Lat) ->
     Ret = 300.0 + Lng + 2.0 * Lat + 0.1 * Lng * Lng +
-        0.1 * Lng * Lat + 0.1 * math:sqrt(math:abs(Lng)),
+        0.1 * Lng * Lat + 0.1 * math:sqrt(abs(Lng)),
     Ret + sin_convert(Lng, 6.0, 20.0) * 2.0 / 3.0 +
         sin_convert(Lng, 1.0, 20.0, 40.0) * 2.0 / 3.0 +
         sin_convert(Lng, 12.0, 150.0, 300.0) * 2.0 / 3.0.

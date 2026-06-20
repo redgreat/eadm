@@ -18,6 +18,14 @@ logs
 config/prod_db.config.prod
 rebar.lock
 rebar3.crashdump
+rebar3-compile.log
+rebar3-install.log
+docker-info.log
+docker-build.log
+tools/rebar3
 doc/
 .trae
 .qoder
+frontend/node_modules/
+frontend/dist/
+frontend/.vinxi/

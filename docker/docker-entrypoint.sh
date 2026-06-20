@@ -27,4 +27,4 @@ fi
 mkdir -p /opt/eadm/log && chown -R eadm:eadm /opt/eadm
 
 # 前台运行
-exec /usr/bin/gosu eadm /opt/eadm/bin/eadm foreground
+exec su-exec eadm /opt/eadm/bin/eadm foreground

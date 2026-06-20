@@ -9,10 +9,12 @@
    [kernel,
     stdlib,
     nova,
+    cowboy,
     epgsql,
     poolboy,
     lager,
-    ecron
+    ecron,
+    xmerl
    ]},
   {env,[]},
   {modules, []},

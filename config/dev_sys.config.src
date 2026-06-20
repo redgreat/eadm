@@ -1,4 +1,8 @@
 ["config/db",
+  {eadm, [
+    {cowboy_enabled, false},
+    {cowboy_port, 8081}
+  ]},
   {nova, [
     {environment, dev},
     {cowboy_configuration, #{port => 8080}},

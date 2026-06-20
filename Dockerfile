@@ -1,8 +1,19 @@
+FROM --platform=$BUILDPLATFORM node:24-alpine AS frontend-builder
+
+WORKDIR /eadmfrontend
+
+COPY frontend/package*.json ./
+RUN npm ci
+
+COPY frontend/ ./
+RUN npm run build
+
 FROM --platform=$BUILDPLATFORM erlang:27.2.3-alpine AS builder
 
 WORKDIR /eadmbuild
 
 COPY . .
+COPY --from=frontend-builder /eadmfrontend/dist ./frontend/dist
 
 RUN apk add --update git
 RUN rebar3 as prod release
@@ -18,17 +29,16 @@ ENV \
 
 WORKDIR /opt/eadm
 
-RUN apk add --no-cache ncurses-libs libgcc libstdc++ dumb-init
-RUN apk add --no-cache --repository https://dl-cdn.alpinelinux.org/alpine/edge/testing/ gosu
+RUN apk add --no-cache ncurses-libs libgcc libstdc++ dumb-init su-exec
 
 COPY --from=builder /eadmbuild/_build/prod/rel/eadm /opt/eadm/
 COPY --from=builder /eadmbuild/docker/docker-entrypoint.sh /opt/eadm/docker/docker-entrypoint.sh
 
-RUN chmod +x /opt/eadm/docker/docker-entrypoint.sh
+RUN sed -i 's/\r$//' /opt/eadm/docker/docker-entrypoint.sh && chmod +x /opt/eadm/docker/docker-entrypoint.sh
 
 VOLUME /opt/eadm
 
-EXPOSE 8090
+EXPOSE 8090 8091
 
 LABEL \
     org.label-schema.name="eadm" \

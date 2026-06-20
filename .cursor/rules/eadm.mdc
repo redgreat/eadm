@@ -1,0 +1,43 @@
+---
+description: EADM 项目开发规则
+globs:
+  - "**/*"
+alwaysApply: true
+---
+
+# EADM Cursor Rules
+
+这是 Erlang/OTP + Nova + ErlyDTL + Bootstrap/jQuery 项目。
+
+## 优先阅读
+
+- `AGENTS.md`
+- `CONTRIBUTING.md`
+- `docs/DEVELOPMENT.md`
+- 与任务相关的 `wiki/` 文档
+
+## 修改规则
+
+- 保持小步修改，避免顺手重构无关模块。
+- Erlang 代码使用 4 空格缩进，沿用现有 `eadm_*` 模块命名。
+- 路由只在 `src/eadm_router.erl` 中集中维护。
+- 控制器放在 `src/controllers/`，外部 API 放在 `src/apis/`。
+- 模板放在 `src/views/`，页面脚本放在 `priv/assets/js/`。
+- 不要修改 `priv/assets/vendor/` 下的第三方文件，除非任务明确要求。
+- 新增页面或接口时，同步考虑模板、JS、CSS、i18n、路由、权限和 wiki。
+- 不提交真实数据库密码、支付密钥、Cookie、Token、个人账单、设备轨迹等敏感信息。
+
+## 验证
+
+默认至少运行：
+
+```powershell
+rebar3 compile
+```
+
+涉及发布或容器时追加：
+
+```powershell
+rebar3 as prod release
+docker compose up --build
+```

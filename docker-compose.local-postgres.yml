@@ -1,0 +1,32 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: eadm-local-postgres
+    environment:
+      POSTGRES_DB: eadm
+      POSTGRES_USER: user_eadm
+      POSTGRES_PASSWORD: iyS62bvt
+      TZ: Asia/Shanghai
+    ports:
+      - "5432:5432"
+    volumes:
+      - eadm-local-postgres-data:/var/lib/postgresql/data
+      - ./script/postgres/datastruct.sql:/docker-entrypoint-initdb.d/010-datastruct.sql:ro
+      - ./docker/local-postgres/020-local-seed.sql:/docker-entrypoint-initdb.d/020-local-seed.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user_eadm -d eadm"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    networks:
+      eadm-local:
+        aliases:
+          - postgres
+
+networks:
+  eadm-local:
+    name: eadm-local
+
+volumes:
+  eadm-local-postgres-data:
+    name: eadm-local-postgres-data
