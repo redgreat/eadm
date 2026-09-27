@@ -16,7 +16,6 @@ logs
 *db.config
 /src/test/
 config/prod_db.config.prod
-rebar.lock
 rebar3.crashdump
 rebar3-compile.log
 rebar3-install.log
@@ -29,3 +28,8 @@ doc/
 frontend/node_modules/
 frontend/dist/
 frontend/.vinxi/
+frontend/coverage/
+frontend/playwright-report/
+frontend/test-results/
+cover/
+.rebar3/

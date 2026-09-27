@@ -37,6 +37,9 @@ refactor: 整理健康数据查询参数
 - 新增接口时明确请求方法、参数校验、权限策略、成功和失败返回。
 - 对外部输入保持校验，避免将未处理参数直接拼入 SQL 或命令。
 - 日志使用项目已有日志体系，避免记录密码、Token、Cookie、支付密钥和完整个人敏感数据。
+- Handler 仅处理 HTTP method、鉴权、请求解析和响应；查询与业务规则放入 `eadm_*_service`。
+- 请求参数值必须通过 epgsql 参数绑定；动态字段、排序和表名只能使用服务端白名单。
+- 新 API 使用 `/api/v1/*`、`eadm_api_response` 和 camelCase JSON，不增加无版本的平行接口。
 
 ## 前端规范
 
@@ -44,6 +47,9 @@ refactor: 整理健康数据查询参数
 - 组件放在 `frontend/src/components/`，API 客户端放在 `frontend/src/lib/api/`。
 - 样式优先复用 `frontend/src/styles/` 和已有组件类名。
 - 第三方前端依赖通过 `frontend/package.json` 管理，不提交 `node_modules/`。
+- 页面只通过 `frontend/src/lib/api/` 访问后端；不要在组件中散落 base URL、Cookie 或响应解包逻辑。
+- 页面至少实现加载、空数据、失败和无权限状态；表单提交需要防重复，并展示服务端校验结果。
+- 不重新引入旧 Bootstrap/jQuery/DataTables 资源；确需新依赖时说明体积、维护状态和替代方案。
 
 ## 数据库规范
 
@@ -51,6 +57,7 @@ refactor: 整理健康数据查询参数
 - 修改表结构时，同步检查 PostgreSQL、MySQL/TiDB、Kingbase、Oracle、DB2 等目录是否需要对应更新。
 - 初始化数据、存储过程、事件调度和定时任务需要写清楚用途。
 - 不要在脚本中提交真实账号、密码、业务账单或设备轨迹。
+- PostgreSQL 详细规则以 `docs/postgresql-db-design.RULE.md` 为准；基线 DDL 不能代替存量库 migration。
 
 ## 文档规范
 
@@ -67,6 +74,12 @@ refactor: 整理健康数据查询参数
 
 ```powershell
 rebar3 compile
+```
+
+前后端迁移链路可执行：
+
+```powershell
+.\script\verify-migration.ps1
 ```
 
 按改动类型追加：

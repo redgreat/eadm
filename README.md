@@ -30,6 +30,16 @@ docker compose up --build
 - AI/Agent 指南：`AGENTS.md`
 - 开发规范：`CONTRIBUTING.md`
 - 本地开发指南：`docs/DEVELOPMENT.md`
+- 当前架构：`docs/ARCHITECTURE.md`
+- API 约定：`docs/API_CONVENTIONS.md`
+- PostgreSQL 设计规范：`docs/postgresql-db-design.RULE.md`
+- Cowboy/SolidJS 迁移状态：`docs/COWBOY_SOLIDJS_STATUS.md`
 - Docker 说明：`README.Docker.md`
 
 修改接口、数据库、部署或页面结构时，请同步更新相关文档。
+
+运行完整自动化检查：
+
+```powershell
+.\script\test-all.ps1
+```

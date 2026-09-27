@@ -54,7 +54,7 @@ wgs84_to_gcj02({Lng, Lat}) ->
 %% 坐标点是否在国内（外国坐标点不在火星系坐标范围内）
 %% @end
 out_of_china({Lng, Lat}) ->
-    Lng > 73.66 andalso Lng < 135.05 andalso Lat > 3.86 andalso Lat < 53.55.
+    Lng < 73.66 orelse Lng > 135.05 orelse Lat < 3.86 orelse Lat > 53.55.
 
 %% @doc
 %% 经纬度坐标转换

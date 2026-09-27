@@ -1,5 +1,7 @@
 # Nova 到 Cowboy、Bootstrap/jQuery 到 SolidJS 重构计划
 
+> 历史计划说明：主体架构迁移已完成，本文件保留决策背景，不再作为当前任务清单。最新完成情况、风险和待办见 `docs/COWBOY_SOLIDJS_STATUS.md`。
+
 ## 目标
 
 将 EADM 从当前的 Nova 后端框架和 ErlyDTL/Bootstrap/jQuery 前端，逐步重构为：

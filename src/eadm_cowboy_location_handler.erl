@@ -16,15 +16,14 @@
 
 init(Req, State) ->
     case eadm_cowboy_guard:require(Req, <<"locate">>) of
-        {ok, internal} -> reply_location(Req, State, internal);
         {ok, User} -> reply_location(Req, State, User);
         {error, unauthorized} -> {ok, eadm_api_response:cowboy_json(Req, 401, eadm_api_response:unauthorized()), State};
         {error, forbidden} -> {ok, eadm_api_response:cowboy_json(Req, 403, eadm_api_response:forbidden()), State}
     end.
 
-reply_location(Req, State, UserOrInternal) ->
+reply_location(Req, State, User) ->
     Query = eadm_cowboy_req:query(Req),
-    LoginName = login_name(UserOrInternal, Query),
+    LoginName = maps:get(<<"loginName">>, User, <<>>),
     DeviceNo = maps:get(<<"deviceNo">>, Query, <<>>),
     StartTime = maps:get(<<"startTime">>, Query, <<>>),
     EndTime = maps:get(<<"endTime">>, Query, <<>>),
@@ -69,9 +68,4 @@ respond({ok, Data}) ->
     eadm_api_response:ok(Data);
 respond({error, forbidden, _Message}) ->
     eadm_api_response:forbidden().
-
-login_name(internal, Query) ->
-    maps:get(<<"loginName">>, Query, <<>>);
-login_name(User, _Query) ->
-    maps:get(<<"loginName">>, User, <<>>).
 

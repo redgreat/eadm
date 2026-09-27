@@ -86,6 +86,14 @@ npm run build
 .\script\verify-migration.ps1
 ```
 
+完整自动化检查：
+
+```powershell
+.\script\test-all.ps1
+```
+
+该命令执行 Erlang warnings-as-errors 编译、EUnit、xref、Cowboy 迁移检查、ESLint、Vitest 覆盖率、前端构建、Playwright 浏览器冒烟和生产依赖审计。首次运行 E2E 前执行 `cd frontend; npx playwright install chromium`。Dialyzer 当前仍有存量告警，使用 `-RunDialyzer` 单独查看；CI 将其作为非阻断分析任务，债务清零后改为阻断。
+
 只验证后端新增迁移模块：
 
 ```powershell
@@ -101,7 +109,6 @@ npm run build
 - Cowboy Handler：`src/eadm_cowboy_*_handler.erl`
 - 外部 API：`src/apis/`
 - 前端工程：`frontend/`
-- 新前端工程：`frontend/`
 - 数据库脚本：`script/`
 
 ## 新增页面或接口清单
@@ -110,8 +117,8 @@ npm run build
 2. 在 `src/eadm_cowboy_*_handler.erl` 或对应 service 增加处理逻辑。
 3. 如需页面，新增或更新 `frontend/src/routes/*.tsx`。
 4. 如需交互或样式，优先放在 `frontend/src/` 对应组件和样式文件。
-7. 如需数据结构，更新相关 `script/<db>/` 脚本和 wiki。
-8. 运行 `rebar3 compile`，必要时启动应用手工验证。
+5. 如需数据结构，更新相关 `script/<db>/` 脚本和 wiki。
+6. 运行 `rebar3 compile` 与 `npm run build`，必要时启动应用手工验证。
 
 ## 敏感模块检查
 

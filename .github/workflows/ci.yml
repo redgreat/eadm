@@ -1,0 +1,152 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  erlang:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: erlef/setup-beam@v1
+        with:
+          otp-version: '27.2.3'
+          rebar3-version: '3.24.0'
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/rebar3
+            _build
+          key: erlang-${{ runner.os }}-${{ hashFiles('rebar.config', 'rebar.lock') }}
+      - run: rebar3 as test compile
+      - run: rebar3 as test eunit
+      - run: rebar3 xref
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: erlang-coverage
+          path: _build/test/cover
+          if-no-files-found: ignore
+
+  dialyzer:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: erlef/setup-beam@v1
+        with:
+          otp-version: '27.2.3'
+          rebar3-version: '3.24.0'
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/rebar3
+            _build/default/rebar3_*_plt
+          key: dialyzer-${{ runner.os }}-${{ hashFiles('rebar.config', 'rebar.lock') }}
+      - run: rebar3 dialyzer
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run test:coverage
+      - run: npm run build
+      - run: npm audit --omit=dev --audit-level=high
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: frontend-coverage
+          path: frontend/coverage
+          if-no-files-found: ignore
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: frontend/playwright-report
+          if-no-files-found: ignore
+
+  release:
+    runs-on: ubuntu-latest
+    needs: [erlang, frontend]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: erlef/setup-beam@v1
+        with:
+          otp-version: '27.2.3'
+          rebar3-version: '3.24.0'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+        working-directory: frontend
+      - run: npm run build
+        working-directory: frontend
+      - run: rebar3 as prod release
+      - run: test -f _build/prod/rel/eadm/priv/spa/index.html
+
+  postgres-schema:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGHOST: 127.0.0.1
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: postgres
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create isolated database
+        run: |
+          psql -v ON_ERROR_STOP=1 -c "CREATE ROLE user_eadm LOGIN PASSWORD 'ci-only';"
+          psql -v ON_ERROR_STOP=1 -c "CREATE DATABASE eadm OWNER user_eadm;"
+      - name: Apply PostgreSQL baseline
+        run: psql -v ON_ERROR_STOP=1 -d eadm -f script/postgres/datastruct.sql
+      - name: Assert required schema objects
+        run: |
+          test "$(psql -At -d eadm -c "select count(*) from information_schema.tables where table_schema='public' and table_name in ('eadm_user','eadm_role','eadm_device','eadm_crontab','fn_paybilldetail');")" = "5"
+          test "$(psql -At -d eadm -c "select count(*) from information_schema.views where table_schema='public' and table_name in ('vi_user','vi_role','vi_userpermission','vi_crontab');")" = "4"
+
+  dependency-review:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high

@@ -50,7 +50,7 @@ clear_cookie(Req) ->
 decode_payload(EncodedPayload) ->
     try
         Payload = base64url_decode(EncodedPayload),
-        {ok, binary_to_term(Payload)}
+        {ok, binary_to_term(Payload, [safe])}
     catch
         _:_ ->
             {error, invalid_payload}

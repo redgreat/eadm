@@ -6,7 +6,13 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "tsc --noEmit && vite build",
-    "preview": "vite preview --host 0.0.0.0"
+    "preview": "vite preview --host 0.0.0.0",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "lint": "eslint . --max-warnings 0",
+    "check": "npm run lint && npm run test:coverage && npm run build"
   },
   "dependencies": {
     "@kobalte/core": "^0.13.11",
@@ -19,8 +25,14 @@
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.1",
+    "@playwright/test": "^1.55.1",
+    "@vitest/coverage-v8": "^5.0.2",
+    "eslint": "^9.36.0",
+    "eslint-plugin-solid": "^0.14.5",
     "typescript": "^6.0.3",
+    "typescript-eslint": "^8.44.1",
     "vite": "^8.0.16",
-    "vite-plugin-solid": "^2.11.12"
+    "vite-plugin-solid": "^2.11.12",
+    "vitest": "^5.0.2"
   }
 }

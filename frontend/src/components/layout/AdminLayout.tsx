@@ -237,7 +237,7 @@ function Modal(props: ParentProps<{ title: string; onClose: () => void }>) {
       <section class="w-full max-w-lg rounded-lg border border-slate-200 bg-white p-5 shadow-xl dark:border-slate-800 dark:bg-slate-900">
         <div class="flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
           <h3 class="text-lg font-semibold">{props.title}</h3>
-          <button type="button" class="rounded-md p-1 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800" onClick={props.onClose}>
+          <button type="button" class="rounded-md p-1 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800" onClick={() => props.onClose()}>
             <X size={18} />
           </button>
         </div>
