@@ -2,7 +2,7 @@
 %%% @author wangcw
 %%% @copyright (C) 2024, REDGREAT
 %%% @doc
-%%%  API response helpers shared by Nova controllers and Cowboy handlers.
+%%%  API response helpers shared by Cowboy handlers.
 %%% @end
 %%%-------------------------------------------------------------------
 -module(eadm_api_response).
@@ -20,7 +20,6 @@
     unauthorized/0,
     forbidden/0,
     not_found/0,
-    nova_json/1,
     cowboy_json/2,
     cowboy_json/3
 ]).
@@ -68,9 +67,6 @@ forbidden() ->
 
 not_found() ->
     error(<<"not_found">>, <<"资源不存在">>).
-
-nova_json(Body) ->
-    {json, Body}.
 
 cowboy_json(Req, Body) ->
     cowboy_json(Req, 200, Body).

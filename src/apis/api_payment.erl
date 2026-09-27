@@ -19,18 +19,18 @@
 %%%===================================================================
 %%% 宏定义
 %%%===================================================================
--define(ALIPAY_API_URL, application:get_env(nova, alipay_api_url, "https://openapi.alipay.com/gateway.do")).
--define(ALIPAY_APP_ID, application:get_env(nova, alipay_app_id, "")).
--define(ALIPAY_PRIVATE_KEY, application:get_env(nova, alipay_private_key, "")).
--define(ALIPAY_PUBLIC_KEY, application:get_env(nova, alipay_public_key, "")).
+-define(ALIPAY_API_URL, application:get_env(eadm, alipay_api_url, "https://openapi.alipay.com/gateway.do")).
+-define(ALIPAY_APP_ID, application:get_env(eadm, alipay_app_id, "")).
+-define(ALIPAY_PRIVATE_KEY, application:get_env(eadm, alipay_private_key, "")).
+-define(ALIPAY_PUBLIC_KEY, application:get_env(eadm, alipay_public_key, "")).
 
--define(WECHAT_API_URL, application:get_env(nova, wechat_api_url, "https://api.mch.weixin.qq.com")).
--define(WECHAT_APP_ID, application:get_env(nova, wechat_app_id, "")).
--define(WECHAT_MCH_ID, application:get_env(nova, wechat_mch_id, "")).
--define(WECHAT_API_KEY, application:get_env(nova, wechat_api_key, "")).
--define(WECHAT_API_V3_KEY, application:get_env(nova, wechat_api_v3_key, "")).
--define(WECHAT_SERIAL_NO, application:get_env(nova, wechat_serial_no, "")).
--define(WECHAT_PRIVATE_KEY, application:get_env(nova, wechat_private_key, "")).
+-define(WECHAT_API_URL, application:get_env(eadm, wechat_api_url, "https://api.mch.weixin.qq.com")).
+-define(WECHAT_APP_ID, application:get_env(eadm, wechat_app_id, "")).
+-define(WECHAT_MCH_ID, application:get_env(eadm, wechat_mch_id, "")).
+-define(WECHAT_API_KEY, application:get_env(eadm, wechat_api_key, "")).
+-define(WECHAT_API_V3_KEY, application:get_env(eadm, wechat_api_v3_key, "")).
+-define(WECHAT_SERIAL_NO, application:get_env(eadm, wechat_serial_no, "")).
+-define(WECHAT_PRIVATE_KEY, application:get_env(eadm, wechat_private_key, "")).
 
 %%====================================================================
 %% API 函数

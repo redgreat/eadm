@@ -2,7 +2,7 @@
 %%% @author wangcw
 %%% @copyright (C) 2024, REDGREAT
 %%% @doc
-%%%  Finance service shared by Nova controllers and future Cowboy handlers.
+%%%  Finance service shared by Cowboy handlers.
 %%% @end
 %%%-------------------------------------------------------------------
 -module(eadm_finance_service).

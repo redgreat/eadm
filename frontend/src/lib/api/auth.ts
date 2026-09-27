@@ -1,4 +1,4 @@
-import { apiRequest } from "./client";
+import { apiRequest, apiV1 } from "./client";
 import type { ApiResponse } from "./client";
 
 export type CurrentUser = {
@@ -9,7 +9,7 @@ export type CurrentUser = {
 };
 
 export function getCurrentUser(): Promise<ApiResponse<CurrentUser>> {
-  return apiRequest<CurrentUser>("/api/auth/me");
+  return apiRequest<CurrentUser>(`${apiV1}/auth/me`);
 }
 
 export function login(loginName: string, password: string): Promise<ApiResponse<CurrentUser>> {
@@ -17,14 +17,14 @@ export function login(loginName: string, password: string): Promise<ApiResponse<
   body.set("loginName", loginName);
   body.set("password", password);
 
-  return apiRequest<CurrentUser>("/api/auth/login", {
+  return apiRequest<CurrentUser>(`${apiV1}/auth/login`, {
     method: "POST",
     body
   });
 }
 
 export function logout(): Promise<ApiResponse<Record<string, never>>> {
-  return apiRequest<Record<string, never>>("/api/auth/logout", {
+  return apiRequest<Record<string, never>>(`${apiV1}/auth/logout`, {
     method: "POST"
   });
 }

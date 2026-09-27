@@ -6,19 +6,18 @@
 
 - 项目名称：`eadm`
 - 类型：个人后台管理系统
-- 后端：Erlang/OTP 27 + rebar3 + Nova/Cowboy
-- 模板：ErlyDTL，模板文件位于 `src/views`
-- 前端：Bootstrap 5、jQuery、DataTables、Chart.js 等静态资源
+- 后端：Erlang/OTP 27 + rebar3 + Cowboy
+- 前端：SolidJS + Vite
 - 数据库：以 PostgreSQL/TiDB/MySQL 脚本为主，同时保留 Kingbase、Oracle、DB2 等脚本
 - 部署：Docker、docker-compose、GitHub Actions
 
 ## 目录边界
 
-- `src/`：Erlang OTP 应用、服务模块、路由、控制器。
-- `src/controllers/`：Nova 控制器，负责页面和接口请求处理。
+- `src/`：Erlang OTP 应用、服务模块、Cowboy 路由和 Handler。
+- `src/eadm_cowboy_http.erl`：Cowboy 主监听器与路由表。
+- `src/eadm_cowboy_*_handler.erl`：页面 API Handler。
 - `src/apis/`：外部 API 入口。
-- `src/views/`：ErlyDTL 模板。
-- `priv/assets/`：前端静态资源。`vendor/` 下是第三方库，通常不要手工改动。
+- `frontend/`：SolidJS 前端工程。
 - `script/`：数据库初始化、迁移、辅助脚本。
 - `config/`：本地和发布配置模板。
 - `docker/`、`Dockerfile`、`docker-compose.yml`：容器运行配置。
@@ -43,11 +42,10 @@ docker compose up --build
 ## 编码规范
 
 - 遵循 `.editorconfig`：UTF-8、LF、4 空格缩进、文件末尾保留换行。
-- Erlang 模块命名沿用 `eadm_*`，控制器命名沿用 `eadm_*_controller`。
+- Erlang 模块命名沿用 `eadm_*`，HTTP Handler 命名沿用 `eadm_cowboy_*_handler`。
 - Erlang 代码保持现有风格：模块头注释、`-author`、导出分组、函数注释可按周边文件补充。
-- 路由集中维护在 `src/eadm_router.erl`，新增业务接口时同步控制器、模板/前端资源和 wiki。
-- 前端业务脚本按页面拆分到 `priv/assets/js/*.js`；公共逻辑优先放 `utils.js` 或已有公共模块。
-- 不要修改 `priv/assets/vendor/` 下的第三方库，除非任务明确要求升级依赖。
+- 路由集中维护在 `src/eadm_cowboy_http.erl`，新增业务接口时同步 Handler、service、前端和 wiki。
+- 前端页面和组件按功能拆分到 `frontend/src/`。
 - 配置文件和示例配置不要写入真实密码、密钥、Token、Cookie、连接串。
 - 数据库脚本涉及多数据库支持时，优先保持各数据库目录的结构一致。
 
@@ -55,13 +53,13 @@ docker compose up --build
 
 - 登录、权限、支付、健康数据、财务数据、设备轨迹属于敏感域，修改时默认按最小权限和输入校验处理。
 - 不要把真实个人数据、账单、设备号、地理位置、支付配置写入仓库。
-- 涉及 `eadm_auth`、登录态、Cookie、密码、支付回调、导入文件解析时，需要额外说明风险和验证方式。
+- 涉及 `eadm_cowboy_session`、登录态、Cookie、密码、支付回调、导入文件解析时，需要额外说明风险和验证方式。
 
 ## AI 修改约束
 
 - 保持改动小而清晰，不做与任务无关的重构。
-- 修改前先定位调用链和已有模式，优先复用现有控制器、工具函数、CSS/JS 结构。
-- 改动用户可见页面时，检查对应模板、JS、CSS、i18n 文案是否需要同步。
+- 修改前先定位调用链和已有模式，优先复用现有 Handler、service、工具函数和 SolidJS 组件结构。
+- 改动用户可见页面时，检查对应 SolidJS 路由、组件、样式和文案是否需要同步。
 - 改动接口时，检查 `wiki/API 接口参考/` 是否需要更新。
 - 改动数据库字段时，检查各数据库脚本、数据访问代码、导入导出逻辑、wiki 数据库文档。
 - 输出结果时说明：改了哪些文件、跑了哪些验证、哪些验证没跑以及原因。

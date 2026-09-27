@@ -53,7 +53,7 @@ to_json(Element) ->
 %% 获取session过期时间
 %% @end
 get_exp_bin() ->
-    ExpExtend = application:get_env(nova, session_expire, 3600),
+    ExpExtend = application:get_env(eadm, session_expire, 3600),
     erlang:system_time(seconds) + ExpExtend.
 
 %% @doc
@@ -85,7 +85,7 @@ return_as_map(Columns, Rows) ->
     #{<<"data">> => as_map(Columns, Rows, [])}.
 
 %% @doc
-%% mysql-otp 查询结果返回nova框架所需格式数据
+%% mysql-otp 查询结果返回通用列表格式数据
 %% @end
 return_as_json({ok, Columns, Rows}) ->
     return_as_json(Columns, Rows).
@@ -279,7 +279,7 @@ lastyear_date_binary() ->
 %% 密码加密.
 %% @end
 pass_encrypt(PassBin) ->
-    SecretKey = application:get_env(nova, secret_key, <<>>),
+    SecretKey = application:get_env(eadm, secret_key, <<>>),
     EncryptPwd = crypto:hash(sha256, <<SecretKey/binary, PassBin/binary>>),
     base64:encode(EncryptPwd).
 
@@ -314,7 +314,7 @@ validate_login(LoginName, Password) ->
 %% 密码加密解密-验证密码
 %% @end
 verify_password(Pwd, DbPwd) ->
-    SecretKey = application:get_env(nova, secret_key, <<>>),
+    SecretKey = application:get_env(eadm, secret_key, <<>>),
     HPwd = crypto:hash(sha256, <<SecretKey/binary, Pwd/binary>>),
     DbPwdBin = base64:decode(DbPwd),
     HPwd =:= DbPwdBin.

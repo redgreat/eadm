@@ -23,7 +23,7 @@ rebar3 compile
 rebar3 shell
 ```
 
-应用启动后，日志会提示本地访问地址。端口以 `config/` 或 Docker 配置为准。
+应用启动后，日志会提示本地访问地址。端口以 `config/` 或 Docker 配置为准，默认 `8090`。
 
 新 SolidJS 前端：
 
@@ -33,13 +33,9 @@ npm install
 npm run dev
 ```
 
-前端开发服务默认使用 Vite `5173` 端口，并将 `/api`、`/login`、`/logout` 代理到 `http://127.0.0.1:8080`。
+前端开发服务默认使用 Vite `5173` 端口，并将 `/api` 代理到 `http://127.0.0.1:8090`。
 
-如需让前端直接访问可选 Cowboy listener，可复制 `frontend/.env.example` 为 `frontend/.env.local` 并设置：
-
-```env
-VITE_API_BASE=http://127.0.0.1:8081
-```
+如需让前端访问其它后端地址，可复制 `frontend/.env.example` 为 `frontend/.env.local` 并设置 `VITE_API_BASE`。
 
 ## 配置文件
 
@@ -75,16 +71,7 @@ docker compose up --build
 
 Docker 构建会先执行前端 `npm ci` 和 `npm run build`，再把 `frontend/dist` 复制进 Erlang release 的 `priv/spa`。
 
-迁移期可选 Cowboy 监听器默认关闭。需要并行验证 SolidJS SPA 静态托管时，可在配置中临时开启：
-
-```erlang
-{eadm, [
-  {cowboy_enabled, true},
-  {cowboy_port, 8081}
-]}
-```
-
-开启后访问 `http://127.0.0.1:8081/app/`，该监听器只用于迁移期静态托管和原生 handler 验证。Docker 配置中预留端口为 `8091`。
+Cowboy 是主 HTTP 服务，负责提供 `/api/*` JSON API 和 SolidJS SPA。
 
 前端构建：
 
@@ -109,24 +96,20 @@ npm run build
 
 - 应用启动：`src/eadm_app.erl`
 - 监督树：`src/eadm_sup.erl`
-- 路由：`src/eadm_router.erl`
-- 认证授权：`src/eadm_auth.erl`
-- 控制器：`src/controllers/`
+- 路由：`src/eadm_cowboy_http.erl`
+- 认证授权：`src/eadm_cowboy_guard.erl`、`src/eadm_cowboy_session.erl`、`src/eadm_auth_service.erl`
+- Cowboy Handler：`src/eadm_cowboy_*_handler.erl`
 - 外部 API：`src/apis/`
-- 页面模板：`src/views/`
-- 前端脚本：`priv/assets/js/`
-- 样式：`priv/assets/css/`
+- 前端工程：`frontend/`
 - 新前端工程：`frontend/`
 - 数据库脚本：`script/`
 
 ## 新增页面或接口清单
 
-1. 在 `src/eadm_router.erl` 增加路由，并确认 `security` 策略。
-2. 在 `src/controllers/` 或 `src/apis/` 增加处理函数。
-3. 如需页面，新增或更新 `src/views/*.dtl`。
-4. 如需交互，新增或更新 `priv/assets/js/*.js`。
-5. 如需样式，优先复用现有 CSS，再局部补充。
-6. 如需文案国际化，更新 `priv/assets/i18n/`。
+1. 在 `src/eadm_cowboy_http.erl` 增加路由，并确认权限策略。
+2. 在 `src/eadm_cowboy_*_handler.erl` 或对应 service 增加处理逻辑。
+3. 如需页面，新增或更新 `frontend/src/routes/*.tsx`。
+4. 如需交互或样式，优先放在 `frontend/src/` 对应组件和样式文件。
 7. 如需数据结构，更新相关 `script/<db>/` 脚本和 wiki。
 8. 运行 `rebar3 compile`，必要时启动应用手工验证。
 
@@ -134,7 +117,7 @@ npm run build
 
 修改以下模块时需要额外谨慎：
 
-- 登录、认证、权限：`eadm_auth`、`eadm_login_controller`
+- 登录、认证、权限：`eadm_cowboy_auth_handler`、`eadm_cowboy_guard`、`eadm_cowboy_session`
 - 支付：`eadm_payment_controller`、`eadm_wechat`
 - 健康与轨迹：`eadm_health_controller`、`eadm_location_controller`、`api_watch`
 - 财务导入：`eadm_finance_controller`、`eadm_xlsx`

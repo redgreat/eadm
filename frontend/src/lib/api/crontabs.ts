@@ -1,4 +1,4 @@
-import { apiRequest } from "./client";
+import { apiRequest, apiV1 } from "./client";
 import type { ApiResponse } from "./client";
 
 export type CrontabItem = {
@@ -23,5 +23,5 @@ export function getCrontabs(cronName = ""): Promise<ApiResponse<CrontabList>> {
     query.set("cronName", cronName.trim());
   }
   const qs = query.toString();
-  return apiRequest<CrontabList>(qs ? `/api/crontabs?${qs}` : "/api/crontabs");
+  return apiRequest<CrontabList>(qs ? `${apiV1}/jobs/crontabs?${qs}` : `${apiV1}/jobs/crontabs`);
 }

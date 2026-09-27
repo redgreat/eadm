@@ -2,13 +2,13 @@
 %%% @author wangcw
 %%% @copyright (C) 2024, REDGREAT
 %%% @doc
-%%%  Authentication service shared by Nova controllers and future Cowboy handlers.
+%%%  Authentication service shared by Cowboy handlers.
 %%% @end
 %%%-------------------------------------------------------------------
 -module(eadm_auth_service).
 -author("wangcw").
 
--export([authenticate/2, current_user/1]).
+-export([authenticate/2, current_user/1, login_name/1, user_name/1]).
 
 %%====================================================================
 %% API functions
@@ -42,12 +42,18 @@ authenticate(LoginName, Password) ->
 current_user(#{<<"authed">> := true} = AuthData) ->
     {ok, #{
         <<"authed">> => true,
-        <<"loginName">> => maps:get(<<"loginname">>, AuthData, <<>>),
-        <<"userName">> => maps:get(<<"username">>, AuthData, <<>>),
+        <<"loginName">> => login_name(AuthData),
+        <<"userName">> => user_name(AuthData),
         <<"permission">> => maps:get(<<"permission">>, AuthData, #{})
     }};
 current_user(_) ->
     {error, unauthorized, <<"请先登录">>}.
+
+login_name(AuthData) ->
+    first_value([<<"loginName">>, <<"loginname">>], AuthData, <<>>).
+
+user_name(AuthData) ->
+    first_value([<<"userName">>, <<"username">>], AuthData, login_name(AuthData)).
 
 %%====================================================================
 %% Internal functions
@@ -83,3 +89,11 @@ get_username(LoginName) ->
 
 utf8(Text) ->
     unicode:characters_to_binary(Text, utf8).
+
+first_value([Key | Rest], Map, Default) ->
+    case maps:get(Key, Map, undefined) of
+        undefined -> first_value(Rest, Map, Default);
+        Value -> Value
+    end;
+first_value([], _Map, Default) ->
+    Default.

@@ -2,7 +2,7 @@
 %%% @author wangcw
 %%% @copyright (C) 2024, REDGREAT
 %%% @doc
-%%%  Role service shared by Nova controllers and future Cowboy handlers.
+%%%  Role service shared by Cowboy handlers.
 %%% @end
 %%%-------------------------------------------------------------------
 -module(eadm_role_service).

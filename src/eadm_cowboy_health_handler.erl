@@ -15,7 +15,7 @@
 %%====================================================================
 
 init(Req, State) ->
-    case eadm_cowboy_guard:allow_internal_or_require(Req, <<"health">>) of
+    case eadm_cowboy_guard:require(Req, <<"health">>) of
         {ok, _User} -> reply_health(Req, State);
         {error, unauthorized} -> {ok, eadm_api_response:cowboy_json(Req, 401, eadm_api_response:unauthorized()), State};
         {error, forbidden} -> {ok, eadm_api_response:cowboy_json(Req, 403, eadm_api_response:forbidden()), State}
@@ -55,3 +55,4 @@ handle_search(DataType, StartTime, EndTime) ->
             lager:error("Cowboy health endpoint failed: ~p~n", [Error]),
             eadm_api_response:error(<<"internal_error">>, <<"健康数据查询失败">>)
     end.
+

@@ -1,4 +1,4 @@
-import { apiRequest } from "./client";
+import { apiRequest, apiV1 } from "./client";
 import type { ApiResponse } from "./client";
 
 export type RoleItem = {
@@ -14,5 +14,5 @@ export type RoleList = {
 };
 
 export function getRoles(): Promise<ApiResponse<RoleList>> {
-  return apiRequest<RoleList>("/api/roles");
+  return apiRequest<RoleList>(`${apiV1}/admin/roles`);
 }

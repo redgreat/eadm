@@ -3,21 +3,13 @@ import { defineConfig } from "vite";
 import solid from "vite-plugin-solid";
 
 export default defineConfig({
-  base: "/app/",
+  base: "/",
   plugins: [solid(), tailwindcss()],
   server: {
     port: 5173,
     proxy: {
       "/api": {
-        target: "http://127.0.0.1:8080",
-        changeOrigin: true
-      },
-      "/login": {
-        target: "http://127.0.0.1:8080",
-        changeOrigin: true
-      },
-      "/logout": {
-        target: "http://127.0.0.1:8080",
+        target: "http://127.0.0.1:8090",
         changeOrigin: true
       }
     }

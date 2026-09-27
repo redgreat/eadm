@@ -1,4 +1,4 @@
-import { apiRequest } from "./client";
+import { apiRequest, apiV1 } from "./client";
 import type { ApiResponse } from "./client";
 
 export type UserItem = {
@@ -17,5 +17,5 @@ export type UserList = {
 };
 
 export function getUsers(): Promise<ApiResponse<UserList>> {
-  return apiRequest<UserList>("/api/users");
+  return apiRequest<UserList>(`${apiV1}/admin/users`);
 }

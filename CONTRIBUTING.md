@@ -31,21 +31,19 @@ refactor: 整理健康数据查询参数
 ## Erlang 后端规范
 
 - 模块按职责拆分，命名沿用 `eadm_*`。
-- 控制器命名沿用 `eadm_*_controller`。
-- 路由集中维护在 `src/eadm_router.erl`。
-- 公共能力优先复用 `eadm_utils`、`eadm_auth` 等已有模块。
+- HTTP Handler 命名沿用 `eadm_cowboy_*_handler`。
+- 路由集中维护在 `src/eadm_cowboy_http.erl`。
+- 公共能力优先复用 `eadm_utils`、`eadm_cowboy_guard`、`eadm_cowboy_session` 和 service 模块。
 - 新增接口时明确请求方法、参数校验、权限策略、成功和失败返回。
 - 对外部输入保持校验，避免将未处理参数直接拼入 SQL 或命令。
 - 日志使用项目已有日志体系，避免记录密码、Token、Cookie、支付密钥和完整个人敏感数据。
 
 ## 前端规范
 
-- 模板文件放在 `src/views/`。
-- 页面级 JS 放在 `priv/assets/js/`，命名与页面或业务模块对应。
-- 公共 JS 逻辑优先放入已有公共工具模块。
-- CSS 优先复用现有样式和 Bootstrap 组件，避免新增重复样式。
-- i18n 文案放入 `priv/assets/i18n/` 中对应模块。
-- 第三方资源位于 `priv/assets/vendor/`，不要直接改动 vendor 文件。
+- 页面路由放在 `frontend/src/routes/`。
+- 组件放在 `frontend/src/components/`，API 客户端放在 `frontend/src/lib/api/`。
+- 样式优先复用 `frontend/src/styles/` 和已有组件类名。
+- 第三方前端依赖通过 `frontend/package.json` 管理，不提交 `node_modules/`。
 
 ## 数据库规范
 

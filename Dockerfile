@@ -16,7 +16,8 @@ COPY . .
 COPY --from=frontend-builder /eadmfrontend/dist ./frontend/dist
 
 RUN apk add --update git
-RUN rebar3 as prod release
+RUN rebar3 local upgrade
+RUN /root/.cache/rebar3/bin/rebar3 as prod release
 
 FROM --platform=$BUILDPLATFORM alpine:3.21
 
@@ -38,7 +39,7 @@ RUN sed -i 's/\r$//' /opt/eadm/docker/docker-entrypoint.sh && chmod +x /opt/eadm
 
 VOLUME /opt/eadm
 
-EXPOSE 8090 8091
+EXPOSE 8090
 
 LABEL \
     org.label-schema.name="eadm" \

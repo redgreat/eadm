@@ -3,14 +3,13 @@
 项目介绍
 ---
 
-使用erlang做后台，web框架为基于cowboy的nova，bootstrap5+jQuery做前台，TiDB做后台数据库。
+使用 Erlang/OTP + Cowboy 做后台，SolidJS 做前台，TiDB/PostgreSQL 等数据库脚本按环境选择。
 初学项目。
 
  - erlang: 27.2.1
  - rebar3: 3.24.0
- - [nova](https://github.com/novaframework/nova): 0.10.4
- - bootstrap5: 5.3.3
- - jQuery: 3.6.0
+ - cowboy
+ - SolidJS + Vite
 
 ---
 

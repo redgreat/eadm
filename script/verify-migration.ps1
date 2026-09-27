@@ -19,7 +19,7 @@ try {
     }
     New-Item -ItemType Directory -Force $Tmp | Out-Null
 
-    Step "Compile migration Erlang modules"
+    Step "Compile Cowboy Erlang modules"
     & erlc -o $Tmp `
         (Join-Path $Root "src\eadm_cowboy_http.erl") `
         (Join-Path $Root "src\eadm_cowboy_req.erl") `
@@ -46,18 +46,7 @@ try {
         (Join-Path $Root "src\eadm_finance_service.erl") `
         (Join-Path $Root "src\eadm_crontab_service.erl") `
         (Join-Path $Root "src\eadm_api_response.erl") `
-        (Join-Path $Root "src\controllers\eadm_api_auth_controller.erl") `
-        (Join-Path $Root "src\controllers\eadm_api_dashboard_controller.erl") `
-        (Join-Path $Root "src\controllers\eadm_api_user_controller.erl") `
-        (Join-Path $Root "src\controllers\eadm_api_role_controller.erl") `
-        (Join-Path $Root "src\controllers\eadm_api_device_controller.erl") `
-        (Join-Path $Root "src\controllers\eadm_api_health_controller.erl") `
-        (Join-Path $Root "src\controllers\eadm_api_location_controller.erl") `
-        (Join-Path $Root "src\controllers\eadm_api_finance_controller.erl") `
-        (Join-Path $Root "src\controllers\eadm_api_crontab_controller.erl") `
-        (Join-Path $Root "src\controllers\eadm_api_system_controller.erl") `
-        (Join-Path $Root "src\eadm_spa_handler.erl") `
-        (Join-Path $Root "src\eadm_router.erl")
+        (Join-Path $Root "src\eadm_spa_handler.erl")
 
     if ($LASTEXITCODE -ne 0) {
         throw "erlc failed with exit code $LASTEXITCODE"
@@ -76,7 +65,7 @@ false = maps:get(<<"success">>, Err),
 SystemItems = eadm_system_service:info(),
 true = is_list(SystemItems),
 true = lists:any(fun(#{<<"key">> := <<"otpRelease">>}) -> true; (_) -> false end, SystemItems),
-application:set_env(nova, secret_key, <<"test-secret">>),
+application:set_env(eadm, secret_key, <<"test-secret">>),
 Token = eadm_cowboy_session:sign(#{<<"loginName">> => <<"admin">>}),
 {ok, #{<<"loginName">> := <<"admin">>}} = eadm_cowboy_session:verify(Token),
 {error, invalid_signature} = eadm_cowboy_session:verify(<<Token/binary, <<"x">>/binary>>),
@@ -100,8 +89,8 @@ halt(0).
             }
             $IndexHtml = Join-Path (Get-Location) "dist\index.html"
             $IndexContent = Get-Content $IndexHtml -Raw
-            if ($IndexContent -notmatch "/app/assets/") {
-                throw "frontend dist index.html does not reference /app/assets/"
+            if ($IndexContent -notmatch "/assets/") {
+                throw "frontend dist index.html does not reference /assets/"
             }
         }
         finally {
@@ -109,7 +98,7 @@ halt(0).
         }
     }
 
-    Step "Migration verification passed"
+    Step "Cowboy/SolidJS verification passed"
 }
 finally {
     if (Test-Path $Tmp) {

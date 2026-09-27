@@ -2,7 +2,7 @@
 %%% @author wangcw
 %%% @copyright (C) 2024, REDGREAT
 %%% @doc
-%%%  Crontab service shared by Nova controllers and future Cowboy handlers.
+%%%  Crontab service shared by Cowboy handlers.
 %%% @end
 %%%-------------------------------------------------------------------
 -module(eadm_crontab_service).

@@ -1,4 +1,4 @@
-import { apiRequest } from "./client";
+import { apiRequest, apiV1 } from "./client";
 import type { ApiResponse } from "./client";
 
 export type FinanceRecord = {
@@ -22,5 +22,5 @@ export function getFinanceRecords(params: {
   endTime: string;
 }): Promise<ApiResponse<FinanceList>> {
   const query = new URLSearchParams(params);
-  return apiRequest<FinanceList>(`/api/finance?${query.toString()}`);
+  return apiRequest<FinanceList>(`${apiV1}/finance/records?${query.toString()}`);
 }

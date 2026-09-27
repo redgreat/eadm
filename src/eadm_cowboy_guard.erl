@@ -8,7 +8,7 @@
 -module(eadm_cowboy_guard).
 -author("wangcw").
 
--export([allow_internal_or_require/2, current_user/1, require/2]).
+-export([current_user/1, require/2]).
 
 %%====================================================================
 %% API functions
@@ -19,12 +19,6 @@ current_user(Req) ->
     case lists:keyfind(<<"eadm_session">>, 1, Cookies) of
         {_, Token} -> eadm_cowboy_session:verify(Token);
         false -> {error, unauthorized}
-    end.
-
-allow_internal_or_require(Req, PermissionSpec) ->
-    case cowboy_req:path(Req) of
-        <<"/api/internal/", _Rest/binary>> -> {ok, internal};
-        _ -> require(Req, PermissionSpec)
     end.
 
 require(Req, PermissionSpec) ->

@@ -20,3 +20,4 @@ init(Req, State) ->
         <<"runtime">> => <<"cowboy">>
     }),
     {ok, eadm_api_response:cowboy_json(Req, Body), State}.
+

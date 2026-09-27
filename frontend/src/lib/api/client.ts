@@ -6,6 +6,7 @@ export type ApiResponse<T> = {
 };
 
 const apiBase = import.meta.env.VITE_API_BASE ?? "";
+export const apiV1 = "/api/v1";
 
 type RequestOptions = RequestInit & {
   skipJsonParse?: boolean;

@@ -1,4 +1,4 @@
-import { apiRequest } from "./client";
+import { apiRequest, apiV1 } from "./client";
 import type { ApiResponse } from "./client";
 
 export type DeviceItem = {
@@ -21,5 +21,5 @@ export function getDevices(deviceNo = ""): Promise<ApiResponse<DeviceList>> {
     params.set("deviceNo", deviceNo.trim());
   }
   const query = params.toString();
-  return apiRequest<DeviceList>(query ? `/api/devices?${query}` : "/api/devices");
+  return apiRequest<DeviceList>(query ? `${apiV1}/devices?${query}` : `${apiV1}/devices`);
 }

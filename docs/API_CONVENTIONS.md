@@ -1,6 +1,6 @@
 # API 约定
 
-本文档定义新前端和后续 Cowboy handler 使用的 JSON API 约定。旧 Nova 页面接口可逐步迁移，不要求一次性改完。
+本文档定义 SolidJS 前端和 Cowboy handler 使用的 JSON API 约定。
 
 ## 响应结构
 
@@ -72,22 +72,41 @@
 }
 ```
 
+## 路径分组
+
+新接口统一使用 `/api/v1` 作为版本前缀，便于后续 Web、iOS、Android、微信小程序共用同一套协议。
+
+| 分组 | 用途 | 当前路径 |
+| --- | --- | --- |
+| `auth` | 登录态、登录、退出 | `/api/v1/auth/*` |
+| `dashboard` | 首页看板 | `/api/v1/dashboard/summary` |
+| `admin` | 后台用户、角色等管理资源 | `/api/v1/admin/users`、`/api/v1/admin/roles` |
+| `devices` | 设备资源 | `/api/v1/devices` |
+| `jobs` | 定时任务、后台任务 | `/api/v1/jobs/crontabs` |
+| `health` | 健康数据 | `/api/v1/health/records` |
+| `location` | 轨迹位置 | `/api/v1/location/points` |
+| `finance` | 财务流水 | `/api/v1/finance/records` |
+| `system` | 系统运行信息 | `/api/v1/system/info` |
+| `ping` | 服务探活 | `/api/v1/ping` |
+
+前端和后续移动端、小程序客户端都只调用 `/api/v1/*`。旧 `/api/*` 路径不再保留。
+
 ## 命名规范
 
-- URL 使用小写短横线或资源名复数，例如 `/api/users`、`/api/system/processes`。
-- JSON 字段使用 camelCase，方便 SolidJS/TypeScript 使用。
+- URL 使用小写短横线或资源名复数，例如 `/api/v1/admin/users`、`/api/v1/system/info`。
+- JSON 字段使用 camelCase，方便多端客户端和 TypeScript 使用。
 - 后端内部数据库字段可继续保持现状，在 API 层转换。
+- 需要区分端能力时优先通过请求头、查询参数或 feature flag 协商，不为 iOS/Android/小程序复制一套平行路径。
 
-## 迁移策略
+## API 实现约定
 
-1. 旧接口继续返回当前结构，保证现有 jQuery 页面可用。
-2. 新 SolidJS 页面只调用新 API。
-3. 新 API 使用 `eadm_api_response` 生成响应。
-4. 模块迁移完成后，再删除对应旧页面接口。
+1. SolidJS 页面只调用 `/api/v1/*` JSON API。
+2. API 使用 `eadm_api_response` 生成响应。
+3. 认证态使用 `eadm_cowboy_session` 签名 Cookie；后续移动端可在同一分组下扩展 Token 认证。
 
 ## 已开始迁移的接口
 
-### GET /api/auth/me
+### GET /api/v1/auth/me
 
 返回当前登录用户信息，用于新前端初始化登录态。
 
@@ -107,7 +126,7 @@
 }
 ```
 
-### GET /api/dashboard/summary
+### GET /api/v1/dashboard/summary
 
 返回新前端首页汇总数据。该接口替代旧 `/dashboard` 数组下标结构。
 
@@ -138,7 +157,7 @@
 }
 ```
 
-### GET /api/users
+### GET /api/v1/admin/users
 
 返回用户列表。需要 `usermanage` 权限。
 
@@ -166,7 +185,7 @@
 }
 ```
 
-### GET /api/roles
+### GET /api/v1/admin/roles
 
 返回角色列表。需要 `usermanage` 权限。
 
@@ -191,7 +210,7 @@
 }
 ```
 
-### GET /api/devices
+### GET /api/v1/devices
 
 返回设备列表。需要 `device.devlist` 权限。支持 `deviceNo` 查询参数。
 
@@ -218,7 +237,7 @@
 }
 ```
 
-### GET /api/health
+### GET /api/v1/health/records
 
 返回健康数据。需要 `health` 权限。查询参数：
 
@@ -245,7 +264,7 @@
 }
 ```
 
-### GET /api/location
+### GET /api/v1/location/points
 
 返回轨迹坐标。需要 `locate` 权限。查询参数：
 
@@ -274,7 +293,7 @@
 }
 ```
 
-### GET /api/finance
+### GET /api/v1/finance/records
 
 返回财务流水。需要 `finance.finlist` 权限。查询参数：
 
@@ -306,7 +325,7 @@
 }
 ```
 
-### GET /api/crontabs
+### GET /api/v1/jobs/crontabs
 
 返回定时任务列表。需要 `crontab` 权限。支持 `cronName` 查询参数。
 
@@ -335,7 +354,7 @@
 }
 ```
 
-### GET /api/system/info
+### GET /api/v1/system/info
 
 返回 Erlang VM 系统信息。
 
@@ -357,9 +376,9 @@
 }
 ```
 
-### GET /api/ping
+### GET /api/v1/ping
 
-迁移期原生 Cowboy 健康检查接口。仅在可选 `eadm_cowboy_http` 监听器开启时可用。
+Cowboy 健康检查接口。
 
 成功：
 
@@ -375,45 +394,13 @@
 }
 ```
 
-### GET /api/internal/system/info
+### /api/v1/auth/*
 
-迁移期原生 Cowboy 系统信息验证接口。仅在可选 `eadm_cowboy_http` 监听器开启时可用。正式认证接入前不要作为主前端接口使用。
+认证接口：
 
-### GET /api/internal/users
-
-迁移期原生 Cowboy 用户列表验证接口。仅用于确认 Cowboy handler 可复用 `eadm_user_service`，正式认证接入前不要作为主前端接口使用。
-
-### GET /api/internal/roles
-
-迁移期原生 Cowboy 角色列表验证接口。仅用于确认 Cowboy handler 可复用 `eadm_role_service`，正式认证接入前不要作为主前端接口使用。
-
-### GET /api/internal/devices
-
-迁移期原生 Cowboy 设备列表验证接口。支持 `deviceNo` 查询参数。
-
-### GET /api/internal/crontabs
-
-迁移期原生 Cowboy 定时任务列表验证接口。支持 `cronName` 查询参数。
-
-### GET /api/internal/health
-
-迁移期原生 Cowboy 健康数据验证接口。支持 `dataType`、`startTime`、`endTime` 查询参数。
-
-### GET /api/internal/location
-
-迁移期原生 Cowboy 轨迹验证接口。支持 `loginName`、`deviceNo`、`startTime`、`endTime` 查询参数。`loginName` 仅用于迁移验证，正式接口会从登录态读取。
-
-### GET /api/internal/finance
-
-迁移期原生 Cowboy 财务流水验证接口。支持 `sourceType`、`inOrOut`、`startTime`、`endTime` 查询参数。
-
-### /api/internal/auth/*
-
-迁移期原生 Cowboy 认证验证接口：
-
-- `POST /api/internal/auth/login`
-- `POST /api/internal/auth/logout`
-- `GET /api/internal/auth/me`
+- `POST /api/v1/auth/login`
+- `POST /api/v1/auth/logout`
+- `GET /api/v1/auth/me`
 
 登录接口接收 JSON body：
 
@@ -424,25 +411,23 @@
 }
 ```
 
-这些接口使用 `eadm_cowboy_session` 签名 Cookie。正式切换前，前端仍使用 Nova `/api/auth/*`。
+这些接口使用 `eadm_cowboy_session` 签名 Cookie。
 
-## Cowboy 正式路径迁移状态
+## Cowboy 正式路径
 
-可选 `eadm_cowboy_http` 监听器已挂载以下正式路径，并使用 `eadm_cowboy_session` 签名 Cookie 做登录态：
+`eadm_cowboy_http` 挂载以下正式路径，并使用 `eadm_cowboy_session` 签名 Cookie 做登录态：
 
-- `POST /api/auth/login`
-- `POST /api/auth/logout`
-- `GET /api/auth/me`
-- `GET /api/system/info`
-- `GET /api/users`
-- `GET /api/roles`
-- `GET /api/devices`
-- `GET /api/crontabs`
-- `GET /api/health`
-- `GET /api/location`
-- `GET /api/finance`
-
-这些路径仅在 `eadm.cowboy_enabled=true` 时由可选 Cowboy listener 提供。当前 Nova 监听器上的同名 API 仍然保留。
+- `POST /api/v1/auth/login`
+- `POST /api/v1/auth/logout`
+- `GET /api/v1/auth/me`
+- `GET /api/v1/system/info`
+- `GET /api/v1/admin/users`
+- `GET /api/v1/admin/roles`
+- `GET /api/v1/devices`
+- `GET /api/v1/jobs/crontabs`
+- `GET /api/v1/health/records`
+- `GET /api/v1/location/points`
+- `GET /api/v1/finance/records`
 
 未登录：
 

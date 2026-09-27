@@ -1,4 +1,4 @@
-import { apiRequest } from "./client";
+import { apiRequest, apiV1 } from "./client";
 import type { ApiResponse } from "./client";
 
 export type HealthRecord = Record<string, string | number | boolean | null>;
@@ -14,5 +14,5 @@ export function getHealthRecords(params: {
   endTime: string;
 }): Promise<ApiResponse<HealthList>> {
   const query = new URLSearchParams(params);
-  return apiRequest<HealthList>(`/api/health?${query.toString()}`);
+  return apiRequest<HealthList>(`${apiV1}/health/records?${query.toString()}`);
 }

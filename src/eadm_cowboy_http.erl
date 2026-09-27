@@ -2,7 +2,7 @@
 %%% @author wangcw
 %%% @copyright (C) 2024, REDGREAT
 %%% @doc
-%%%  Optional Cowboy listener used during the Nova to Cowboy migration.
+%%%  Main Cowboy listener for the EADM API and SolidJS SPA.
 %%% @end
 %%%-------------------------------------------------------------------
 -module(eadm_cowboy_http).
@@ -27,11 +27,11 @@ start_link() ->
 %%====================================================================
 
 init([]) ->
-    Port = application:get_env(eadm, cowboy_port, 8091),
+    Port = application:get_env(eadm, cowboy_port, 8090),
     {ok, _} = application:ensure_all_started(cowboy),
     Dispatch = cowboy_router:compile(routes()),
     {ok, _} = cowboy:start_clear(?LISTENER, [{port, Port}], #{env => #{dispatch => Dispatch}}),
-    lager:info("EADM optional Cowboy listener started on port ~p", [Port]),
+    lager:info("EADM Cowboy listener started on port ~p", [Port]),
     {ok, #{port => Port}}.
 
 handle_call(_Request, _From, State) ->
@@ -57,30 +57,30 @@ code_change(_OldVsn, State, _Extra) ->
 routes() ->
     [
         {'_', [
-            {"/api/ping", eadm_cowboy_ping_handler, []},
-            {"/api/auth/[...]", eadm_cowboy_auth_handler, []},
-            {"/api/system/info", eadm_cowboy_system_handler, []},
-            {"/api/users", eadm_cowboy_users_handler, []},
-            {"/api/roles", eadm_cowboy_roles_handler, []},
-            {"/api/devices", eadm_cowboy_devices_handler, []},
-            {"/api/crontabs", eadm_cowboy_crontabs_handler, []},
-            {"/api/health", eadm_cowboy_health_handler, []},
-            {"/api/location", eadm_cowboy_location_handler, []},
-            {"/api/finance", eadm_cowboy_finance_handler, []},
-            {"/api/internal/auth/[...]", eadm_cowboy_auth_handler, []},
-            {"/api/internal/system/info", eadm_cowboy_system_handler, []},
-            {"/api/internal/users", eadm_cowboy_users_handler, []},
-            {"/api/internal/roles", eadm_cowboy_roles_handler, []},
-            {"/api/internal/devices", eadm_cowboy_devices_handler, []},
-            {"/api/internal/crontabs", eadm_cowboy_crontabs_handler, []},
-            {"/api/internal/health", eadm_cowboy_health_handler, []},
-            {"/api/internal/location", eadm_cowboy_location_handler, []},
-            {"/api/internal/finance", eadm_cowboy_finance_handler, []},
-            {"/app/assets/[...]", cowboy_static, {dir, spa_assets_dir()}},
-            {"/app/[...]", eadm_spa_handler, []},
-            {"/", eadm_spa_handler, []}
+            {"/api/v1/ping", eadm_cowboy_ping_handler, []},
+            {"/api/v1/auth/[...]", eadm_cowboy_auth_handler, []},
+            {"/api/v1/dashboard/summary", eadm_cowboy_dashboard_handler, []},
+            {"/api/v1/admin/users", eadm_cowboy_users_handler, []},
+            {"/api/v1/admin/roles", eadm_cowboy_roles_handler, []},
+            {"/api/v1/devices", eadm_cowboy_devices_handler, []},
+            {"/api/v1/jobs/crontabs", eadm_cowboy_crontabs_handler, []},
+            {"/api/v1/health/records", eadm_cowboy_health_handler, []},
+            {"/api/v1/location/points", eadm_cowboy_location_handler, []},
+            {"/api/v1/finance/records", eadm_cowboy_finance_handler, []},
+            {"/api/v1/system/info", eadm_cowboy_system_handler, []},
+            {"/favicon.ico", cowboy_static, {file, spa_file_path("favicon.ico")}},
+            {"/assets/[...]", cowboy_static, {dir, spa_assets_dir()}},
+            {"/[...]", eadm_spa_handler, []}
         ]}
     ].
+
+spa_file_path(FileName) ->
+    Candidates = [
+        filename:join([code:priv_dir(eadm), "spa", FileName]),
+        filename:join(["priv", "spa", FileName]),
+        filename:join(["/opt/eadm/priv/spa", FileName])
+    ],
+    first_existing_file(Candidates).
 
 spa_assets_dir() ->
     Candidates = [
@@ -97,3 +97,11 @@ first_existing_dir([Path | Rest]) ->
     end;
 first_existing_dir([]) ->
     filename:join([code:priv_dir(eadm), "spa", "assets"]).
+
+first_existing_file([Path | Rest]) ->
+    case filelib:is_regular(Path) of
+        true -> Path;
+        false -> first_existing_file(Rest)
+    end;
+first_existing_file([]) ->
+    filename:join([code:priv_dir(eadm), "spa", "favicon.ico"]).

@@ -15,7 +15,7 @@
 %%====================================================================
 
 init(Req, State) ->
-    case eadm_cowboy_guard:allow_internal_or_require(Req, [<<"finance">>, <<"finlist">>]) of
+    case eadm_cowboy_guard:require(Req, [<<"finance">>, <<"finlist">>]) of
         {ok, _User} -> reply_finance(Req, State);
         {error, unauthorized} -> {ok, eadm_api_response:cowboy_json(Req, 401, eadm_api_response:unauthorized()), State};
         {error, forbidden} -> {ok, eadm_api_response:cowboy_json(Req, 403, eadm_api_response:forbidden()), State}
@@ -71,3 +71,4 @@ to_int(Value) when is_integer(Value) ->
     Value;
 to_int(_) ->
     0.
+

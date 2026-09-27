@@ -1,6 +1,17 @@
-import { createResource, createSignal, For, Show } from "solid-js";
+import { createMemo, createResource, createSignal } from "solid-js";
+import Badge from "../components/ui/Badge";
 import Button from "../components/ui/Button";
-import { getFinanceRecords } from "../lib/api/finance";
+import DataTable, { type DataTableColumn } from "../components/ui/DataTable";
+import { getFinanceRecords, type FinanceRecord } from "../lib/api/finance";
+import { daysAgo, toApiDateTime, toInputDateTime } from "../lib/datetime";
+
+const columns: DataTableColumn<FinanceRecord>[] = [
+  { key: "tradeTime", header: "时间", sortable: true },
+  { key: "sourceType", header: "来源", sortable: true, render: (record) => <Badge tone="blue">{sourceLabel(record.sourceType)}</Badge> },
+  { key: "inOrOut", header: "收支", sortable: true },
+  { key: "tradeType", header: "类型", sortable: true },
+  { key: "amount", header: "金额", sortable: true, align: "right", class: "font-medium text-slate-950" }
+];
 
 export default function FinancePage() {
   const [sourceType, setSourceType] = createSignal("0");
@@ -9,6 +20,8 @@ export default function FinancePage() {
   const [endTime, setEndTime] = createSignal(toInputDateTime(new Date()));
   const [query, setQuery] = createSignal(currentQuery());
   const [records] = createResource(query, getFinanceRecords);
+  const rows = createMemo(() => records()?.data.items ?? []);
+  const totalAmount = createMemo(() => rows().reduce((sum, item) => sum + Number(item.amount || 0), 0));
 
   function currentQuery() {
     return {
@@ -29,10 +42,10 @@ export default function FinancePage() {
       <section class="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 class="text-2xl font-semibold tracking-tight">财务数据</h2>
-          <p class="mt-1 text-sm text-slate-500">已接入新的 `/api/finance` 查询接口。</p>
+          <p class="mt-1 text-sm text-slate-500">按来源、收支类型和交易时间查询账单流水。</p>
         </div>
         <div class="rounded-md bg-white px-3 py-2 text-sm text-slate-500 shadow-sm">
-          共 {records()?.data.total ?? "--"} 条流水
+          {rows().length} 条，合计 {totalAmount().toFixed(2)}
         </div>
       </section>
 
@@ -54,68 +67,18 @@ export default function FinancePage() {
         <Button type="submit">查询</Button>
       </form>
 
-      <Show when={records()?.success === false}>
-        <div class="rounded-md bg-amber-50 px-4 py-3 text-sm text-amber-700">
-          {records()?.message || "财务数据加载失败"}
-        </div>
-      </Show>
-
-      <section class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-        <div class="overflow-x-auto">
-          <table class="min-w-full divide-y divide-slate-200 text-sm">
-            <thead class="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-              <tr>
-                <th class="px-4 py-3">时间</th>
-                <th class="px-4 py-3">来源</th>
-                <th class="px-4 py-3">收支</th>
-                <th class="px-4 py-3">类型</th>
-                <th class="px-4 py-3 text-right">金额</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-100">
-              <Show
-                when={(records()?.data.items.length ?? 0) > 0}
-                fallback={
-                  <tr>
-                    <td class="px-4 py-8 text-center text-slate-400" colSpan={5}>
-                      {records.loading ? "加载中..." : "暂无财务数据"}
-                    </td>
-                  </tr>
-                }
-              >
-                <For each={records()?.data.items ?? []}>
-                  {(record) => (
-                    <tr class="hover:bg-slate-50">
-                      <td class="px-4 py-3 text-slate-500">{record.tradeTime}</td>
-                      <td class="px-4 py-3">{sourceLabel(record.sourceType)}</td>
-                      <td class="px-4 py-3">{record.inOrOut}</td>
-                      <td class="px-4 py-3 text-slate-500">{record.tradeType}</td>
-                      <td class="px-4 py-3 text-right font-medium">{record.amount}</td>
-                    </tr>
-                  )}
-                </For>
-              </Show>
-            </tbody>
-          </table>
-        </div>
-      </section>
+      <DataTable
+        rows={rows()}
+        columns={columns}
+        loading={records.loading}
+        error={records()?.success === false ? records()?.message || "财务数据加载失败" : undefined}
+        emptyText="暂无财务数据"
+        rowKey={(row) => row.id}
+      />
     </div>
   );
 }
 
 function sourceLabel(sourceType: number) {
   return ({ 1: "支付宝", 2: "微信", 3: "银行" } as Record<number, string>)[sourceType] ?? String(sourceType);
-}
-
-function daysAgo(days: number) {
-  return new Date(Date.now() - days * 24 * 60 * 60 * 1000);
-}
-
-function toInputDateTime(date: Date) {
-  const pad = (value: number) => String(value).padStart(2, "0");
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
-}
-
-function toApiDateTime(value: string) {
-  return `${value.replace("T", " ")}:00`;
 }

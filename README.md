@@ -1,13 +1,12 @@
 # eadm
 
-EADM 是一个基于 Erlang/OTP + Nova 的个人后台管理系统，前端使用 Bootstrap 5、jQuery、DataTables 等静态资源，支持 Docker 部署和多数据库脚本维护。
+EADM 是一个基于 Erlang/OTP + Cowboy 的个人后台管理系统，前端使用 SolidJS，支持 Docker 部署和多数据库脚本维护。
 
 ## 项目入口
 
 - 后端源码：`src/`
-- 控制器：`src/controllers/`
-- 页面模板：`src/views/`
-- 前端资源：`priv/assets/`
+- Cowboy Handler：`src/eadm_cowboy_*_handler.erl`
+- 前端工程：`frontend/`
 - 数据库脚本：`script/`
 - 运行配置：`config/`
 - Docker 配置：`Dockerfile`、`docker-compose.yml`、`docker/`

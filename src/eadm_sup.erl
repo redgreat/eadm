@@ -51,7 +51,7 @@ init([]) ->
             {worker_module, eadm_pgpool_worker}] ++ SizeArgs,
         poolboy:child_spec(PoolName, PoolArgs, WorkerArgs)
                          end, Pools),
-    CowboySpec = cowboy_spec(application:get_env(eadm, cowboy_enabled, false)),
+    CowboySpec = cowboy_spec(application:get_env(eadm, cowboy_enabled, true)),
     {ok, { {one_for_one, 10, 10}, PoolSpec ++ CowboySpec} }.
 
 %% @doc

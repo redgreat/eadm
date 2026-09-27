@@ -1,32 +1,13 @@
 ["config/prod_db",
-  {nova, [
-    {environment, prod},    {cowboy_configuration, #{port => 8080}},
-    {dev_mode, true},
-    {bootstrap_application, eadm}, %% Bootstraps the application
-    {use_sessions, true},
+  {eadm, [
+    {cowboy_enabled, true},
+    {cowboy_port, 8090},
     {session_expire, 3600},
     {secret_key, <<"PfE4U42K6ApFYTgWjWRCvaD7wenPL26xcc7T">>},
     {max_search_span, 3},
     {max_fin_search_span, 366},
     {wx_key, "ea50a2d0-2d51-4ba3-a90c-66919a51ca01"},
-    {push_token, "f9f695f545524ebd89927ddfbce5d9b1"},
-    %% Plugins is written on form {RequestType, Module, Options, Priority}
-    %% Priority is that the lowest number is executed first
-    {plugins, [
-      {pre_request, nova_correlation_plugin, #{}},
-      {pre_request, nova_request_plugin, #{decode_json_body => true,
-                                           parse_bindings => true,
-                                           read_urlencoded_body=>true,
-                                           parse_qs=>true}},
-      {pre_request, nova_cors_plugin, #{
-          allow_origins => [<<"http://localhost:3000">>],
-          allow_methods => [<<"GET">>, <<"POST">>, <<"OPTIONS">>, <<"DELETE">>, <<"PUT">>],
-          allow_headers => [<<"content-type">>, <<"x-requested-with">>, <<"authorization">>],
-          allow_credentials => true,
-          max_age => 3600,
-          expose_headers => [<<"content-type">>, <<"x-requested-with">>]
-      }}
-      ]}
+    {push_token, "f9f695f545524ebd89927ddfbce5d9b1"}
     ]},
   {lager, [
       {log_root, "/var/log/eadm/"}

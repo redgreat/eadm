@@ -1,4 +1,4 @@
-import { apiRequest } from "./client";
+import { apiRequest, apiV1 } from "./client";
 import type { ApiResponse } from "./client";
 
 export type SystemInfoItem = {
@@ -11,5 +11,5 @@ export type SystemInfo = {
 };
 
 export function getSystemInfo(): Promise<ApiResponse<SystemInfo>> {
-  return apiRequest<SystemInfo>("/api/system/info");
+  return apiRequest<SystemInfo>(`${apiV1}/system/info`);
 }

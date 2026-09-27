@@ -57,7 +57,7 @@ decode_payload(EncodedPayload) ->
     end.
 
 signature(EncodedPayload) ->
-    Secret = application:get_env(nova, secret_key, <<"">>),
+    Secret = application:get_env(eadm, secret_key, <<"">>),
     base64url(crypto:mac(hmac, sha256, Secret, EncodedPayload)).
 
 cookie_opts() ->

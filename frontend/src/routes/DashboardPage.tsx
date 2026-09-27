@@ -17,7 +17,7 @@ export default function DashboardPage() {
     <div class="space-y-6">
       <section>
         <h2 class="text-2xl font-semibold tracking-tight">仪表盘</h2>
-        <p class="mt-1 text-sm text-slate-500">首页已接入新的 `/api/dashboard/summary` 接口。</p>
+        <p class="mt-1 text-sm text-slate-500">汇总最近一周健康、位置和财务数据。</p>
       </section>
 
       <Show when={summary()?.success === false}>

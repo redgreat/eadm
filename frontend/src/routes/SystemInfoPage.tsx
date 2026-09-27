@@ -1,5 +1,9 @@
-import { createResource, For, Show } from "solid-js";
+import { createResource } from "solid-js";
 import { getSystemInfo } from "../lib/api/system";
+import DataTable, { type DataTableColumn } from "../components/ui/DataTable";
+import Badge from "../components/ui/Badge";
+import Button from "../components/ui/Button";
+import type { SystemInfoItem } from "../lib/api/system";
 
 const labels: Record<string, string> = {
   otpRelease: "OTP 版本",
@@ -25,34 +29,70 @@ const labels: Record<string, string> = {
 };
 
 export default function SystemInfoPage() {
-  const [info] = createResource(getSystemInfo);
+  const [info, { refetch }] = createResource(getSystemInfo);
+  const columns: DataTableColumn<SystemInfoItem>[] = [
+    {
+      key: "label",
+      header: "指标",
+      accessor: (item) => labels[item.key] ?? item.key,
+      render: (item) => (
+        <div>
+          <div class="font-medium text-slate-950">{labels[item.key] ?? item.key}</div>
+          <div class="mt-1 text-xs text-slate-400">{item.key}</div>
+        </div>
+      ),
+      sortable: true
+    },
+    {
+      key: "value",
+      header: "当前值",
+      accessor: (item) => item.value,
+      render: (item) => <span class="break-all font-mono text-slate-700">{String(item.value)}</span>,
+      sortable: true
+    },
+    {
+      key: "group",
+      header: "分组",
+      accessor: (item) => groupOf(item.key),
+      render: (item) => <Badge tone="blue">{groupOf(item.key)}</Badge>,
+      sortable: true
+    }
+  ];
 
   return (
     <div class="space-y-6">
-      <section>
-        <h2 class="text-2xl font-semibold tracking-tight">系统信息</h2>
-        <p class="mt-1 text-sm text-slate-500">已接入新的 `/api/system/info` 接口。</p>
-      </section>
-
-      <Show when={info()?.success === false}>
-        <div class="rounded-md bg-amber-50 px-4 py-3 text-sm text-amber-700">
-          {info()?.message || "系统信息加载失败"}
+      <section class="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h2 class="text-2xl font-semibold tracking-tight">系统信息</h2>
+          <p class="mt-1 text-sm text-slate-500">查看 Erlang VM、进程、端口、ETS 和内存运行状态。</p>
         </div>
-      </Show>
-
-      <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        <Show when={(info()?.data.items.length ?? 0) > 0} fallback={<div class="text-sm text-slate-400">加载中...</div>}>
-          <For each={info()?.data.items ?? []}>
-            {(item) => (
-              <article class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-                <div class="text-xs font-medium uppercase tracking-wide text-slate-400">{item.key}</div>
-                <div class="mt-2 text-sm text-slate-500">{labels[item.key] ?? item.key}</div>
-                <div class="mt-2 break-all text-lg font-semibold text-slate-950">{String(item.value)}</div>
-              </article>
-            )}
-          </For>
-        </Show>
+        <Button variant="secondary" type="button" onClick={() => refetch()}>
+          刷新
+        </Button>
       </section>
+
+      <DataTable
+        columns={columns}
+        rows={info()?.data.items ?? []}
+        loading={info.loading}
+        error={info()?.success === false ? info()?.message || "系统信息加载失败" : undefined}
+        emptyText="暂无系统运行数据"
+        pageSize={12}
+        rowKey={(item) => item.key}
+      />
     </div>
   );
+}
+
+function groupOf(key: string) {
+  if (key.startsWith("memory")) {
+    return "内存";
+  }
+  if (key.startsWith("io")) {
+    return "IO";
+  }
+  if (key.includes("process") || key.includes("port") || key.includes("ets")) {
+    return "资源";
+  }
+  return "运行时";
 }

@@ -15,7 +15,7 @@
 %%====================================================================
 
 init(Req, State) ->
-    case eadm_cowboy_guard:allow_internal_or_require(Req, <<"locate">>) of
+    case eadm_cowboy_guard:require(Req, <<"locate">>) of
         {ok, internal} -> reply_location(Req, State, internal);
         {ok, User} -> reply_location(Req, State, User);
         {error, unauthorized} -> {ok, eadm_api_response:cowboy_json(Req, 401, eadm_api_response:unauthorized()), State};
@@ -74,3 +74,4 @@ login_name(internal, Query) ->
     maps:get(<<"loginName">>, Query, <<>>);
 login_name(User, _Query) ->
     maps:get(<<"loginName">>, User, <<>>).
+

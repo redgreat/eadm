@@ -1,4 +1,4 @@
-import { apiRequest } from "./client";
+import { apiRequest, apiV1 } from "./client";
 import type { ApiResponse } from "./client";
 
 export type LocationPoint = {
@@ -24,5 +24,5 @@ export function getLocationPoints(params: {
   }
   query.set("startTime", params.startTime);
   query.set("endTime", params.endTime);
-  return apiRequest<LocationList>(`/api/location?${query.toString()}`);
+  return apiRequest<LocationList>(`${apiV1}/location/points?${query.toString()}`);
 }

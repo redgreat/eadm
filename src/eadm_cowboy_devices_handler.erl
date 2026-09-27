@@ -15,7 +15,7 @@
 %%====================================================================
 
 init(Req, State) ->
-    case eadm_cowboy_guard:allow_internal_or_require(Req, [<<"device">>, <<"devlist">>]) of
+    case eadm_cowboy_guard:require(Req, [<<"device">>, <<"devlist">>]) of
         {ok, _User} -> reply_devices(Req, State);
         {error, unauthorized} -> {ok, eadm_api_response:cowboy_json(Req, 401, eadm_api_response:unauthorized()), State};
         {error, forbidden} -> {ok, eadm_api_response:cowboy_json(Req, 403, eadm_api_response:forbidden()), State}
@@ -33,3 +33,4 @@ reply_devices(Req, State) ->
             ErrorBody = eadm_api_response:error(<<"internal_error">>, <<"设备查询失败">>),
             {ok, eadm_api_response:cowboy_json(Req, 500, ErrorBody), State}
     end.
+

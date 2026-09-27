@@ -1,4 +1,4 @@
-import { apiRequest } from "./client";
+import { apiRequest, apiV1 } from "./client";
 import type { ApiResponse } from "./client";
 
 export type DashboardSummary = {
@@ -20,5 +20,5 @@ export type DashboardSummary = {
 };
 
 export function getDashboardSummary(): Promise<ApiResponse<DashboardSummary>> {
-  return apiRequest<DashboardSummary>("/api/dashboard/summary");
+  return apiRequest<DashboardSummary>(`${apiV1}/dashboard/summary`);
 }

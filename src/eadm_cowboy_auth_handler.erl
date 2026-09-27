@@ -2,7 +2,7 @@
 %%% @author wangcw
 %%% @copyright (C) 2024, REDGREAT
 %%% @doc
-%%%  Native Cowboy auth endpoints used during migration.
+%%%  Cowboy auth endpoints.
 %%% @end
 %%%-------------------------------------------------------------------
 -module(eadm_cowboy_auth_handler).
@@ -23,35 +23,53 @@ init(Req, State) ->
 %% Internal functions
 %%====================================================================
 
-handle(<<"POST">>, <<"/api/internal/auth/login">>, Req, State) ->
+handle(<<"POST">>, <<"/api/v1/auth/login">>, Req, State) ->
     login_request(Req, State);
-handle(<<"POST">>, <<"/api/auth/login">>, Req, State) ->
-    login_request(Req, State);
-handle(<<"POST">>, <<"/api/internal/auth/logout">>, Req, State) ->
+handle(<<"POST">>, <<"/api/v1/auth/logout">>, Req, State) ->
     Req1 = eadm_cowboy_session:clear_cookie(Req),
     Reply = eadm_api_response:ok(#{}, utf8("已退出登录")),
     {ok, eadm_api_response:cowboy_json(Req1, Reply), State};
-handle(<<"POST">>, <<"/api/auth/logout">>, Req, State) ->
-    Req1 = eadm_cowboy_session:clear_cookie(Req),
-    Reply = eadm_api_response:ok(#{}, utf8("已退出登录")),
-    {ok, eadm_api_response:cowboy_json(Req1, Reply), State};
-handle(<<"GET">>, <<"/api/internal/auth/me">>, Req, State) ->
-    me_request(Req, State);
-handle(<<"GET">>, <<"/api/auth/me">>, Req, State) ->
+handle(<<"GET">>, <<"/api/v1/auth/me">>, Req, State) ->
     me_request(Req, State);
 handle(_Method, _Path, Req, State) ->
     Reply = eadm_api_response:not_found(),
     {ok, eadm_api_response:cowboy_json(Req, 404, Reply), State}.
 
 login_request(Req, State) ->
-    case eadm_cowboy_req:json_body(Req) of
+    case login_params(Req) of
         {ok, Body, Req1} ->
             LoginName = maps:get(<<"loginName">>, Body, <<>>),
             Password = maps:get(<<"password">>, Body, <<>>),
             login(LoginName, Password, Req1, State);
-        {error, invalid_json, Req1} ->
-            Reply = eadm_api_response:validation_error(utf8("JSON格式错误")),
+        {error, invalid_body, Req1} ->
+            Reply = eadm_api_response:validation_error(utf8("请求参数格式错误")),
             {ok, eadm_api_response:cowboy_json(Req1, 400, Reply), State}
+    end.
+
+login_params(Req) ->
+    ContentType = cowboy_req:header(<<"content-type">>, Req, <<>>),
+    case binary:match(ContentType, <<"application/x-www-form-urlencoded">>) of
+        nomatch ->
+            json_login_params(Req);
+        _ ->
+            form_login_params(Req)
+    end.
+
+json_login_params(Req) ->
+    case eadm_cowboy_req:json_body(Req) of
+        {ok, Body, Req1} ->
+            {ok, Body, Req1};
+        {error, invalid_json, Req1} ->
+            {error, invalid_body, Req1}
+    end.
+
+form_login_params(Req) ->
+    try
+        {ok, Params, Req1} = cowboy_req:read_urlencoded_body(Req),
+        {ok, maps:from_list(Params), Req1}
+    catch
+        _:_ ->
+            {error, invalid_body, Req}
     end.
 
 me_request(Req, State) ->
@@ -81,3 +99,4 @@ login(LoginName, Password, Req, State) ->
 
 utf8(Text) ->
     unicode:characters_to_binary(Text, utf8).
+
